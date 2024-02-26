@@ -6,17 +6,20 @@ import java.util.Properties;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Hashtable;
 
 
 
 public class DBApp {
+	
+	private Metadata metadata;
 
-
-
-	public DBApp( ){
-		
+	public DBApp( ) throws FileNotFoundException, IOException{
+		metadata = new Metadata();
 	}
+
+	 
 
 	// this does whatever initialization you would like 
 	// or leave it empty if there is no code you want to 
@@ -24,6 +27,7 @@ public class DBApp {
 	public void init( ){
 
 		// TODO: LOAD INDICES
+		// TODO: LOAD METADATA FILE
 
 
 		Properties prop = new Properties();
@@ -37,6 +41,9 @@ public class DBApp {
         }
         System.out.println(prop.getProperty("MaximumRowsCountinPage"));
 		
+
+		
+
 		
 	}
 
@@ -91,8 +98,10 @@ public class DBApp {
 	// htblColNameValue enteries are ANDED together
 	public void deleteFromTable(String strTableName, 
 								Hashtable<String,Object> htblColNameValue) throws DBAppException{
-	
+
+		
 		throw new DBAppException("not implemented yet");
+		
 	}
 
 
@@ -118,9 +127,15 @@ public class DBApp {
 
 			tree.displayTree();
 
+			
 
 			// String strTableName = "Student";
+			// Hashtable htblColNameValue = new Hashtable( );
+			// htblColNameValue.put("ID", new Integer( 2343432 ));
+			// htblColNameValue.put("name", new String("Ahmed Noor" ) );
+			// htblColNameValue.put("gpa", new Double( 0.95 ) );
 			// DBApp	dbApp = new DBApp( );
+			// dbApp.deleteFromTable("CityShop", htblColNameValue);
 			
 			// Hashtable htblColNameType = new Hashtable( );
 			// htblColNameType.put("id", "java.lang.Integer");
