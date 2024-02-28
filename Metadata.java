@@ -168,6 +168,9 @@ public class Metadata {
         return new ArrayList<>(htblMetadata.keySet());
     }
 
+    public boolean checkTableName(String str){
+        return htblMetadata.containsKey(str);
+    }
     /**
      * The function getColumnNames returns a list of column names for a given table name.
      * 
@@ -178,7 +181,9 @@ public class Metadata {
     public List<String> getColumnNames(String strTableName){
         return new ArrayList<>(htblMetadata.get(strTableName).keySet());
     }
-
+    public boolean checkColumnName(String strTableName, String strColumnName){
+        return htblMetadata.get(strTableName).containsKey(strColumnName);
+    } 
     /**
      * The `addTable` function adds a new table to the metadata with specified columns and clustering
      * key.
