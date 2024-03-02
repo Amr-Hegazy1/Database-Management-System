@@ -250,7 +250,7 @@ public class Metadata {
             htblMetadata.get(strTableName).get(strColName).put("IndexType", strIndexType);
         }
         else{
-            throw new IOException("Table does not exist");
+            throw new IOException("Table does not exist");//should be index exists
         }
     }
 
@@ -312,6 +312,28 @@ public class Metadata {
         return strMetadata;
         
 
+    }
+
+
+    public void createIndex(String strTableName,String strColName,String strIndexName) throws DBAppException{
+        if(!htblMetadata.containsKey(strTableName)){
+            throw new DBAppException("This table does not exist");
+
+        }
+        else if(htblMetadata.get(strTableName).containsKey(strColName)){
+             throw new DBAppException("This column does not exist");
+        }
+        else if ((htblMetadata.get(strTableName).get(strColumnName).get("IndexName")).equals(strIndexName) && (htblMetadata.get(strTableName).containsKey())){
+            throw new DBAppException("This index already exists");
+
+        }
+        else{
+        
+            //addIndex(strTableName,strColName,);
+            htblMetadata.get(strTableName).get(strColName).put("IndexName", strIndexName);
+            bplustree tree = new bplustree();
+           
+        }
     }
 
     
