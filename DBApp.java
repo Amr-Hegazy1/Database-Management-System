@@ -14,9 +14,14 @@ import java.util.Hashtable;
 public class DBApp {
 	
 	private Metadata metadata;
+	private Table table;
 
 	public DBApp( ) throws FileNotFoundException, IOException{
 		metadata = new Metadata();
+
+        // TESTING PURPOSES ONLY
+        table = new Table("City Shop");
+        
 	}
 
 	 
@@ -109,6 +114,99 @@ public class DBApp {
 									String[]  strarrOperators) throws DBAppException{
 										
 		return null;
+	}
+
+	private Page getPageByClusteringKey(String strTableName, String strClusteringKey, Object objClusteringKeyValue) throws IOException, ClassNotFoundException, DBAppException{
+
+        int intTableSize = table.getNumberOfPages();
+        int intTopPageIndex = 0;
+        int intBottomPageIndex = intTableSize - 1;
+
+        while(intTopPageIndex <= intBottomPageIndex){
+
+            int intMiddlePageIndex = intTopPageIndex + (intBottomPageIndex - intTopPageIndex) / 2;
+
+            String strMiddlePage = table.getPageAtIndex(intMiddlePageIndex);
+
+            System.out.println(intMiddlePageIndex);
+
+            Page pageMiddlePage = Page.deserialize(strMiddlePage + ".class");
+
+            int intMiddlePageSize = pageMiddlePage.getSize();
+
+            Tuple tupleMiddlePageTopTuple = pageMiddlePage.getTupleWithIndex(0);
+
+            Tuple tupleMiddlePageBottomTuple = pageMiddlePage.getTupleWithIndex(intMiddlePageSize - 1);
+
+			// convert the clustering key value to appropriate type for valid comparison
+			// for example, if the clustering key is of type integer, then convert the string value to integer
+			// if the clustering key is of type double, then convert the string value to double
+			// if the clustering key is of type string, then no conversion is needed
+
+			// TODO: REFACTOR
+			
+			if(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey) instanceof Integer){
+				objClusteringKeyValue = (Integer) objClusteringKeyValue;
+				Integer topTupleValue = (Integer) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
+				Integer bottomTupleValue = (Integer) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
+				System.out.println("Integer");
+
+				// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
+				if((Integer) objClusteringKeyValue >= topTupleValue && (Integer) objClusteringKeyValue <= bottomTupleValue){
+					return pageMiddlePage;
+
+				}else if((Integer) objClusteringKeyValue < topTupleValue){
+					intBottomPageIndex = intMiddlePageIndex - 1;
+				}else{
+					intTopPageIndex = intMiddlePageIndex + 1;
+				}
+
+			}else if(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey) instanceof Double){
+				objClusteringKeyValue = (Double) objClusteringKeyValue;
+				Double topTupleValue = (Double) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
+				Double bottomTupleValue = (Double) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
+				System.out.println("Double");
+
+				// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
+
+				if((Double) objClusteringKeyValue >= topTupleValue && (Double) objClusteringKeyValue <= bottomTupleValue){
+					return pageMiddlePage;
+
+				}else if((Double) objClusteringKeyValue < topTupleValue){
+					intBottomPageIndex = intMiddlePageIndex - 1;
+				}else{
+					intTopPageIndex = intMiddlePageIndex + 1;
+				}
+
+
+			}else{
+				objClusteringKeyValue = (String) objClusteringKeyValue;
+				String topTupleValue = (String) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
+				String bottomTupleValue = (String) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
+				System.out.println("String");
+				
+				// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
+				if(((String) objClusteringKeyValue).compareTo(topTupleValue) >= 0 && ((String) objClusteringKeyValue).compareTo(bottomTupleValue) <= 0){
+					return pageMiddlePage;
+				}else if(((String) objClusteringKeyValue).compareTo(topTupleValue) < 0){
+					intBottomPageIndex = intMiddlePageIndex - 1;
+				}else{
+					intTopPageIndex = intMiddlePageIndex + 1;
+				}
+
+			}
+
+            
+			
+
+			
+
+
+
+
+        }
+
+        return null;
 	}
 
 
