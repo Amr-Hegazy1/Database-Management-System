@@ -114,6 +114,52 @@ public class Metadata {
         return htblMetadata.get(strTableName).get(strColumnName).get("Column Type");
     }
 
+
+    /**
+     * The function `isColumnIndexed` checks if a specified column in a table has an index associated
+     * with it.
+     * 
+     * @param strTableName The `strTableName` parameter represents the name of the table for which you
+     * want to check if a specific column is indexed.
+     * @param strColumnName The `strColumnName` parameter in the `isColumnIndexed` method refers to the
+     * name of the column for which you want to check if an index is present in the metadata of a
+     * specified table.
+     * @return The method `isColumnIndexed` is returning a boolean value indicating whether the
+     * specified column in the given table is indexed or not. It checks if the "IndexName" attribute in
+     * the metadata for the specified table and column is not empty, and returns true if it is indexed,
+     * and false if it is not indexed.
+     */
+    public boolean isColumnIndexed(String strTableName, String strColumnName){
+        return !htblMetadata.get(strTableName).get(strColumnName).get("IndexName").equals("");
+    }
+
+    /**
+     * This Java function retrieves the clustering key for a given table from metadata stored in a
+     * Hashtable.
+     * 
+     * @param strTableName The `strTableName` parameter is a `String` representing the name of the
+     * table for which you want to retrieve the clustering key.
+     * @return The `getClusteringKey` method is returning the name of the column that is designated as
+     * the clustering key for the specified table `strTableName`. If the table exists in the metadata
+     * and has a clustering key defined, the method will return the name of that column. If the table
+     * does not have a clustering key defined, it will throw a `DBAppException` with the message "Table
+     * doesn't have a clustering key"
+     */
+    public String getClusteringKey(String strTableName) throws DBAppException{
+        
+        if(!htblMetadata.containsKey(strTableName))
+            throw new DBAppException("Table does not exist");
+        
+
+        Hashtable<String, Hashtable<String, String>> htblColNames = htblMetadata.get(strTableName);
+
+        for(String col : htblColNames.keySet()){
+            if(isClusteringKey(strTableName, col)) return col;
+        }
+
+        throw new DBAppException("Table doesn't have a clustering key");
+    }
+
     /**
      * The function `getClusteringKey` retrieves the clustering key for a specified table and column
      * from a metadata hash table.
@@ -168,9 +214,21 @@ public class Metadata {
         return new ArrayList<>(htblMetadata.keySet());
     }
 
+    /**
+     * The function `checkTableName` checks if a given table name exists in a metadata hash table.
+     * 
+     * @param str The `checkTableName` method takes a String parameter `str`, which represents the
+     * table name to be checked. The method checks if the `htblMetadata` map contains the provided
+     * table name `str` as a key and returns a boolean value indicating whether the table name exists
+     * in the metadata map or
+     * @return The method `checkTableName` returns a boolean value indicating whether the
+     * `htblMetadata` map contains the key specified by the input string `str`.
+     */
     public boolean checkTableName(String str){
         return htblMetadata.containsKey(str);
     }
+
+
     /**
      * The function getColumnNames returns a list of column names for a given table name.
      * 
@@ -181,9 +239,24 @@ public class Metadata {
     public List<String> getColumnNames(String strTableName){
         return new ArrayList<>(htblMetadata.get(strTableName).keySet());
     }
+
+
+    /**
+     * The function `checkColumnName` checks if a specified column exists in the metadata for a given
+     * table.
+     * 
+     * @param strTableName The `strTableName` parameter represents the name of the table for which you
+     * want to check the existence of a column.
+     * @param strColumnName The `strColumnName` parameter is a `String` representing the name of a
+     * column in a table.
+     * @return The method `checkColumnName` returns a boolean value indicating whether the specified
+     * column name exists in the metadata for the given table name.
+     */
     public boolean checkColumnName(String strTableName, String strColumnName){
         return htblMetadata.get(strTableName).containsKey(strColumnName);
     } 
+
+
     /**
      * The `addTable` function adds a new table to the metadata with specified columns and clustering
      * key.

@@ -1,7 +1,8 @@
+import java.io.Serializable;
 import java.util.*;
 
 
-public class Tuple {
+public class Tuple implements Serializable{
     
     private HashMap<String, Object> hmTuple;
 
