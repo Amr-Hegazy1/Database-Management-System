@@ -61,6 +61,10 @@ public class Table implements Serializable{
         return table;
 
     }
+    
+    public Vector<String> getPages (){
+        return this.vecPages;
+    }
 
     
 

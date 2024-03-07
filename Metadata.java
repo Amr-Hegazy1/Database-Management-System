@@ -320,7 +320,7 @@ public class Metadata {
             throw new DBAppException("This table does not exist");
 
         }
-        else if(htblMetadata.get(strTableName).containsKey(strColName)){
+        else if(!htblMetadata.get(strTableName).containsKey(strColName)){
              throw new DBAppException("This column does not exist");
         }
         else if ((htblMetadata.get(strTableName).get(strColumnName).get("IndexName")).equals(strIndexName) && (htblMetadata.get(strTableName).containsKey())){
@@ -330,12 +330,30 @@ public class Metadata {
         else{
         
             //addIndex(strTableName,strColName,);
-            htblMetadata.get(strTableName).get(strColName).put("IndexName", strIndexName);
-            bplustree tree = new bplustree();
+            htblMetadata.get(strTableName).get(strColumnName).put("IndexName", strIndexName);
+            htblMetadata.get(strTableName).get(strColumnName).put("IndexType", "B+tree");
+            BTree <Integer> btree = new BTree<>(100);
+            Table table= deserialize(strTableName);
+            Vector<String> vecPages = table.getPages();
+            
+
            
+           // Loop through the column values
+            for (String p : vecPages) {
+                Page page = deserialize(p);
+                Vector<Tuple> vecTuples = page.getTuples();
+                for (Tuple tuple : vecTuples) {
+                    int key = tuple.getColumnValue(strColumnName);
+                    btree.insert(key,tuple);
+                    }
+                }
+           btree.serialize("Indecies");
+
+            //TODO :keep track of trees using their names as keys in a hashtable
+
+
         }
+            }
     }
 
     
-
-}
