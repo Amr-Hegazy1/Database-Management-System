@@ -1,8 +1,7 @@
 import java.lang.*;
 import java.util.*;
-import java.io.*;
 
-public class bplustree {
+public class bplustree<T extends Comparable<T> , K> {
 	int m;
 	InternalNode root;
 	LeafNode firstLeaf;
@@ -18,16 +17,30 @@ public class bplustree {
 	 * @param t: target key value of dictionary pair being searched for
 	 * @return index of the target value if found, else a negative value
 	 */
-	private int binarySearch(DictionaryPair[] dps, int numPairs, int t) {
-		Comparator<DictionaryPair> c = new Comparator<DictionaryPair>() {
-			@Override
-			public int compare(DictionaryPair o1, DictionaryPair o2) {
-				Integer a = Integer.valueOf(o1.key);
-				Integer b = Integer.valueOf(o2.key);
-				return a.compareTo(b);
+	private int binarySearch(ArrayList<DictionaryPair> dps, int numPairs, T t) {
+		return binarySearchInRange(dps, numPairs, t);
+	}
+
+	private int binarySearchInRange(ArrayList<DictionaryPair> list, int endIndex , T target) {
+
+		// Perform binary search within the specified range
+		int low = 0;
+		int high = endIndex -1;
+
+		while (low <= high) {
+			int mid = low + (high - low) / 2;
+			DictionaryPair midValue = list.get(mid);
+
+			if (midValue.key.compareTo(target) < 0) {
+				low = mid + 1;
+			} else if (midValue.key.compareTo(target) > 0) {
+				high = mid - 1;
+			} else {
+				return mid; // Element found
 			}
-		};
-		return Arrays.binarySearch(dps, 0, numPairs, new DictionaryPair(t, ""), c);
+		}
+
+		return -1; // Element not found
 	}
 
 	/**
@@ -37,20 +50,19 @@ public class bplustree {
 	 * @param key: the unique key that lies within the dictionary of a LeafNode object
 	 * @return the LeafNode object that contains the key within its dictionary
 	 */
-	private LeafNode findLeafNode(int key) {
+	private LeafNode findLeafNode(T key) {
 
 		// Initialize keys and index variable
-		Integer[] keys = this.root.keys;
+		ArrayList<T> keys = this.root.keys;
 		int i;
-
 		// Find next node on path to appropriate leaf node
 		for (i = 0; i < this.root.degree - 1; i++) {
-			if (key < keys[i]) { break; }
+			if (key.compareTo(keys.get(i)) < 0) { break; }
 		}
 
 		/* Return node if it is a LeafNode object,
 		   otherwise repeat the search function a level down */
-		Node child = this.root.childPointers[i];
+		Node child = this.root.childPointers.get(i);
 		if (child instanceof LeafNode) {
 			return (LeafNode)child;
 		} else {
@@ -58,24 +70,24 @@ public class bplustree {
 		}
 	}
 
-	private LeafNode findLeafNode(InternalNode node, int key) {
+	private LeafNode findLeafNode(InternalNode node, T key) {
 
 		// Initialize keys and index variable
-		Integer[] keys = node.keys;
+		ArrayList<T> keys = node.keys;
 		int i;
 
 		// Find next node on path to appropriate leaf node
 		for (i = 0; i < node.degree - 1; i++) {
-			if (key < keys[i]) { break; }
+			if (key.compareTo(keys.get(i)) < 0) { break; }
 		}
 
 		/* Return node if it is a LeafNode object,
 		   otherwise repeat the search function a level down */
-		Node childNode = node.childPointers[i];
+		Node childNode = node.childPointers.get(i);
 		if (childNode instanceof LeafNode) {
 			return (LeafNode)childNode;
 		} else {
-			return findLeafNode((InternalNode)node.childPointers[i], key);
+			return findLeafNode((InternalNode)node.childPointers.get(i), key);
 		}
 	}
 
@@ -86,10 +98,10 @@ public class bplustree {
 	 * @param node: a specific pointer to a LeafNode
 	 * @return (int) index of pointer in list of pointers
 	 */
-	private int findIndexOfPointer(Node[] pointers, LeafNode node) {
+	private int findIndexOfPointer(ArrayList<Node> pointers, LeafNode node) {
 		int i;
-		for (i = 0; i < pointers.length; i++) {
-			if (pointers[i] == node) { break; }
+		for (i = 0; i < pointers.size(); i++) {
+			if (pointers.get(i) == node) { break; }
 		}
 		return i;
 	}
@@ -116,12 +128,12 @@ public class bplustree {
 
 		// Remedy deficient root node
 		if (this.root == in) {
-			for (int i = 0; i < in.childPointers.length; i++) {
-				if (in.childPointers[i] != null) {
-					if (in.childPointers[i] instanceof InternalNode) {
-						this.root = (InternalNode)in.childPointers[i];
+			for (int i = 0; i < in.childPointers.size(); i++) {
+				if (in.childPointers.get(i) != null) {
+					if (in.childPointers.get(i) instanceof InternalNode) {
+						this.root = (InternalNode) in.childPointers.get(i);
 						this.root.parent = null;
-					} else if (in.childPointers[i] instanceof LeafNode) {
+					} else if (in.childPointers.get(i) instanceof LeafNode) {
 						this.root = null;
 					}
 				}
@@ -135,19 +147,19 @@ public class bplustree {
 			sibling = in.rightSibling;
 
 			// Copy 1 key and pointer from sibling (atm just 1 key)
-			int borrowedKey = sibling.keys[0];
-			Node pointer = sibling.childPointers[0];
+			T borrowedKey = sibling.keys.get(0);
+			Node pointer = sibling.childPointers.get(0);
 
 			// Copy root key and pointer into parent
-			in.keys[in.degree - 1] = parent.keys[0];
-			in.childPointers[in.degree] = pointer;
+			in.keys.set(in.degree - 1 , parent.keys.get(0));
+			in.childPointers.set(in.degree , pointer);
 
 			// Copy borrowedKey into root
-			parent.keys[0] = borrowedKey;
+			parent.keys.set(0 , borrowedKey);
 
 			// Delete key and pointer from sibling
 			sibling.removePointer(0);
-			Arrays.sort(sibling.keys);
+			Collections.sort(sibling.keys);
 			sibling.removePointer(0);
 			shiftDown(in.childPointers, 1);
 		}
@@ -160,15 +172,16 @@ public class bplustree {
 
 			// Copy rightmost key in parent to beginning of sibling's keys &
 			// delete key from parent
-			sibling.keys[sibling.degree - 1] = parent.keys[parent.degree - 2];
-			Arrays.sort(sibling.keys, 0, sibling.degree);
-			parent.keys[parent.degree - 2] = null;
+			sibling.keys.set(sibling.degree - 1 , parent.keys.get(parent.degree - 2));
+			sortRange(sibling.keys, sibling.degree);
+			parent.keys.set(parent.degree - 2 , null);
 
 			// Copy in's child pointer over to sibling's list of child pointers
-			for (int i = 0; i < in.childPointers.length; i++) {
-				if (in.childPointers[i] != null) {
-					sibling.prependChildPointer(in.childPointers[i]);
-					in.childPointers[i].parent = sibling;
+			for (int i = 0; i < in.childPointers.size(); i++) {
+				Node node = in.childPointers.get(i);
+				if (node != null) {
+					sibling.prependChildPointer(node);
+					node.parent = sibling;
 					in.removePointer(i);
 				}
 			}
@@ -202,27 +215,27 @@ public class bplustree {
 	 * @param dps: list of dictionary pairs sorted by key within leaf node
 	 * @return index of the target value if found, else -1
 	 */
-	private int linearNullSearch(DictionaryPair[] dps) {
-		for (int i = 0; i <  dps.length; i++) {
-			if (dps[i] == null) { return i; }
+	private int linearNullSearch(ArrayList dps) {
+		for (int i = 0; i <  dps.size(); i++) {
+			if (dps.get(i) == null) { return i; }
 		}
 		return -1;
 	}
 
-	/**
-	 * This method performs a standard linear search on a list of Node[] pointers
-	 * and returns the index of the first null entry found. Otherwise, this
-	 * method returns a -1. This method is primarily used in place of
-	 * binarySearch() when the target t = null.
-	 * @param pointers: list of Node[] pointers
-	 * @return index of the target value if found, else -1
-	 */
-	private int linearNullSearch(Node[] pointers) {
-		for (int i = 0; i <  pointers.length; i++) {
-			if (pointers[i] == null) { return i; }
-		}
-		return -1;
-	}
+//	/**
+//	 * This method performs a standard linear search on a list of Node[] pointers
+//	 * and returns the index of the first null entry found. Otherwise, this
+//	 * method returns a -1. This method is primarily used in place of
+//	 * binarySearch() when the target t = null.
+//	 * @param pointers: list of Node[] pointers
+//	 * @return index of the target value if found, else -1
+//	 */
+//	private int linearNullSearch(ArrayList<Node> pointers) {
+//		for (int i = 0; i <  pointers.size(); i++) {
+//			if (pointers.get(i) == null) { return i; }
+//		}
+//		return -1;
+//	}
 
 	/**
 	 * This method is used to shift down a set of pointers that are prepended
@@ -230,10 +243,10 @@ public class bplustree {
 	 * @param pointers: the list of pointers that are to be shifted
 	 * @param amount: the amount by which the pointers are to be shifted
 	 */
-	private void shiftDown(Node[] pointers, int amount) {
-		Node[] newPointers = new Node[this.m + 1];
-		for (int i = amount; i < pointers.length; i++) {
-			newPointers[i - amount] = pointers[i];
+	private void shiftDown(ArrayList<Node> pointers, int amount) {
+		ArrayList<Node> newPointers = new ArrayList<>(this.m + 1);
+		for (int i = amount; i < pointers.size(); i++) {
+			newPointers.set(i - amount , pointers.get(i));
 		}
 		pointers = newPointers;
 	}
@@ -243,8 +256,8 @@ public class bplustree {
 	 * that may contain interspersed null values.
 	 * @param dictionary: a list of DictionaryPair objects
 	 */
-	private void sortDictionary(DictionaryPair[] dictionary) {
-		Arrays.sort(dictionary, new Comparator<DictionaryPair>() {
+	private void sortDictionary(ArrayList<DictionaryPair> dictionary) {
+		Collections.sort(dictionary, new Comparator<DictionaryPair>() {
 			@Override
 			public int compare(DictionaryPair o1, DictionaryPair o2) {
 				if (o1 == null && o2 == null) { return 0; }
@@ -264,14 +277,15 @@ public class bplustree {
 	 * @param split: the index at which the split in the childPointers begins
 	 * @return a Node[] of the removed pointers
 	 */
-	private Node[] splitChildPointers(InternalNode in, int split) {
+	private ArrayList<Node> splitChildPointers(InternalNode in, int split) {
 
-		Node[] pointers = in.childPointers;
-		Node[] halfPointers = new Node[this.m + 1];
+		ArrayList<Node> pointers = in.childPointers;
+		ArrayList<Node> halfPointers = new ArrayList<Node>(this.m + 1);
 
+		for (int i = 0 ; i < pointers.size() ; i++) halfPointers.add(null);
 		// Copy half of the values into halfPointers while updating original keys
-		for (int i = split + 1; i < pointers.length; i++) {
-			halfPointers[i - split - 1] = pointers[i];
+		for (int i = split + 1; i < pointers.size(); i++) {
+			halfPointers.set(i - split - 1 , pointers.get(i));
 			in.removePointer(i);
 		}
 
@@ -289,17 +303,18 @@ public class bplustree {
 	 * @param split: the index at which the split occurs
 	 * @return DictionaryPair[] of the two split dictionaries
 	 */
-	private DictionaryPair[] splitDictionary(LeafNode ln, int split) {
+	private ArrayList<DictionaryPair> splitDictionary(LeafNode ln, int split) {
 
-		DictionaryPair[] dictionary = ln.dictionary;
+		ArrayList<DictionaryPair> dictionary = ln.dictionary;
 
 		/* Initialize two dictionaries that each hold half of the original
 		   dictionary values */
-		DictionaryPair[] halfDict = new DictionaryPair[this.m];
+		ArrayList<DictionaryPair> halfDict = new ArrayList<>(this.m);
 
+		for (int i = 0 ; i < dictionary.size() ; i++) halfDict.add(null);
 		// Copy half of the values into halfDict
-		for (int i = split; i < dictionary.length; i++) {
-			halfDict[i - split] = dictionary[i];
+		for (int i = split; i < dictionary.size(); i++) {
+			halfDict.set(i - split , dictionary.get(i));
 			ln.delete(i);
 		}
 
@@ -320,9 +335,9 @@ public class bplustree {
 
 		// Split keys and pointers in half
 		int midpoint = getMidpoint();
-		int newParentKey = in.keys[midpoint];
-		Integer[] halfKeys = splitKeys(in.keys, midpoint);
-		Node[] halfPointers = splitChildPointers(in, midpoint);
+		T newParentKey = in.keys.get(midpoint);
+		ArrayList<T> halfKeys = splitKeys(in.keys, midpoint);
+		ArrayList<Node> halfPointers = splitChildPointers(in, midpoint);
 
 		// Change degree of original InternalNode in
 		in.degree = linearNullSearch(in.childPointers);
@@ -344,8 +359,9 @@ public class bplustree {
 		if (parent == null) {
 
 			// Create new root node and add midpoint key and pointers
-			Integer[] keys = new Integer[this.m];
-			keys[0] = newParentKey;
+			ArrayList<T> keys = new ArrayList<>(this.m);
+			// keys.set(0 , newParentKey);
+			keys.add(newParentKey);
 			InternalNode newRoot = new InternalNode(this.m, keys);
 			newRoot.appendChildPointer(in);
 			newRoot.appendChildPointer(sibling);
@@ -357,9 +373,11 @@ public class bplustree {
 
 		} else {
 
+			for(int i = parent.keys.size() ; i < parent.degree ; i++)
+				parent.keys.add(null);
 			// Add key to parent
-			parent.keys[parent.degree - 1] = newParentKey;
-			Arrays.sort(parent.keys, 0, parent.degree);
+			parent.keys.set(parent.degree - 1 , newParentKey);
+			sortRange(parent.keys, parent.degree);
 
 			// Set up pointer to new sibling
 			int pointerIndex = parent.findIndexOfPointer(in) + 1;
@@ -376,17 +394,19 @@ public class bplustree {
 	 * @param split: the index where the split is to occur
 	 * @return Integer[] of removed keys
 	 */
-	private Integer[] splitKeys(Integer[] keys, int split) {
+	private ArrayList<T> splitKeys(ArrayList<T> keys, int split) {
 
-		Integer[] halfKeys = new Integer[this.m];
+		ArrayList<T> halfKeys = new ArrayList<>(this.m);
 
 		// Remove split-indexed value from keys
-		keys[split] = null;
+		keys.set(split,null);
+
+		for (int i = 0 ; i < keys.size() ; i++) halfKeys.add(null);
 
 		// Copy half of the values into halfKeys while updating original keys
-		for (int i = split + 1; i < keys.length; i++) {
-			halfKeys[i - split - 1] = keys[i];
-			keys[i] = null;
+		for (int i = split + 1; i < keys.size(); i++) {
+			halfKeys.set(i - split - 1 , keys.get(i));
+			keys.set(i , null);
 		}
 
 		return halfKeys;
@@ -400,7 +420,7 @@ public class bplustree {
 	 * @param key: an integer key that corresponds with an existing dictionary
 	 *             pair
 	 */
-	public void delete(int key) {
+	public void delete(T key) {
 		if (isEmpty()) {
 
 			/* Flow of execution goes here when B+ tree has no dictionary pairs */
@@ -437,7 +457,7 @@ public class bplustree {
 						ln.leftSibling.isLendable()) {
 
 						sibling = ln.leftSibling;
-						DictionaryPair borrowedDP = sibling.dictionary[sibling.numPairs - 1];
+						DictionaryPair borrowedDP = sibling.dictionary.get(sibling.numPairs - 1);
 
 						/* Insert borrowed dictionary pair, sort dictionary,
 						   and delete dictionary pair from sibling */
@@ -447,8 +467,8 @@ public class bplustree {
 
 						// Update key in parent if necessary
 						int pointerIndex = findIndexOfPointer(parent.childPointers, ln);
-						if (!(borrowedDP.key >= parent.keys[pointerIndex - 1])) {
-							parent.keys[pointerIndex - 1] = ln.dictionary[0].key;
+						if (borrowedDP.key.compareTo(parent.keys.get(pointerIndex - 1)) < 0) {
+							parent.keys.set(pointerIndex - 1 , ln.dictionary.get(0).key);
 						}
 
 					} else if (ln.rightSibling != null &&
@@ -456,7 +476,7 @@ public class bplustree {
 							   ln.rightSibling.isLendable()) {
 
 						sibling = ln.rightSibling;
-						DictionaryPair borrowedDP = sibling.dictionary[0];
+						DictionaryPair borrowedDP = sibling.dictionary.get(0);
 
 						/* Insert borrowed dictionary pair, sort dictionary,
 					       and delete dictionary pair from sibling */
@@ -466,8 +486,8 @@ public class bplustree {
 
 						// Update key in parent if necessary
 						int pointerIndex = findIndexOfPointer(parent.childPointers, ln);
-						if (!(borrowedDP.key < parent.keys[pointerIndex])) {
-							parent.keys[pointerIndex] = sibling.dictionary[0].key;
+						if (borrowedDP.key.compareTo(parent.keys.get(pointerIndex)) >= 0) {
+							parent.keys.set(pointerIndex,sibling.dictionary.get(0).key);
 						}
 
 					}
@@ -539,7 +559,7 @@ public class bplustree {
 	 * @param key: an integer key to be used in the dictionary pair
 	 * @param value: a floating point number to be used in the dictionary pair
 	 */
-	public void insert(int key, String value){
+	public void insert(T key, K value){
 		if (isEmpty()) {
 
 			/* Flow of execution goes here only when first insert takes place */
@@ -560,21 +580,21 @@ public class bplustree {
 			if (!ln.insert(new DictionaryPair(key, value))) {
 
 				// Sort all the dictionary pairs with the included pair to be inserted
-				ln.dictionary[ln.numPairs] = new DictionaryPair(key, value);
+				ln.dictionary.add(new DictionaryPair(key, value));
 				ln.numPairs++;
 				sortDictionary(ln.dictionary);
 
 				// Split the sorted pairs into two halves
 				int midpoint = getMidpoint();
-				DictionaryPair[] halfDict = splitDictionary(ln, midpoint);
+				ArrayList<DictionaryPair> halfDict = splitDictionary(ln, midpoint);
 
 				if (ln.parent == null) {
 
 					/* Flow of execution goes here when there is 1 node in tree */
 
 					// Create internal node to serve as parent, use dictionary midpoint key
-					Integer[] parent_keys = new Integer[this.m];
-					parent_keys[0] = halfDict[0].key;
+					ArrayList<T> parent_keys = new ArrayList<> (this.m);
+					parent_keys.add(halfDict.get(0).key);
 					InternalNode parent = new InternalNode(this.m, parent_keys);
 					ln.parent = parent;
 					parent.appendChildPointer(ln);
@@ -584,9 +604,12 @@ public class bplustree {
 					/* Flow of execution goes here when parent exists */
 
 					// Add new key to parent for proper indexing
-					int newParentKey = halfDict[0].key;
-					ln.parent.keys[ln.parent.degree - 1] = newParentKey;
-					Arrays.sort(ln.parent.keys, 0, ln.parent.degree);
+					T newParentKey = halfDict.get(0).key;
+					if(ln.parent.degree - 1 < ln.parent.keys.size())
+						ln.parent.keys.set(ln.parent.degree - 1 , newParentKey);
+					else
+						ln.parent.keys.add(newParentKey);
+					sortRange(ln.parent.keys, ln.parent.degree);
 				}
 
 				// Create new LeafNode that holds the other half
@@ -633,7 +656,7 @@ public class bplustree {
 	 * @param key: the key to be searched within the B+ tree
 	 * @return the floating point value associated with the key within the B+ tree
 	 */
-	public String search(int key) {
+	public K search(T key) {
 
 		// If B+ tree is completely empty, simply return null
 		if (isEmpty()) { return null; }
@@ -642,14 +665,14 @@ public class bplustree {
 		LeafNode ln = (this.root == null) ? this.firstLeaf : findLeafNode(key);
 
 		// Perform binary search to find index of key within dictionary
-		DictionaryPair[] dps = ln.dictionary;
+		ArrayList<DictionaryPair> dps = ln.dictionary;
 		int index = binarySearch(dps, ln.numPairs, key);
 
 		// If index negative, the key doesn't exist in B+ tree
 		if (index < 0) {
 			return null;
 		} else {
-			return dps[index].value;
+			return dps.get(index).value;
 		}
 	}
 
@@ -662,17 +685,17 @@ public class bplustree {
 	 * @return an ArrayList<Double> that holds all values of dictionary pairs
 	 * whose keys are within the specified range
 	 */
-	public ArrayList<String> search(int lowerBound, int upperBound) {
+	public ArrayList<K> search(T lowerBound, T upperBound) {
 
 		// Instantiate Double array to hold values
-		ArrayList<String> values = new ArrayList<String>();
+		ArrayList<K> values = new ArrayList<>();
 
 		// Iterate through the doubly linked list of leaves
 		LeafNode currNode = this.firstLeaf;
 		while (currNode != null) {
 
 			// Iterate through the dictionary of each node
-			DictionaryPair dps[] = currNode.dictionary;
+			ArrayList<DictionaryPair> dps = currNode.dictionary;
 			for (DictionaryPair dp : dps) {
 
 				/* Stop searching the dictionary once a null value is encountered
@@ -680,7 +703,7 @@ public class bplustree {
 				if (dp == null) { break; }
 
 				// Include value if its key fits within the provided range
-				if (lowerBound <= dp.key && dp.key <= upperBound) {
+				if (lowerBound.compareTo(dp.key) <= 0 && dp.key.compareTo(upperBound) <= 0) {
 					values.add(dp.value);
 				}
 			}
@@ -703,72 +726,11 @@ public class bplustree {
 		this.root = null;
 	}
 
-    /**
-     * this method is used to print the tree in a tree-like structure and showing branches with "\", "/" and "|"
-     * 
-     */
-
-    
-	// In your BPlusTree.java file
-	
-	public void displayTree() {
-		java.util.Stack<Node> globalStack = new java.util.Stack<Node>();
-		globalStack.push(root);
-		int nBlanks = 32;
-		boolean isRowEmpty = false;
-		System.out.println("......................................................");
-		while(isRowEmpty==false) {
-			java.util.Stack<Node> localStack = new java.util.Stack<Node>();
-			isRowEmpty = true;
-
-			for(int j=0; j<nBlanks; j++)
-				System.out.print(' ');
-
-			while(globalStack.isEmpty()==false) {
-				Node temp = globalStack.pop();
-				if(temp != null) {
-					
-					if(temp instanceof LeafNode){
-						System.out.print(((LeafNode) temp)); // print all keys in the node
-					}else{
-						System.out.print(((InternalNode) temp)); // print all keys in the node
-						// add all children to the stack
-
-						for(int i = 0; i < ((InternalNode) temp).degree; i++){
-							localStack.push(((InternalNode) temp).childPointers[i]);
-							if(((InternalNode) temp).childPointers[i] != null)
-								isRowEmpty = false;
-						}
-					}
-					if(temp instanceof InternalNode)
-						isRowEmpty = false;
-				}
-				else {
-					System.out.print("--");
-					localStack.push(null);
-				}
-				for(int j=0; j<nBlanks*2-2; j++)
-					System.out.print(' ');
-			}
-			System.out.println();
-			nBlanks /= 2;
-			while(localStack.isEmpty()==false)
-				globalStack.push( localStack.pop() );
-		}
-		System.out.println("......................................................");
-	}
-
-	
-    
-
-    
-        
-
 	/**
 	 * This class represents a general node within the B+ tree and serves as a
 	 * superclass of InternalNode and LeafNode.
 	 */
-	public class Node {
+	public class  Node{
 		InternalNode parent;
 	}
 
@@ -783,8 +745,8 @@ public class bplustree {
 		int degree;
 		InternalNode leftSibling;
 		InternalNode rightSibling;
-		Integer[] keys;
-		Node[] childPointers;
+		ArrayList<T> keys;
+		ArrayList<Node> childPointers;
 
 		/**
 		 * This method appends 'pointer' to the end of the childPointers
@@ -795,7 +757,10 @@ public class bplustree {
 		 *                    childPointers list
 		 */
 		private void appendChildPointer(Node pointer) {
-			this.childPointers[degree] = pointer;
+			if(degree < childPointers.size())
+				this.childPointers.set(degree , pointer);
+			else 
+				this.childPointers.add(pointer);
 			this.degree++;
 		}
 
@@ -809,8 +774,8 @@ public class bplustree {
 		 * 'pointer' can't be found
 		 */
 		private int findIndexOfPointer(Node pointer) {
-			for (int i = 0; i < childPointers.length; i++) {
-				if (childPointers[i] == pointer) { return i; }
+			for (int i = 0; i < childPointers.size(); i++) {
+				if (childPointers.get(i) == pointer) { return i; }
 			}
 			return -1;
 		}
@@ -824,10 +789,16 @@ public class bplustree {
 		 * @param index: the index at which the insert is to take place
 		 */
 		private void insertChildPointer(Node pointer, int index) {
+			int start = childPointers.size();
+			for (int i = start ; i <= degree ; i++) 
+				childPointers.add(null);
 			for (int i = degree - 1; i >= index ;i--) {
-				childPointers[i + 1] = childPointers[i];
+				childPointers.set(i + 1 , childPointers.get(i));
 			}
-			this.childPointers[index] = pointer;
+			if(childPointers.size() > index)
+				this.childPointers.set(index , pointer);
+			else
+				this.childPointers.add(pointer);
 			this.degree++;
 		}
 
@@ -878,9 +849,9 @@ public class bplustree {
 		 */
 		private void prependChildPointer(Node pointer) {
 			for (int i = degree - 1; i >= 0 ;i--) {
-				childPointers[i + 1] = childPointers[i];
+				childPointers.set(i + 1 , childPointers.get(i));
 			}
-			this.childPointers[0] = pointer;
+			this.childPointers.set(0,pointer);
 			this.degree++;
 		}
 
@@ -889,7 +860,7 @@ public class bplustree {
 		 * parent of a merging, deficient LeafNode.
 		 * @param index: the location within keys to be set to null
 		 */
-		private void removeKey(int index) { this.keys[index] = null; }
+		private void removeKey(int index) { this.keys.set(index , null); }
 
 		/**
 		 * This method sets childPointers[index] to null and additionally
@@ -897,7 +868,7 @@ public class bplustree {
 		 * @param index: the location within childPointers to be set to null
 		 */
 		private void removePointer(int index) {
-			this.childPointers[index] = null;
+			this.childPointers.set(index , null);
 			this.degree--;
 		}
 
@@ -908,8 +879,8 @@ public class bplustree {
 		 * @param pointer: the Node pointer to be removed from childPointers
 		 */
 		private void removePointer(Node pointer) {
-			for (int i = 0; i < childPointers.length; i++) {
-				if (childPointers[i] == pointer) { this.childPointers[i] = null; }
+			for (int i = 0; i < childPointers.size(); i++) {
+				if (childPointers.get(i) == pointer) { this.childPointers.set(i , null); }
 			}
 			this.degree--;
 		}
@@ -919,12 +890,12 @@ public class bplustree {
 		 * @param m: the max degree of the InternalNode
 		 * @param keys: the list of keys that InternalNode is initialized with
 		 */
-		private InternalNode(int m, Integer[] keys) {
+		private InternalNode(int m, ArrayList<T> keys) {
 			this.maxDegree = m;
 			this.minDegree = (int)Math.ceil(m/2.0);
 			this.degree = 0;
 			this.keys = keys;
-			this.childPointers = new Node[this.maxDegree+1];
+			this.childPointers = new ArrayList<>(this.maxDegree+1);
 		}
 
 		/**
@@ -933,25 +904,12 @@ public class bplustree {
 		 * @param keys: the list of keys that InternalNode is initialized with
 		 * @param pointers: the list of pointers that InternalNode is initialized with
 		 */
-		private InternalNode(int m, Integer[] keys, Node[] pointers) {
+		private InternalNode(int m, ArrayList<T> keys, ArrayList<Node> pointers) {
 			this.maxDegree = m;
 			this.minDegree = (int)Math.ceil(m/2.0);
 			this.degree = linearNullSearch(pointers);
 			this.keys = keys;
 			this.childPointers = pointers;
-		}
-
-		/*
-		 * This method is used to print the internal node in a readable format
-		 * @return a string representation of the internal node
-		 */
-		@Override
-		public String toString() {
-			String result = "";
-			for (int i = 0; i < degree; i++) {
-				result += keys[i] + " ";
-			}
-			return result;
 		}
 	}
 
@@ -967,7 +925,7 @@ public class bplustree {
 		int numPairs;
 		LeafNode leftSibling;
 		LeafNode rightSibling;
-		DictionaryPair[] dictionary;
+		ArrayList<DictionaryPair> dictionary;
 
 		/**
 		 * Given an index, this method sets the dictionary pair at that index
@@ -977,7 +935,7 @@ public class bplustree {
 		public void delete(int index) {
 
 			// Delete dictionary pair from leaf
-			this.dictionary[index] = null;
+			this.dictionary.set(index , null);
 
 			// Decrement numPairs
 			numPairs--;
@@ -1000,9 +958,9 @@ public class bplustree {
 			} else {
 
 				// Insert dictionary pair, increment numPairs, sort dictionary
-				this.dictionary[numPairs] = dp;
+				this.dictionary.add(dp);
 				numPairs++;
-				Arrays.sort(this.dictionary, 0, numPairs);
+				sortRange(this.dictionary,  numPairs);
 
 				return true;
 			}
@@ -1051,8 +1009,8 @@ public class bplustree {
 		 */
 		public LeafNode(int m, DictionaryPair dp) {
 			this.maxNumPairs = m - 1;
-			this.minNumPairs = (int)(Math.ceil(m/2) - 1);
-			this.dictionary = new DictionaryPair[m];
+			this.minNumPairs = (int)(Math.ceil(m/2.0) - 1);
+			this.dictionary = new ArrayList<>(m);
 			this.numPairs = 0;
 			this.insert(dp);
 		}
@@ -1065,26 +1023,12 @@ public class bplustree {
 		 * 		     minNumPairs
 		 * @param parent: parent of newly created child LeafNode
 		 */
-		public LeafNode(int m, DictionaryPair[] dps, InternalNode parent) {
+		public LeafNode(int m, ArrayList<DictionaryPair> dps, InternalNode parent) {
 			this.maxNumPairs = m - 1;
-			this.minNumPairs = (int)(Math.ceil(m/2) - 1);
+			this.minNumPairs = (int)(Math.ceil(m/2.0) - 1);
 			this.dictionary = dps;
 			this.numPairs = linearNullSearch(dps);
 			this.parent = parent;
-		}
-
-		/*
-		 * This method is used to print the leaf node in a readable format
-		 * @return a string representation of the leaf node
-		 */
-
-		@Override
-		public String toString() {
-			String result = "";
-			for (int i = 0; i < numPairs; i++) {
-				result += dictionary[i].toString() + " ";
-			}
-			return result;
 		}
 	}
 
@@ -1094,15 +1038,15 @@ public class bplustree {
 	 * so that the DictionaryPair objects can be sorted later on.
 	 */
 	public class DictionaryPair implements Comparable<DictionaryPair> {
-		int key;
-		String value;
+		T key;
+		K value;
 
 		/**
 		 * Constructor
 		 * @param key: the key of the key-value pair
 		 * @param value: the value of the key-value pair
 		 */
-		public DictionaryPair(int key, String value) {
+		public DictionaryPair(T key, K value) {
 			this.key = key;
 			this.value = value;
 		}
@@ -1115,21 +1059,18 @@ public class bplustree {
 		 */
 		@Override
 		public int compareTo(DictionaryPair o) {
-			if (key == o.key) { return 0; }
-			else if (key > o.key) { return 1; }
-			else { return -1; }
+			return this.key.compareTo(o.key);
 		}
-		
-		/**
-		 * This method is used to print the dictionary pair in a readable format
-		 * @return a string representation of the dictionary pair
-		 */
-		@Override
-		public String toString() {
-			return "(" + key + ", " + value + ")";
-		}
-
 	}
 
-	
+	public static <K extends Comparable<? super K>> void sortRange(List<K> list, int endIndex) {
+		int startIndex = 0;
+
+		List<K> sublist = list.subList(startIndex, endIndex ); // Extract the sublist
+		Collections.sort(sublist); // Sort the sublist
+		// Replace the sorted sublist back into the original list
+		for (int i = startIndex; i < endIndex; i++) {
+			list.set(i, sublist.get(i - startIndex));
+		}
+	}
 }

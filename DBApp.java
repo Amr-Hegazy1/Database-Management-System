@@ -3,6 +3,7 @@
 
 import java.util.Iterator;
 import java.util.Properties;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -48,17 +49,43 @@ public class DBApp {
 	}
 
 
-	// following method creates one table only
-	// strClusteringKeyColumn is the name of the column that will be the primary
-	// key and the clustering column as well. The data type of that column will
-	// be passed in htblColNameType
-	// htblColNameValue will have the column name as key and the data 
-	// type as value
+	/**
+     * The `createTable` function creates one tabel only.
+	 * 
+	 * @param strTableName The `strTableName` is the name of the table needed be created.
+	 * 
+	 * @param strClusteringKeyColumn The `strClusteringKeyColumn` is the name of the column 
+	 * that will be the primary key and the clustering column as well.
+	 * The data type of that column will be passed in htblColNameType.
+     * 
+     * @param htblColNameValue The `htblColNameValue` will have the column name as key and
+	 * the data type as value.
+	 * 
+	 * @throws DBAppException The `DBAppException` will be thrown if there exists a table with
+	 * the same name.
+	 * 
+	 * @throws IOExecption The `IOExecption` will be thrown if the function fails to create the
+	 * folder or fails to serialize the table.
+     */
 	public void createTable(String strTableName, 
 							String strClusteringKeyColumn,  
-							Hashtable<String,String> htblColNameType) throws DBAppException{
-								
-		throw new DBAppException("not implemented yet");
+							Hashtable<String,String> htblColNameType) throws DBAppException , IOException{
+		
+		metadata.addTable(strTableName, strClusteringKeyColumn, htblColNameType);
+		Table tblTable = new Table(strTableName);
+		File fileTableFolder = new File("tables/" + strTableName);
+		if(!fileTableFolder.exists()){
+			boolean boolSuccess = fileTableFolder.mkdir();
+			if (boolSuccess){
+				tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".ser");
+			}
+			else{
+				throw new IOException("Can't create a Folder!");
+			}
+		}
+		else {
+			throw new DBAppException("Table already exists!");
+		}
 	}
 
 
@@ -114,85 +141,19 @@ public class DBApp {
 
 	public static void main( String[] args ){
 	
-	try{
+		try{
+			DBApp myDbApp = new DBApp();
+			String strTableName = "Studen1t";
+			String strClustringKeyColumn = "ID";
+			Hashtable<String,String> htblColNameType = new Hashtable<>();
+			htblColNameType.put("ID", "java.lang.Integer");
+			htblColNameType.put("Name", "java.lang.String");
+			htblColNameType.put("GPA", "java.lang.Double");
+			myDbApp.createTable(strTableName , strClustringKeyColumn , htblColNameType);
+			// Table myTable = Table.deserialize("tables/"+strTableName+"/"+strTableName+".ser");
+			// System.out.println(myTable.strTableName);
 
-			bplustree tree = new bplustree(3);
-
-			tree.insert(1, "amr");
-			tree.insert(2, "mohamed");
-			tree.insert(3, "wael");
-			tree.insert(4, "ahmed");
-
-			// tree.printTree(tree.root);
-
-			tree.displayTree();
-
-			
-
-			// String strTableName = "Student";
-			// Hashtable htblColNameValue = new Hashtable( );
-			// htblColNameValue.put("ID", new Integer( 2343432 ));
-			// htblColNameValue.put("name", new String("Ahmed Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.95 ) );
-			// DBApp	dbApp = new DBApp( );
-			// dbApp.deleteFromTable("CityShop", htblColNameValue);
-			
-			// Hashtable htblColNameType = new Hashtable( );
-			// htblColNameType.put("id", "java.lang.Integer");
-			// htblColNameType.put("name", "java.lang.String");
-			// htblColNameType.put("gpa", "java.lang.double");
-			// dbApp.createTable( strTableName, "id", htblColNameType );
-			// dbApp.createIndex( strTableName, "gpa", "gpaIndex" );
-
-			// Hashtable htblColNameValue = new Hashtable( );
-			// htblColNameValue.put("id", new Integer( 2343432 ));
-			// htblColNameValue.put("name", new String("Ahmed Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.95 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 453455 ));
-			// htblColNameValue.put("name", new String("Ahmed Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.95 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 5674567 ));
-			// htblColNameValue.put("name", new String("Dalia Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 1.25 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 23498 ));
-			// htblColNameValue.put("name", new String("John Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 1.5 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 78452 ));
-			// htblColNameValue.put("name", new String("Zaky Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.88 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-
-			// SQLTerm[] arrSQLTerms;
-			// arrSQLTerms = new SQLTerm[2];
-			// arrSQLTerms[0]._strTableName =  "Student";
-			// arrSQLTerms[0]._strColumnName=  "name";
-			// arrSQLTerms[0]._strOperator  =  "=";
-			// arrSQLTerms[0]._objValue     =  "John Noor";
-
-			// arrSQLTerms[1]._strTableName =  "Student";
-			// arrSQLTerms[1]._strColumnName=  "gpa";
-			// arrSQLTerms[1]._strOperator  =  "=";
-			// arrSQLTerms[1]._objValue     =  new Double( 1.5 );
-
-			// String[]strarrOperators = new String[1];
-			// strarrOperators[0] = "OR";
-			// // select * from Student where name = "John Noor" or gpa = 1.5;
-			// Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
-		}
-		catch(Exception exp){
+		} catch(Exception exp){
 			exp.printStackTrace( );
 		}
 	}
