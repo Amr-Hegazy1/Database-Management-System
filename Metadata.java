@@ -198,9 +198,9 @@ public class Metadata {
      * names as keys and their corresponding data types as values. It is used to define the columns and
      * their data types for a new table being added to the metadata.
      */
-    public void addTable(String strTableName, String strClusteringKey, Hashtable<String, String> htblColNameType) throws IOException{
+    public void addTable(String strTableName, String strClusteringKey, Hashtable<String, String> htblColNameType) throws DBAppException{
         if(htblMetadata.containsKey(strTableName)){
-            throw new IOException("Table already exists");
+            throw new DBAppException("Table already exists");
         }
         else{
             htblMetadata.put(strTableName, new Hashtable<>());
