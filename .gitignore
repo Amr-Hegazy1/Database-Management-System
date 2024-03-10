@@ -2,3 +2,10 @@ playground/
 *.class
 tempCodeRunnerFile.java
 metadata.csv
+
+/.metadata/
+
+out
+tables/
+
+Isndices/

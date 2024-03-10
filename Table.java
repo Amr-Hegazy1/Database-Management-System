@@ -70,6 +70,10 @@ public class Table implements Serializable{
         return table;
 
     }
+    //get all the pages used to store the table's data
+    public Vector<String> getPages (){
+        return this.vecPages;
+    }
 
     /**
      * The `addPage` function in Java adds a page name to a vector.
