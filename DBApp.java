@@ -211,7 +211,7 @@ public class DBApp  {
 	 * not found within the range, the method will continue searching through the pages until it either
 	 * finds the key or exhausts all pages, in which case it will return `null`.
 	 */
-	private Page getPageByClusteringKey(String strTableName, String strClusteringKey, Object objClusteringKeyValue) throws IOException, ClassNotFoundException, DBAppException{
+	private Page getPageByClusteringKey(String strTableName, String strClusteringKey, Object objClusteringKeyValue, Table table) throws IOException, ClassNotFoundException, DBAppException{
 
         int intTableSize = table.getNumberOfPages();
         int intTopPageIndex = 0;
@@ -317,11 +317,12 @@ public class DBApp  {
 	 * @param htblColNameValue The `htblColNameValue` parameter is a Hashtable that contains the column
 	 * names as keys and their corresponding values as values. This Hashtable represents the values of the
 	 * columns for the record that you want to delete.
+	 * @param table 
 	 */
-	private void deleteWithClusteringKey(String strTableName, String strClusteringKey, Hashtable<String,Object> htblColNameValue) throws IOException,ClassNotFoundException, DBAppException{
+	private void deleteWithClusteringKey(String strTableName, String strClusteringKey, Hashtable<String,Object> htblColNameValue, Table table) throws IOException,ClassNotFoundException, DBAppException{
 		
         Object objClusteringKeyValue = htblColNameValue.get(strClusteringKey);
-		Page pagePage = getPageByClusteringKey(strTableName, strClusteringKey, objClusteringKeyValue);
+		Page pagePage = getPageByClusteringKey(strTableName, strClusteringKey, objClusteringKeyValue, table);
         int intTupleIndex = pagePage.searchTuplesByClusteringKey(strClusteringKey, objClusteringKeyValue);
 		pagePage.deleteTupleWithIndex(intTupleIndex);
 		pagePage.serialize(pagePage.getPageName());
@@ -353,7 +354,7 @@ public class DBApp  {
 		String strIndexName = metadata.getIndexName(strTableName, strIndexedColumn);
 		System.out.println(strIndexName);
 
-		bplustree bplustreeIndex = htblIndices.get(strIndexName);
+		bplustree bplustreeIndex = htbIndex.get(strIndexName);
 		
 		String strIndexedColumnType = metadata.getColumnType(strTableName, strIndexedColumn);
 
@@ -422,7 +423,7 @@ public class DBApp  {
 	 * pages in a table, then iterates through all tuples in each page. For each tuple, it checks if the
 	 * values in
 	 */
-	private void deleteNonClusterinKeyWithoutIndex(String strTableName, Hashtable<String,Object> htblColNameValue) throws IOException, ClassNotFoundException, DBAppException{
+	private void deleteNonClusterinKeyWithoutIndex(String strTableName, Hashtable<String,Object> htblColNameValue, Table table) throws IOException, ClassNotFoundException, DBAppException{
 
 		// Linear search
 
@@ -477,8 +478,9 @@ public class DBApp  {
 	 * names and their corresponding values that you want to use as criteria for deleting records from a
 	 * table. Each entry in the Hashtable represents a column name-value pair that specifies the condition
 	 * for deleting records.
+	 * @param table 
 	 */
-	private void deleteWithoutClusteringKey(String strTableName, Hashtable<String,Object> htblColNameValue) throws IOException, ClassNotFoundException, DBAppException{
+	private void deleteWithoutClusteringKey(String strTableName, Hashtable<String,Object> htblColNameValue, Table table) throws IOException, ClassNotFoundException, DBAppException{
 		
 		Hashtable<Tuple, String> htblTuples = null;
 		for(String col : htblColNameValue.keySet()){
@@ -515,7 +517,7 @@ public class DBApp  {
 			return;
 		}
 
-		deleteNonClusterinKeyWithoutIndex(strTableName, htblColNameValue);
+		deleteNonClusterinKeyWithoutIndex(strTableName, htblColNameValue, table);
 
 	}
 
@@ -557,14 +559,28 @@ public class DBApp  {
 	public void deleteFromTable(String strTableName, 
 								Hashtable<String,Object> htblColNameValue) throws DBAppException, IOException,ClassNotFoundException{
 
+		if (!metadata.checkTableName(strTableName)){
+			throw new DBAppException("Table does not exist");
+		}
+
+		if(htblColNameValue.isEmpty()){
+			throw new DBAppException("No columns to delete");
+		}
+
+		for(String strCol : htblColNameValue.keySet()){
+			if(!metadata.checkColumnName(strTableName, strCol)){
+				throw new DBAppException("Column does not exist");
+			}
+		}
 		
+		Table table = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".ser");
 		String strClusteringKey = metadata.getClusteringKey(strTableName);
 
 		if(htblColNameValue.containsKey(strClusteringKey)){
-			deleteWithClusteringKey(strTableName, strClusteringKey, htblColNameValue);
+			deleteWithClusteringKey(strTableName, strClusteringKey, htblColNameValue, table);
 		}else{
-			System.out.println("here");
-			deleteWithoutClusteringKey(strTableName, htblColNameValue);
+			
+			deleteWithoutClusteringKey(strTableName, htblColNameValue, table);
 		}
 		
 		
