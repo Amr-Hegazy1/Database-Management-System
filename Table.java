@@ -16,21 +16,35 @@ public class Table implements Serializable {
         this.vecPages = new Vector<String>();
     }
 
-    // Generates Auto Page Name and Adds it to the Table. (Returns Value in order to
-    // use it in serilization of the Page File) (Numbering Starts from 1)
+    /**
+     * The addPage function adds an auto-generated page name to the Table
+     * (vecPages).
+     * 
+     * @return The method `addPage` is returning the name of the new page that was
+     *         added to the 'vecpages' Vector of the Table.
+     */
     public String addPage() {
-        int newPageNum = vecPages.size() + 1;
-        String newPage = strTableName + newPageNum;
+        int newPageNum = vecPages.size();
+        String newPage = strTableName + "_" + newPageNum;
         vecPages.add(newPage);
         return newPage;
     }
 
-    // Returns Page Name Vectors
+    /**
+     * The getPageVector returns vector of page names 'vecPages'.
+     * 
+     * @return The method `getPageVector` is returning the vector of page names.
+     */
     public Vector<String> getPageVector() {
         return vecPages;
     }
 
-    // Returns Number of Pages in Table
+    /**
+     * The getNumofPages returns Number of Pages in the Table.
+     * 
+     * @return The method `getNumofPages` is returning the number of pages in the
+     *         Table.
+     */
     public int getNumofPages() {
         return vecPages.size();
     }

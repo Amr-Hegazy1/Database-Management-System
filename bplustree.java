@@ -60,9 +60,6 @@ public class bplustree<T extends Comparable<T>, K> {
 		int i;
 		// Find next node on path to appropriate leaf node
 		for (i = 0; i < this.root.degree - 1; i++) {
-			if (key < keys[i]) {
-				break;
-			}
 			if (key.compareTo(keys.get(i)) < 0) {
 				break;
 			}
@@ -72,16 +69,11 @@ public class bplustree<T extends Comparable<T>, K> {
 		 * Return node if it is a LeafNode object,
 		 * otherwise repeat the search function a level down
 		 */
-		Node child = this.root.childPointers[i];
-		/*
-		 * Return node if it is a LeafNode object,
-		 * otherwise repeat the search function a level down
-		 */
 		Node child = this.root.childPointers.get(i);
-		if (child instanceof LeafNode) {
-			return (LeafNode) child;
+		if (child instanceof bplustree.LeafNode) {
+			return (bplustree.LeafNode) child;
 		} else {
-			return findLeafNode((InternalNode) child, key);
+			return findLeafNode((bplustree.InternalNode) child, key);
 		}
 	}
 
@@ -93,9 +85,6 @@ public class bplustree<T extends Comparable<T>, K> {
 
 		// Find next node on path to appropriate leaf node
 		for (i = 0; i < node.degree - 1; i++) {
-			if (key < keys[i]) {
-				break;
-			}
 			if (key.compareTo(keys.get(i)) < 0) {
 				break;
 			}
@@ -105,17 +94,11 @@ public class bplustree<T extends Comparable<T>, K> {
 		 * Return node if it is a LeafNode object,
 		 * otherwise repeat the search function a level down
 		 */
-		Node childNode = node.childPointers[i];
-		/*
-		 * Return node if it is a LeafNode object,
-		 * otherwise repeat the search function a level down
-		 */
 		Node childNode = node.childPointers.get(i);
-		if (childNode instanceof LeafNode) {
-			return (LeafNode) childNode;
+		if (childNode instanceof bplustree.LeafNode) {
+			return (bplustree.LeafNode) childNode;
 		} else {
-			return findLeafNode((InternalNode) node.childPointers[i], key);
-			return findLeafNode((InternalNode) node.childPointers.get(i), key);
+			return findLeafNode((bplustree.InternalNode) node.childPointers.get(i), key);
 		}
 	}
 
@@ -129,12 +112,10 @@ public class bplustree<T extends Comparable<T>, K> {
 	 */
 	private int findIndexOfPointer(ArrayList<Node> pointers, LeafNode node) {
 		int i;
-		for (i = 0; i < pointers.length; i++) {
-			if (pointers[i] == node) {
+		for (i = 0; i < pointers.size(); i++) {
+			if (pointers.get(i) == node) {
 				break;
 			}
-		for (i = 0; i < pointers.size(); i++) {
-			if (pointers.get(i) == node) { break; }
 		}
 		return i;
 	}
@@ -163,16 +144,12 @@ public class bplustree<T extends Comparable<T>, K> {
 
 		// Remedy deficient root node
 		if (this.root == in) {
-			for (int i = 0; i < in.childPointers.length; i++) {
-				if (in.childPointers[i] != null) {
-					if (in.childPointers[i] instanceof InternalNode) {
-						this.root = (InternalNode) in.childPointers[i];
 			for (int i = 0; i < in.childPointers.size(); i++) {
 				if (in.childPointers.get(i) != null) {
-					if (in.childPointers.get(i) instanceof InternalNode) {
-						this.root = (InternalNode) in.childPointers.get(i);
+					if (in.childPointers.get(i) instanceof bplustree.InternalNode) {
+						this.root = (bplustree.InternalNode) in.childPointers.get(i);
 						this.root.parent = null;
-					} else if (in.childPointers.get(i) instanceof LeafNode) {
+					} else if (in.childPointers.get(i) instanceof bplustree.LeafNode) {
 						this.root = null;
 					}
 				}
@@ -190,11 +167,11 @@ public class bplustree<T extends Comparable<T>, K> {
 			Node pointer = sibling.childPointers.get(0);
 
 			// Copy root key and pointer into parent
-			in.keys.set(in.degree - 1 , parent.keys.get(0));
-			in.childPointers.set(in.degree , pointer);
+			in.keys.set(in.degree - 1, parent.keys.get(0));
+			in.childPointers.set(in.degree, pointer);
 
 			// Copy borrowedKey into root
-			parent.keys.set(0 , borrowedKey);
+			parent.keys.set(0, borrowedKey);
 
 			// Delete key and pointer from sibling
 			sibling.removePointer(0);
@@ -211,9 +188,9 @@ public class bplustree<T extends Comparable<T>, K> {
 
 			// Copy rightmost key in parent to beginning of sibling's keys &
 			// delete key from parent
-			sibling.keys.set(sibling.degree - 1 , parent.keys.get(parent.degree - 2));
+			sibling.keys.set(sibling.degree - 1, parent.keys.get(parent.degree - 2));
 			sortRange(sibling.keys, sibling.degree);
-			parent.keys.set(parent.degree - 2 , null);
+			parent.keys.set(parent.degree - 2, null);
 
 			// Copy in's child pointer over to sibling's list of child pointers
 			for (int i = 0; i < in.childPointers.size(); i++) {
@@ -256,12 +233,6 @@ public class bplustree<T extends Comparable<T>, K> {
 	 * @param dps: list of dictionary pairs sorted by key within leaf node
 	 * @return index of the target value if found, else -1
 	 */
-	private int linearNullSearch(DictionaryPair[] dps) {
-		for (int i = 0; i < dps.length; i++) {
-			if (dps[i] == null) {
-				return i;
-			}
-
 	private int linearNullSearch(ArrayList dps) {
 		for (int i = 0; i < dps.size(); i++) {
 			if (dps.get(i) == null) {
@@ -271,23 +242,6 @@ public class bplustree<T extends Comparable<T>, K> {
 		return -1;
 	}
 
-	/**
-	 * This method performs a standard linear search on a list of Node[] pointers
-	 * and returns the index of the first null entry found. Otherwise, this
-	 * method returns a -1. This method is primarily used in place of
-	 * binarySearch() when the target t = null.
-	 * 
-	 * @param pointers: list of Node[] pointers
-	 * @return index of the target value if found, else -1
-	 */
-	private int linearNullSearch(Node[] pointers) {
-		for (int i = 0; i < pointers.length; i++) {
-			if (pointers[i] == null) {
-				return i;
-			}
-		}
-		return -1;
-	}
 	// /**
 	// * This method performs a standard linear search on a list of Node[] pointers
 	// * and returns the index of the first null entry found. Otherwise, this
@@ -384,11 +338,6 @@ public class bplustree<T extends Comparable<T>, K> {
 
 		ArrayList<DictionaryPair> dictionary = ln.dictionary;
 
-		/*
-		 * Initialize two dictionaries that each hold half of the original
-		 * dictionary values
-		 */
-		DictionaryPair[] halfDict = new DictionaryPair[this.m];
 		/*
 		 * Initialize two dictionaries that each hold half of the original
 		 * dictionary values
@@ -658,8 +607,6 @@ public class bplustree<T extends Comparable<T>, K> {
 	 * @param key:   an integer key to be used in the dictionary pair
 	 * @param value: a floating point number to be used in the dictionary pair
 	 */
-	public void insert(int key, String value) {
-
 	public void insert(T key, K value) {
 		if (isEmpty()) {
 
@@ -840,60 +787,6 @@ public class bplustree<T extends Comparable<T>, K> {
 	}
 
 	/**
-	 * this method is used to print the tree in a tree-like structure and showing
-	 * branches with "\", "/" and "|"
-	 * 
-	 */
-
-	// In your BPlusTree.java file
-
-	public void displayTree() {
-		java.util.Stack<Node> globalStack = new java.util.Stack<Node>();
-		globalStack.push(root);
-		int nBlanks = 32;
-		boolean isRowEmpty = false;
-		System.out.println("......................................................");
-		while (isRowEmpty == false) {
-			java.util.Stack<Node> localStack = new java.util.Stack<Node>();
-			isRowEmpty = true;
-
-			for (int j = 0; j < nBlanks; j++)
-				System.out.print(' ');
-
-			while (globalStack.isEmpty() == false) {
-				Node temp = globalStack.pop();
-				if (temp != null) {
-
-					if (temp instanceof LeafNode) {
-						System.out.print(((LeafNode) temp)); // print all keys in the node
-					} else {
-						System.out.print(((InternalNode) temp)); // print all keys in the node
-						// add all children to the stack
-
-						for (int i = 0; i < ((InternalNode) temp).degree; i++) {
-							localStack.push(((InternalNode) temp).childPointers[i]);
-							if (((InternalNode) temp).childPointers[i] != null)
-								isRowEmpty = false;
-						}
-					}
-					if (temp instanceof InternalNode)
-						isRowEmpty = false;
-				} else {
-					System.out.print("--");
-					localStack.push(null);
-				}
-				for (int j = 0; j < nBlanks * 2 - 2; j++)
-					System.out.print(' ');
-			}
-			System.out.println();
-			nBlanks /= 2;
-			while (localStack.isEmpty() == false)
-				globalStack.push(localStack.pop());
-		}
-		System.out.println("......................................................");
-	}
-
-	/**
 	 * This class represents a general node within the B+ tree and serves as a
 	 * superclass of InternalNode and LeafNode.
 	 */
@@ -943,12 +836,10 @@ public class bplustree<T extends Comparable<T>, K> {
 		 *         'pointer' can't be found
 		 */
 		private int findIndexOfPointer(Node pointer) {
-			for (int i = 0; i < childPointers.length; i++) {
-				if (childPointers[i] == pointer) {
+			for (int i = 0; i < childPointers.size(); i++) {
+				if (childPointers.get(i) == pointer) {
 					return i;
 				}
-			for (int i = 0; i < childPointers.size(); i++) {
-				if (childPointers.get(i) == pointer) { return i; }
 			}
 			return -1;
 		}
@@ -963,16 +854,14 @@ public class bplustree<T extends Comparable<T>, K> {
 		 * @param index:   the index at which the insert is to take place
 		 */
 		private void insertChildPointer(Node pointer, int index) {
-			for (int i = degree - 1; i >= index; i--) {
-				childPointers[i + 1] = childPointers[i];
 			int start = childPointers.size();
-			for (int i = start ; i <= degree ; i++) 
+			for (int i = start; i <= degree; i++)
 				childPointers.add(null);
-			for (int i = degree - 1; i >= index ;i--) {
-				childPointers.set(i + 1 , childPointers.get(i));
+			for (int i = degree - 1; i >= index; i--) {
+				childPointers.set(i + 1, childPointers.get(i));
 			}
-			if(childPointers.size() > index)
-				this.childPointers.set(index , pointer);
+			if (childPointers.size() > index)
+				this.childPointers.set(index, pointer);
 			else
 				this.childPointers.add(pointer);
 			this.degree++;
@@ -1034,11 +923,9 @@ public class bplustree<T extends Comparable<T>, K> {
 		 */
 		private void prependChildPointer(Node pointer) {
 			for (int i = degree - 1; i >= 0; i--) {
-				childPointers[i + 1] = childPointers[i];
-			for (int i = degree - 1; i >= 0 ;i--) {
-				childPointers.set(i + 1 , childPointers.get(i));
+				childPointers.set(i + 1, childPointers.get(i));
 			}
-			this.childPointers.set(0,pointer);
+			this.childPointers.set(0, pointer);
 			this.degree++;
 		}
 
@@ -1048,10 +935,6 @@ public class bplustree<T extends Comparable<T>, K> {
 		 * 
 		 * @param index: the location within keys to be set to null
 		 */
-		private void removeKey(int index) {
-			this.keys[index] = null;
-		}
-
 		private void removeKey(int index) {
 			this.keys.set(index, null);
 		}
@@ -1075,12 +958,10 @@ public class bplustree<T extends Comparable<T>, K> {
 		 * @param pointer: the Node pointer to be removed from childPointers
 		 */
 		private void removePointer(Node pointer) {
-			for (int i = 0; i < childPointers.length; i++) {
-				if (childPointers[i] == pointer) {
-					this.childPointers[i] = null;
-				}
 			for (int i = 0; i < childPointers.size(); i++) {
-				if (childPointers.get(i) == pointer) { this.childPointers.set(i , null); }
+				if (childPointers.get(i) == pointer) {
+					this.childPointers.set(i, null);
+				}
 			}
 			this.degree--;
 		}
@@ -1096,7 +977,6 @@ public class bplustree<T extends Comparable<T>, K> {
 			this.minDegree = (int) Math.ceil(m / 2.0);
 			this.degree = 0;
 			this.keys = keys;
-			this.childPointers = new Node[this.maxDegree + 1];
 			this.childPointers = new ArrayList<>(this.maxDegree + 1);
 		}
 
@@ -1113,20 +993,6 @@ public class bplustree<T extends Comparable<T>, K> {
 			this.degree = linearNullSearch(pointers);
 			this.keys = keys;
 			this.childPointers = pointers;
-		}
-
-		/*
-		 * This method is used to print the internal node in a readable format
-		 * 
-		 * @return a string representation of the internal node
-		 */
-		@Override
-		public String toString() {
-			String result = "";
-			for (int i = 0; i < degree; i++) {
-				result += keys[i] + " ";
-			}
-			return result;
 		}
 	}
 
@@ -1240,8 +1106,6 @@ public class bplustree<T extends Comparable<T>, K> {
 		 */
 		public LeafNode(int m, DictionaryPair dp) {
 			this.maxNumPairs = m - 1;
-			this.minNumPairs = (int) (Math.ceil(m / 2) - 1);
-			this.dictionary = new DictionaryPair[m];
 			this.minNumPairs = (int) (Math.ceil(m / 2.0) - 1);
 			this.dictionary = new ArrayList<>(m);
 			this.numPairs = 0;
@@ -1259,26 +1123,10 @@ public class bplustree<T extends Comparable<T>, K> {
 		 */
 		public LeafNode(int m, ArrayList<DictionaryPair> dps, InternalNode parent) {
 			this.maxNumPairs = m - 1;
-			this.minNumPairs = (int) (Math.ceil(m / 2) - 1);
 			this.minNumPairs = (int) (Math.ceil(m / 2.0) - 1);
 			this.dictionary = dps;
 			this.numPairs = linearNullSearch(dps);
 			this.parent = parent;
-		}
-
-		/*
-		 * This method is used to print the leaf node in a readable format
-		 * 
-		 * @return a string representation of the leaf node
-		 */
-
-		@Override
-		public String toString() {
-			String result = "";
-			for (int i = 0; i < numPairs; i++) {
-				result += dictionary[i].toString() + " ";
-			}
-			return result;
 		}
 	}
 
@@ -1311,23 +1159,6 @@ public class bplustree<T extends Comparable<T>, K> {
 		 */
 		@Override
 		public int compareTo(DictionaryPair o) {
-			if (key == o.key) {
-				return 0;
-			} else if (key > o.key) {
-				return 1;
-			} else {
-				return -1;
-			}
-		}
-
-		/**
-		 * This method is used to print the dictionary pair in a readable format
-		 * 
-		 * @return a string representation of the dictionary pair
-		 */
-		@Override
-		public String toString() {
-			return "(" + key + ", " + value + ")";
 			return this.key.compareTo(o.key);
 		}
 	}
@@ -1342,5 +1173,4 @@ public class bplustree<T extends Comparable<T>, K> {
 			list.set(i, sublist.get(i - startIndex));
 		}
 	}
-
 }

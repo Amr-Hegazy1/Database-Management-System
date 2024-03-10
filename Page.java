@@ -38,25 +38,54 @@ public class Page implements Serializable {
         vecTuples.add(index, tupleTuple);
     }
 
-    // Returns size of "vecTuples" Vector; Number of Tuples in Page
+    /**
+     * The getSize function returns number of tuples in the page.
+     * 
+     * @return number of tuples in the page.
+     */
     public int getSize() {
         return vecTuples.size();
     }
 
-    // Returns First Tuple in Page
+    /**
+     * The getFirstTuple function returns first tuple in the page.
+     * 
+     * @return First tuple in the page.
+     */
     public Tuple getFirstTuple() {
         return vecTuples.get(0);
     }
 
-    // Returns Last Tuple in Page
+    /**
+     * The getLastTuple function returns Last tuple in the page.
+     * 
+     * @return Last tuple in the page.
+     */
     public Tuple getLastTuple() {
         return vecTuples.get(vecTuples.size() - 1);
     }
 
-    // Removes Last Tuple in Page while Returning it
+    /**
+     * The removeLastTuple function returns Last tuple in the page, tyhen removes it
+     * from the page.
+     * 
+     * @return Last tuple in the page after removing it.
+     */
     public Tuple removeLastTuple() {
         Tuple tupleRemovedTuple = vecTuples.remove(vecTuples.size() - 1);
         return tupleRemovedTuple;
+    }
+
+    /**
+     * The getTuple function returns tuple in the page at index i.
+     * 
+     * @param i The `i` parameter in the `getTuple` method is an integer that is the
+     *          index of teh tuple that you want to retrieve from the `vecTuples`
+     * 
+     * @return Tuple at index 'i'.
+     */
+    public Tuple getTuple(int i) {
+        return vecTuples.get(i);
     }
 
     // // Returns the Tuples Vector (All Tuples in the Page)

@@ -34,6 +34,29 @@ public class Tuple implements Serializable {
     }
 
     /**
+     * The function equals determines whether two tuples are equal or not.
+     * 
+     * 
+     * @param obj The `obj` parameter in the `equals`
+     *            method represents the object to compare with the current Tuple
+     *            object.
+     * 
+     * @return The method `equals` is returning boolean value, whether the two
+     *         objects are equal or not.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Tuple other = (Tuple) obj;
+        return this.hmTuple.equals(other.hmTuple);
+    }
+
+    /**
      * The function `setColumnValue` sets a column value in a HashMap using the
      * column name as the key
      * and the column value as the value.
