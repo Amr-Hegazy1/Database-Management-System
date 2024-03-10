@@ -6,62 +6,82 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 
-public class Table implements Serializable{
+public class Table implements Serializable {
     private String strTableName;
 
     private Vector<String> vecPages;
 
-    public Table(String strTableName){
+    public Table(String strTableName) {
         this.strTableName = strTableName;
         this.vecPages = new Vector<String>();
     }
 
+    // Generates Auto Page Name and Adds it to the Table. (Returns Value in order to
+    // use it in serilization of the Page File) (Numbering Starts from 1)
+    public String addPage() {
+        int newPageNum = vecPages.size() + 1;
+        String newPage = strTableName + newPageNum;
+        vecPages.add(newPage);
+        return newPage;
+    }
+
+    // Returns Page Name Vectors
+    public Vector<String> getPageVector() {
+        return vecPages;
+    }
+
+    // Returns Number of Pages in Table
+    public int getNumofPages() {
+        return vecPages.size();
+    }
+
     /**
-     * The `serialize` method writes the current object to a file using Java serialization.
+     * The `serialize` method writes the current object to a file using Java
+     * serialization.
      * 
-     * @param strFileName The `strFileName` parameter in the `serialize` method is a `String` that
-     * represents the name of the file to which the object will be serialized. This parameter specifies
-     * the file path where the object will be written in serialized form.
+     * @param strFileName The `strFileName` parameter in the `serialize` method is a
+     *                    `String` that
+     *                    represents the name of the file to which the object will
+     *                    be serialized. This parameter specifies
+     *                    the file path where the object will be written in
+     *                    serialized form.
      */
-    public void serialize(String strFileName) throws IOException{
-        
+    public void serialize(String strFileName) throws IOException {
+
         // TODO: Exception Handling
 
-
-        FileOutputStream fos= new FileOutputStream(strFileName);
-        ObjectOutputStream oos=new ObjectOutputStream(fos);
+        FileOutputStream fos = new FileOutputStream(strFileName);
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(this);
-
 
         oos.close();
         fos.close();
-        
-        
+
     }
 
-
     /**
-     * The function `deserialize` reads a serialized `Table` object from a file and returns it.
+     * The function `deserialize` reads a serialized `Table` object from a file and
+     * returns it.
      * 
-     * @param strFileName The `strFileName` parameter in the `deserialize` method is a `String` that
-     * represents the file name of the file from which the `Table` object will be deserialized.
+     * @param strFileName The `strFileName` parameter in the `deserialize` method is
+     *                    a `String` that
+     *                    represents the file name of the file from which the
+     *                    `Table` object will be deserialized.
      * @return The `deserialize` method is returning an object of type `Table`.
      */
-    public static Table deserialize(String strFileName) throws IOException, ClassNotFoundException{
-        
+    public static Table deserialize(String strFileName) throws IOException, ClassNotFoundException {
+
         // TODO: Exception Handling
-        
-        FileInputStream fis=new FileInputStream(strFileName);
-        ObjectInputStream ois= new ObjectInputStream(fis);
+
+        FileInputStream fis = new FileInputStream(strFileName);
+        ObjectInputStream ois = new ObjectInputStream(fis);
         Table table = (Table) ois.readObject();
 
         ois.close();
         fis.close();
-        
+
         return table;
 
     }
-
-    
 
 }
