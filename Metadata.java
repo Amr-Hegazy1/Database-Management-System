@@ -159,6 +159,8 @@ public class Metadata {
         return htblMetadata.get(strTableName).get(strColumnName).get("IndexType");
     }
 
+   
+
     /**
      * The function `getTableNames` returns a list of table names from a metadata hash table.
      * 
@@ -242,15 +244,16 @@ public class Metadata {
      * @param strIndexType The `strIndexType` parameter in the `addIndex` method represents the type of
      * index that will be created for the specified column in the given table. This could be a B-tree
      * index, hash index, bitmap index, etc. The method uses this parameter to store the index type in
-     * the
+     * the metadata table
+     * @param strIndexName The strIndexName parameter represents the name of the index which we will add
      */
-    public void addIndex(String strTableName, String strColName, String strIndexType) throws IOException{
+    public void addIndex(String strTableName, String strColName, String strIndexType,String strIndexName) throws IOException{
         if(htblMetadata.containsKey(strTableName)){
-            htblMetadata.get(strTableName).get(strColName).put("IndexName", strColName + "Index");
+            htblMetadata.get(strTableName).get(strColName).put("IndexName", strIndexName);
             htblMetadata.get(strTableName).get(strColName).put("IndexType", strIndexType);
         }
         else{
-            throw new IOException("Table does not exist");
+            throw new IOException("Table does not exist");//should be index exists
         }
     }
 
@@ -314,6 +317,8 @@ public class Metadata {
 
     }
 
-    
 
-}
+    
+    }
+
+    

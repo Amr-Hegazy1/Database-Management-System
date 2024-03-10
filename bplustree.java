@@ -1,7 +1,15 @@
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.*;
 import java.util.*;
 
-public class bplustree<T extends Comparable<T> , K> {
+
+public class bplustree<T extends Comparable<T> , K> implements Serializable {
+
 	int m;
 	InternalNode root;
 	LeafNode firstLeaf;
@@ -1061,6 +1069,7 @@ public class bplustree<T extends Comparable<T> , K> {
 		public int compareTo(DictionaryPair o) {
 			return this.key.compareTo(o.key);
 		}
+
 	}
 
 	public static <K extends Comparable<? super K>> void sortRange(List<K> list, int endIndex) {
@@ -1073,4 +1082,53 @@ public class bplustree<T extends Comparable<T> , K> {
 			list.set(i, sublist.get(i - startIndex));
 		}
 	}
+
+	/**
+     * The `serialize` method writes the current object to a file using Java serialization.
+     * 
+     * @param strFileName The `strFileName` parameter in the `serialize` method is a `String` that
+     * represents the name of the file to which the object will be serialized. This parameter specifies
+     * the file path where the serialized object will be saved.
+     */
+    public void serialize(String strFileName) throws IOException{
+        
+        // TODO: Exception Handling
+
+
+        FileOutputStream fos= new FileOutputStream(strFileName);
+        ObjectOutputStream oos=new ObjectOutputStream(fos);
+        oos.writeObject(this);
+
+
+        oos.close();
+        fos.close();
+        
+        
+    }
+
+
+
+    /**
+     * The `deserialize` function reads a serialized `Page` object from a file and returns it.
+     * 
+     * @param strFileName The `strFileName` parameter in the `deserialize` method is a `String` that
+     * represents the file name of the file from which the `Page` object will be deserialized.
+     * @return The `deserialize` method is returning an object of type `Page` that has been
+     * deserialized from the file specified by the `strFileName` parameter.
+     */
+    public static bplustree deserialize(String strFileName) throws IOException, ClassNotFoundException{
+        
+        // TODO: Exception Handling
+        
+        FileInputStream fis=new FileInputStream(strFileName);
+        ObjectInputStream ois= new ObjectInputStream(fis);
+        bplustree bplusBtree = (bplustree) ois.readObject();
+
+        ois.close();
+        fis.close();
+       
+        return bplusBtree;
+
+    }
+
 }
