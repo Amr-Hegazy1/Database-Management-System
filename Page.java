@@ -95,7 +95,7 @@ public class Page implements Serializable{
 
             String strMidClusteringKeyValue = vecTuples.get(mid).getColumnValue(strClusteringKeyName).toString();
 
-            System.out.println(mid + " " + strMidClusteringKeyValue + " " + objClusteringKeyValue);
+            
 
             // convert the clustering key value to appropriate type for valid comparison
 			// for example, if the clustering key is of type integer, then convert the string value to integer
@@ -150,7 +150,7 @@ public class Page implements Serializable{
     public void deleteTupleWithIndex(int i) throws DBAppException{
         if(i >= vecTuples.size()) 
             throw new DBAppException("Attempting to access a wrong tuple index");
-            System.out.println(i);
+            
         vecTuples.remove(i);
     }
 
@@ -215,6 +215,8 @@ public class Page implements Serializable{
      * the file path where the serialized object will be saved.
      */
     public void serialize(String strFileName) throws IOException{
+
+        
         
         // TODO: Exception Handling
 
@@ -253,6 +255,24 @@ public class Page implements Serializable{
        
         return page;
 
+    }
+
+    /**
+     * The `deleteTuple` function removes a specified tuple from a vector of tuples.
+     * 
+     * @param tuple The `deleteTuple` method takes a `Tuple` object as a parameter. This `Tuple` object
+     * is used to identify and remove a specific tuple from the `vecTuples` collection.
+     */
+    public void deleteTuple(Tuple tuple) {
+        // TODO: make vecTuple.remove() work
+        
+        for(int i = 0; i < vecTuples.size(); i++){
+            if(vecTuples.get(i).equals(tuple)){
+                
+                vecTuples.remove(i);
+                return;
+            }
+        }
     }
 
 

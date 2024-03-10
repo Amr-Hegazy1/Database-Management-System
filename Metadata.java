@@ -129,8 +129,13 @@ public class Metadata {
      * the metadata for the specified table and column is not empty, and returns true if it is indexed,
      * and false if it is not indexed.
      */
-    public boolean isColumnIndexed(String strTableName, String strColumnName){
-        return !htblMetadata.get(strTableName).get(strColumnName).get("IndexName").equals("");
+    public boolean isColumnIndexed(String strTableName, String strColumnName) throws DBAppException{
+        if(!htblMetadata.containsKey(strTableName))
+            throw new DBAppException("Table does not exist");
+        if(!htblMetadata.get(strTableName).containsKey(strColumnName))
+            throw new DBAppException("Column does not exist");
+        
+        return !htblMetadata.get(strTableName).get(strColumnName).get("IndexName").equals("N/A");
     }
 
     /**
@@ -277,6 +282,7 @@ public class Metadata {
         }
         else{
             htblMetadata.put(strTableName, new Hashtable<>());
+        
             for (String strColumnName : htblColNameType.keySet()) {
                 htblMetadata.get(strTableName).put(strColumnName, new Hashtable<>());
                 htblMetadata.get(strTableName).get(strColumnName).put("Column Type", htblColNameType.get(strColumnName));
@@ -353,8 +359,9 @@ public class Metadata {
     public void save() throws IOException{
         try (FileOutputStream fileOutputStream = new FileOutputStream("metadata.csv")) {
             for (String strTableName : htblMetadata.keySet()) {
-                fileOutputStream.write((strTableName + ", ").getBytes());
+                
                 for (String strColumnName : htblMetadata.get(strTableName).keySet()) {
+                    fileOutputStream.write((strTableName + ", ").getBytes());
                     fileOutputStream.write((strColumnName + ", ").getBytes());
                     fileOutputStream.write((htblMetadata.get(strTableName).get(strColumnName).get("Column Type") + ", ").getBytes());
                     fileOutputStream.write((htblMetadata.get(strTableName).get(strColumnName).get("ClusteringKey") + ", ").getBytes());

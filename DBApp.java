@@ -1,13 +1,13 @@
 
 /** * @author Wael Abouelsaadat */ 
 
-import java.util.Iterator;
-import java.util.Properties;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Hashtable;
+import java.util.*;
+
 
 
 
@@ -21,7 +21,26 @@ public class DBApp {
 	public DBApp( ) throws FileNotFoundException, IOException, ClassNotFoundException{
 		metadata = new Metadata();
 
+		
+		
+		
+		
+
         // TESTING PURPOSES ONLY
+
+		Hashtable htblColNameType = new Hashtable( );
+
+		htblColNameType.put("ID", "java.lang.Integer");
+		htblColNameType.put("Name", "java.lang.String");
+		htblColNameType.put("Age", "java.lang.Integer");
+		// metadata.addTable("CityShop", "ID", htblColNameType);
+		// metadata.addIndex("CityShop", "Name", "B+Tree");
+
+		
+
+		metadata.save();
+
+		
         table = new Table("City Shop");
         table.addPage("CityShop_0");
         table.addPage("CityShop_1");
@@ -31,11 +50,23 @@ public class DBApp {
         
 		table.serialize("CityShop.class");
 
-		table.printAllPages();
+		// table.printAllPages();
 
 		htblIndices = new Hashtable<>();
 
-		htblIndices.put("CityShop", new bplustree(3));
+		bplustree<String, Pair<Tuple, String>> tree = new bplustree<String, Pair<Tuple, String>>(3);
+
+		Tuple tuple = new Tuple();
+
+		tuple.setColumnValue("ID", 0);
+		tuple.setColumnValue("Name", "Ahmed00");
+		tuple.setColumnValue("Age", 20);
+
+		Pair pairPair = new Pair(tuple, "CityShop_0");
+
+		tree.insert("Ahmed00", pairPair);
+
+		htblIndices.put("NameIndex",tree);
 
 
 
@@ -113,6 +144,25 @@ public class DBApp {
 		throw new DBAppException("not implemented yet");
 	}
 
+	/**
+	 * The function `getPageByClusteringKey` searches for a specific page in a table based on a given
+	 * clustering key value.
+	 * 
+	 * @param strTableName It seems like you were about to provide some information about the parameters,
+	 * but the message got cut off. Could you please provide more details about the parameters
+	 * `strTableName`, `strClusteringKey`, and `objClusteringKeyValue` so that I can assist you further
+	 * with the `getPageByCl
+	 * @param strClusteringKey It seems like you were about to provide some information about the
+	 * parameter `strClusteringKey` but the message got cut off. How can I assist you further with this
+	 * parameter?
+	 * @param objClusteringKeyValue It seems like the method `getPageByClusteringKey` is trying to find a
+	 * specific page in a table based on a clustering key value. The method uses binary search to locate
+	 * the page efficiently.
+	 * @return The method `getPageByClusteringKey` is returning a `Page` object. If the clustering key
+	 * value is found within the specified range in the page, then that page is returned. If the key is
+	 * not found within the range, the method will continue searching through the pages until it either
+	 * finds the key or exhausts all pages, in which case it will return `null`.
+	 */
 	private Page getPageByClusteringKey(String strTableName, String strClusteringKey, Object objClusteringKeyValue) throws IOException, ClassNotFoundException, DBAppException{
 
         int intTableSize = table.getNumberOfPages();
@@ -125,7 +175,7 @@ public class DBApp {
 
             String strMiddlePage = table.getPageAtIndex(intMiddlePageIndex);
 
-            System.out.println(intMiddlePageIndex);
+            
 
             Page pageMiddlePage = Page.deserialize(strMiddlePage + ".class");
 
@@ -146,7 +196,7 @@ public class DBApp {
 				objClusteringKeyValue = (Integer) objClusteringKeyValue;
 				Integer topTupleValue = (Integer) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
 				Integer bottomTupleValue = (Integer) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
-				System.out.println("Integer");
+				
 
 				// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
 				if((Integer) objClusteringKeyValue >= topTupleValue && (Integer) objClusteringKeyValue <= bottomTupleValue){
@@ -162,7 +212,7 @@ public class DBApp {
 				objClusteringKeyValue = (Double) objClusteringKeyValue;
 				Double topTupleValue = (Double) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
 				Double bottomTupleValue = (Double) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
-				System.out.println("Double");
+				
 
 				// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
 
@@ -180,7 +230,7 @@ public class DBApp {
 				objClusteringKeyValue = (String) objClusteringKeyValue;
 				String topTupleValue = (String) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
 				String bottomTupleValue = (String) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
-				System.out.println("String");
+				
 				
 				// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
 				if(((String) objClusteringKeyValue).compareTo(topTupleValue) >= 0 && ((String) objClusteringKeyValue).compareTo(bottomTupleValue) <= 0){
@@ -207,6 +257,19 @@ public class DBApp {
 	}
 
 
+	/**
+	 * This Java function deletes a tuple with a specified clustering key from a table and handles page
+	 * deletion if necessary.
+	 * 
+	 * @param strTableName The `strTableName` parameter is a `String` representing the name of the table
+	 * from which you want to delete a record.
+	 * @param strClusteringKey The `strClusteringKey` parameter in the `deleteWithClusteringKey` method
+	 * refers to the name of the clustering key column in the table from which you want to delete a
+	 * record.
+	 * @param htblColNameValue The `htblColNameValue` parameter is a Hashtable that contains the column
+	 * names as keys and their corresponding values as values. This Hashtable represents the values of the
+	 * columns for the record that you want to delete.
+	 */
 	private void deleteWithClusteringKey(String strTableName, String strClusteringKey, Hashtable<String,Object> htblColNameValue) throws IOException,ClassNotFoundException, DBAppException{
 		
         Object objClusteringKeyValue = htblColNameValue.get(strClusteringKey);
@@ -221,17 +284,96 @@ public class DBApp {
 		}
 	}
 
-	private void deleteNonClusterinKeyWithIndex(String strTableName, String strIndexedColumn, Hashtable<String,Object> htblColNameValue){
+	/**
+	 * This Java function retrieves tuples from an index based on a specified table name, indexed column,
+	 * and column values.
+	 * 
+	 * @param strTableName The `strTableName` parameter represents the name of the table from which you
+	 * want to retrieve tuples based on the indexed column value.
+	 * @param strIndexedColumn The `strIndexedColumn` parameter in the `getTuplesFromIndex` method refers
+	 * to the name of the column that is indexed in the B+ tree for a specific table. This column is used
+	 * to efficiently retrieve tuples based on their values in that column.
+	 * @param htblColNameValue The `htblColNameValue` parameter is a Hashtable that contains the column
+	 * names as keys and their corresponding values as values. In the context of your method
+	 * `getTuplesFromIndex`, it is used to specify the column name and value that you want to search for
+	 * in the index.
+	 * @return This method returns a Hashtable containing tuples and their corresponding page names that
+	 * match the given indexed column value in the specified table.
+	 */
+	private Hashtable<Tuple, String> getTuplesFromIndex(String strTableName, String strIndexedColumn, Hashtable<String,Object> htblColNameValue) throws IOException, ClassNotFoundException, DBAppException{
 
-		bplustree bplustreeIndex = htblIndices.get(strTableName);
-		Integer intIndexedColumnValue = (Integer) htblColNameValue.get(strIndexedColumn);
+		String strIndexName = metadata.getIndexName(strTableName, strIndexedColumn);
+		System.out.println(strIndexName);
 
-		bplustreeIndex.search(intIndexedColumnValue);
+		bplustree bplustreeIndex = htblIndices.get(strIndexName);
+		
+		String strIndexedColumnType = metadata.getColumnType(strTableName, strIndexedColumn);
+
+	
+		
+		
+		Comparable cmpIndexedColumnValue = (Comparable) htblColNameValue.get(strIndexedColumn);
+			
+
+		
+		Hashtable<Tuple, String> htblTuples = new Hashtable<>(); // Tuple, page name
+
+		ArrayList<Pair> arrayTuples = bplustreeIndex.search(cmpIndexedColumnValue, cmpIndexedColumnValue); // first index is the page name, second index is the tuple object
+
+		for (Pair pair : arrayTuples){
+			String strPageName = (String) pair.getValue();
+			Tuple tupleTuple = (Tuple) pair.getKey();
+			
+			htblTuples.put(tupleTuple, strPageName);
+			
+		}
+		
+
+		return htblTuples;
 
 		
 
 	}
 
+	/**
+	 * The function checks if a tuple satisfies a set of conditions specified in a Hashtable by comparing
+	 * column values.
+	 * 
+	 * @param tupleTuple The `tupleTuple` parameter is an object of type `Tuple`, which likely represents
+	 * a tuple or a row in a database table. It contains column values that can be accessed using the
+	 * `getColumnValue` method.
+	 * @param htblColNameValue The `htblColNameValue` parameter is a Hashtable that stores column names as
+	 * keys and their corresponding values as values.
+	 * @return The method `tupleSatisfiesAndedConditions` returns a boolean value - `true` if the tuple
+	 * satisfies all the conditions specified in the `htblColNameValue` hashtable, and `false` otherwise.
+	 */
+	
+	private boolean tupleSatisfiesAndedConditions(Tuple tupleTuple, Hashtable<String, Object> htblColNameValue) throws DBAppException {
+
+		for(String strCol : htblColNameValue.keySet()){
+			String strTupleColumnValue = tupleTuple.getColumnValue(strCol).toString();
+			String strHtbleColumnValue = htblColNameValue.get(strCol).toString();
+			if(!strTupleColumnValue.equals(strHtbleColumnValue)) return false;
+
+		}
+
+		return true;
+		
+	}
+
+
+
+	/**
+	 * The function `deleteNonClusterinKeyWithoutIndex` deletes tuples from a table without an index based
+	 * on the provided column values using linear search.
+	 * 
+	 * @param strTableName The `strTableName` parameter in the `deleteNonClusterinKeyWithoutIndex` method
+	 * represents the name of the table from which you want to delete tuples.
+	 * @param htblColNameValue The `htblColNameValue` parameter is a Hashtable that contains the column
+	 * names as keys and the corresponding values to be matched as values. The method iterates through all
+	 * pages in a table, then iterates through all tuples in each page. For each tuple, it checks if the
+	 * values in
+	 */
 	private void deleteNonClusterinKeyWithoutIndex(String strTableName, Hashtable<String,Object> htblColNameValue) throws IOException, ClassNotFoundException, DBAppException{
 
 		// Linear search
@@ -276,14 +418,53 @@ public class DBApp {
 		
 	}
 
+	/**
+	 * The `deleteWithoutClusteringKey` function in Java deletes tuples from a table without a clustering
+	 * key, handling indexed and non-indexed columns.
+	 * 
+	 * @param strTableName The `strTableName` parameter in the `deleteWithoutClusteringKey` method refers
+	 * to the name of the table from which you want to delete records. This method is used to delete
+	 * records from a table without a clustering key.
+	 * @param htblColNameValue The `htblColNameValue` parameter is a Hashtable that contains the column
+	 * names and their corresponding values that you want to use as criteria for deleting records from a
+	 * table. Each entry in the Hashtable represents a column name-value pair that specifies the condition
+	 * for deleting records.
+	 */
 	private void deleteWithoutClusteringKey(String strTableName, Hashtable<String,Object> htblColNameValue) throws IOException, ClassNotFoundException, DBAppException{
 		
-
+		Hashtable<Tuple, String> htblTuples = null;
 		for(String col : htblColNameValue.keySet()){
 			if(metadata.isColumnIndexed(strTableName, col)){
-				deleteNonClusterinKeyWithIndex(strTableName, col, htblColNameValue);
-				return;
+				System.out.println("Indexed column: " + col + " found.");
+				if(htblTuples == null){
+					htblTuples = getTuplesFromIndex(strTableName, col, htblColNameValue);
+				}else{
+					// get the intersection hashmap entries
+					
+					htblTuples = getHashMapIntersection(htblTuples, getTuplesFromIndex(strTableName, col, htblColNameValue));
+					
+				}
+				
 			}
+		}
+
+		if (htblTuples != null){
+			// TODO: delete from index
+			for(Tuple tuple : htblTuples.keySet()){
+				String strPageName = htblTuples.get(tuple);
+				
+				Page pagePage = Page.deserialize(strPageName + ".class");
+				
+				
+				pagePage.deleteTuple(tuple);
+				pagePage.serialize(pagePage.getPageName());
+				if(pagePage.getSize() == 0){
+					pagePage.deletePage();
+					table.removePage(pagePage.getPageName());
+					table.serialize(table.getTableName());
+				}
+			}
+			return;
 		}
 
 		deleteNonClusterinKeyWithoutIndex(strTableName, htblColNameValue);
@@ -291,6 +472,34 @@ public class DBApp {
 	}
 
 	
+
+
+	
+	/**
+	 * The function `getHashMapIntersection` takes two Hashtables of type Tuple and String, and returns a
+	 * new Hashtable containing the intersection of key-value pairs present in both input Hashtables.
+	 * 
+	 * @param htbl1 The `htbl1` parameter is a Hashtable that maps Tuple objects to String values. It
+	 * contains key-value pairs where the key is a Tuple object and the value is a String.
+	 * @param htbl2 The `htbl2` parameter in the `getHashMapIntersection` method is a Hashtable that
+	 * contains key-value pairs where the key is of type `Tuple` and the value is of type `String`. This
+	 * method compares the keys of `htbl1` and `htbl2` and creates
+	 * @return The method `getHashMapIntersection` returns a Hashtable containing the intersection of keys
+	 * between the two input Hashtables `htbl1` and `htbl2`.
+	 */
+	private Hashtable<Tuple, String> getHashMapIntersection(Hashtable<Tuple, String> htbl1, Hashtable<Tuple, String> htbl2) {
+		Hashtable<Tuple, String> htblIntersection = new Hashtable<>();
+
+		for(Tuple tuple : htbl1.keySet()){
+			if(htbl2.containsKey(tuple)){
+				htblIntersection.put(tuple, htbl2.get(tuple));
+			}
+		}
+
+		return htblIntersection;
+	}
+	
+
 
 
 	// following method could be used to delete one or more rows.
@@ -306,6 +515,7 @@ public class DBApp {
 		if(htblColNameValue.containsKey(strClusteringKey)){
 			deleteWithClusteringKey(strTableName, strClusteringKey, htblColNameValue);
 		}else{
+			System.out.println("here");
 			deleteWithoutClusteringKey(strTableName, htblColNameValue);
 		}
 		
@@ -336,17 +546,17 @@ public class DBApp {
 
 			// tree.printTree(tree.root);
 
-			tree.displayTree();
+			// tree.displayTree();
 
-
+			
 
 			
 
 			// String strTableName = "Student";
 			Hashtable htblColNameValue = new Hashtable( );
-			htblColNameValue.put("ID", new Integer( 3 ));
-			htblColNameValue.put("name", new String("Ahmed Noor" ) );
-			htblColNameValue.put("gpa", new Double( 0.95 ) );
+			// htblColNameValue.put("ID", new Integer( 3 ));
+			htblColNameValue.put("Name", new String("Ahmed00" ) );
+			htblColNameValue.put("Age", new Double( 20 ) );
 			DBApp	dbApp = new DBApp( );
 			dbApp.deleteFromTable("CityShop", htblColNameValue);
 			
