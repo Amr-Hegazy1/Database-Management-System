@@ -112,7 +112,7 @@ public class Page implements Serializable{
         return page;
 
     }
-
+    //get all tuples in the page
     public Vector<Tuple> getTuples(){
         return this.vecTuples;
     }

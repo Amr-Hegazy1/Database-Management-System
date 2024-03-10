@@ -159,6 +159,8 @@ public class Metadata {
         return htblMetadata.get(strTableName).get(strColumnName).get("IndexType");
     }
 
+   
+
     /**
      * The function `getTableNames` returns a list of table names from a metadata hash table.
      * 
@@ -242,11 +244,12 @@ public class Metadata {
      * @param strIndexType The `strIndexType` parameter in the `addIndex` method represents the type of
      * index that will be created for the specified column in the given table. This could be a B-tree
      * index, hash index, bitmap index, etc. The method uses this parameter to store the index type in
-     * the
+     * the metadata table
+     * @param strIndexName The strIndexName parameter represents the name of the index which we will add
      */
-    public void addIndex(String strTableName, String strColName, String strIndexType) throws IOException{
+    public void addIndex(String strTableName, String strColName, String strIndexType,String strIndexName) throws IOException{
         if(htblMetadata.containsKey(strTableName)){
-            htblMetadata.get(strTableName).get(strColName).put("IndexName", strColName + "Index");
+            htblMetadata.get(strTableName).get(strColName).put("IndexName", strIndexName);
             htblMetadata.get(strTableName).get(strColName).put("IndexType", strIndexType);
         }
         else{
@@ -315,45 +318,7 @@ public class Metadata {
     }
 
 
-    public void createIndex(String strTableName,String strColName,String strIndexName) throws DBAppException{
-        if(!htblMetadata.containsKey(strTableName)){
-            throw new DBAppException("This table does not exist");
-
-        }
-        else if(!htblMetadata.get(strTableName).containsKey(strColName)){
-             throw new DBAppException("This column does not exist");
-        }
-        else if ((htblMetadata.get(strTableName).get(strColumnName).get("IndexName")).equals(strIndexName) && (htblMetadata.get(strTableName).containsKey())){
-            throw new DBAppException("This index already exists");
-
-        }
-        else{
-        
-            //addIndex(strTableName,strColName,);
-            htblMetadata.get(strTableName).get(strColumnName).put("IndexName", strIndexName);
-            htblMetadata.get(strTableName).get(strColumnName).put("IndexType", "B+tree");
-            BTree <Integer> btree = new BTree<>(100);
-            Table table= deserialize(strTableName);
-            Vector<String> vecPages = table.getPages();
-            
-
-           
-           // Loop through the column values
-            for (String p : vecPages) {
-                Page page = deserialize(p);
-                Vector<Tuple> vecTuples = page.getTuples();
-                for (Tuple tuple : vecTuples) {
-                    int key = tuple.getColumnValue(strColumnName);
-                    btree.insert(key,tuple);
-                    }
-                }
-           btree.serialize("Indecies");
-
-            //TODO :keep track of trees using their names as keys in a hashtable
-
-
-        }
-            }
+    
     }
 
     
