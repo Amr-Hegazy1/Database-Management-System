@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Hashtable;
 
 
@@ -104,10 +105,30 @@ public class DBApp {
 		
 	}
 
+	//TODO handle law empty arr
 
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, 
 									String[]  strarrOperators) throws DBAppException{
-										
+		HashSet<String> hmkilobatata = new HashSet<>();
+		hmkilobatata.add("=");hmkilobatata.add("!=");hmkilobatata.add(">=");hmkilobatata.add("<=");hmkilobatata.add(">");;hmkilobatata.add("<");
+		for(int i=0;i<arrSQLTerms.length;i++){
+		if(metadata.checkTableName(arrSQLTerms[i]._strTableName)){
+			if(metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)){
+				String strType= metadata.getColumnType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName);
+				if( hmkilobatata.contains(arrSQLTerms[i]._strOperator)){	
+					if(!strType.equals(arrSQLTerms[i]._objValue)){
+						throw new DBAppException("Datatype doesn't match");
+					}
+				}
+				else 
+				throw new DBAppException("This Operator isn't supported");
+			}
+			else
+			throw new DBAppException("Column doesn't exist");
+		}
+		else
+		throw new DBAppException("Table doesn't exist");
+	}
 		return null;
 	}
 
@@ -127,6 +148,8 @@ public class DBApp {
 
 			tree.displayTree();
 
+		
+			 
 			
 
 			// String strTableName = "Student";
