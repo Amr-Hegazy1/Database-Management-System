@@ -1,9 +1,8 @@
 
 /** * @author Wael Abouelsaadat */ 
 
-import java.util.Iterator;
-import java.util.Properties;
-import java.util.Vector;
+import java.util.*;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -54,12 +53,24 @@ public class DBApp  {
 	}
 
 
-	// following method creates one table only
-	// strClusteringKeyColumn is the name of the column that will be the primary
-	// key and the clustering column as well. The data type of that column will
-	// be passed in htblColNameType
-	// htblColNameValue will have the column name as key and the data 
-	// type as value
+	/**
+     * The `createTable` function creates one tabel only.
+	 * 
+	 * @param strTableName The `strTableName` is the name of the table needed be created.
+	 * 
+	 * @param strClusteringKeyColumn The `strClusteringKeyColumn` is the name of the column 
+	 * that will be the primary key and the clustering column as well.
+	 * The data type of that column will be passed in htblColNameType.
+     * 
+     * @param htblColNameValue The `htblColNameValue` will have the column name as key and
+	 * the data type as value.
+	 * 
+	 * @throws DBAppException The `DBAppException` will be thrown if there exists a table with
+	 * the same name.
+	 * 
+	 * @throws IOExecption The `IOExecption` will be thrown if the function fails to create the
+	 * folder or fails to serialize the table.
+     */
 	public void createTable(String strTableName, 
 							String strClusteringKeyColumn,  
 							Hashtable<String,String> htblColNameType) throws DBAppException , IOException{
@@ -202,6 +213,7 @@ public class DBApp  {
 
 	public static void main( String[] args ){
 	
+
 	try{
 
 			bplustree tree = new bplustree(3);
@@ -281,6 +293,7 @@ public class DBApp  {
 			// Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
 		}
 		catch(Exception exp){
+
 			exp.printStackTrace( );
 		}
 	}
