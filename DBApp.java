@@ -239,7 +239,9 @@ public class DBApp {
 	for(int i=0;i<strarrOperators.length;i++){
 		
 	}
-		
+	int left=0;
+	int right=0;
+	
 	}
 
 }
