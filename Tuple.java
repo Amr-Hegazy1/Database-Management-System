@@ -4,6 +4,7 @@ import java.util.*;
 public class Tuple implements Serializable {
 
     private HashMap<String, Object> hmTuple;
+    private String strpageName;
 
     // The `public Tuple()` constructor in the `Tuple` class is initializing a new
     // instance of the
@@ -14,6 +15,7 @@ public class Tuple implements Serializable {
     // the column value.
     public Tuple() {
         hmTuple = new HashMap<String, Object>();
+        strpageName = "";
     }
 
     /**
@@ -31,6 +33,14 @@ public class Tuple implements Serializable {
     public Object getColumnValue(String strColumnName) {
         // TODO: What if column does not exist?
         return hmTuple.get(strColumnName);
+    }
+
+    public void setPageName(String strpageName) {
+        this.strpageName = strpageName;
+    }
+
+    public String getPageName() {
+        return strpageName;
     }
 
     /**

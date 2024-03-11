@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
-import javafx.util.Pair;
+// import javafx.util.Pair;
 
 public class DBApp {
 
@@ -126,6 +126,9 @@ public class DBApp {
 							throw new DBAppException("Clustering Key Cannot Be Null");
 						}
 						strClustKeyName = entry.getKey();
+						tupleNewTuple.setColumnValue(entry.getKey(), entry.getValue());
+					} else if (entry.getValue() == null) {// other columns cannot be null check
+						throw new DBAppException("Value Cannot Be Null, Please Enter Appropriate Value");
 					}
 					// chcecking which columns are indexed
 					// storing indexed column names in a hashset to adjust their indicies later
@@ -225,8 +228,10 @@ public class DBApp {
 
 						if (!tupleLastTuple.equals(tupleNewTuple)) {// ensure which page name my tuple was inserted into
 							strFinalPageName = strPageName;
+							tupleNewTuple.setPageName(strFinalPageName);
 						} else {
 							strFinalPageName = strNewPageName;
+							tupleNewTuple.setPageName(strFinalPageName);
 						}
 						newPage.serialize("tables/" + strTableName + "/" + strNewPageName + ".class");
 					}
@@ -236,9 +241,10 @@ public class DBApp {
 
 		} else {// if table has no pages to begin with
 			Page newPage = new Page();
-			newPage.addTuple(0, tupleNewTuple);
 			String strPageName = tblTable.addPage(); // addPage() adds page to the table Vector and assigns it an
 														// automated Page Name & returns that name
+			tupleNewTuple.setPageName(strPageName);
+			newPage.addTuple(0, tupleNewTuple);
 			newPage.serialize("tables/" + strTableName + "/" + strPageName + ".class");
 		}
 
@@ -246,12 +252,13 @@ public class DBApp {
 		if (hsIndexedColumns.size() > 0) {
 			for (String strColName : hsIndexedColumns) {
 				String strIndexName = metadata.getIndexName(strTableName, strColName); // getting index name
-				bplustree bptTree = (htbltrees.get(strTableName)).get(strIndexName); // getting the tree object
-				Pair<Tuple, String> pairTreeInsert = new Pair<Tuple, String>(tupleNewTuple, strFinalPageName);
-				bptTree.insert(tupleNewTuple.getColumnValue(strColName), pairTreeInsert); // inserting col value(key)
-																							// and tuple,pagename
-																							// pair(value) in the bTree
-
+				bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class"); // getting
+																														// the
+																														// tree
+																														// object
+				Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
+																								// Comparable
+				bptTree.insert(colValue, tupleNewTuple); // inserting col value(key) and tuple object(value) into bTree
 			}
 		}
 
@@ -291,23 +298,23 @@ public class DBApp {
 	public static void main(String[] args) {
 
 		try {
-			// Tuple t1 = new Tuple();
-			// t1.setColumnValue("id", "1"); // 0
+			Tuple t1 = new Tuple();
+			t1.setColumnValue("id", "1"); // 0
 
-			// Tuple t2 = new Tuple();
-			// t2.setColumnValue("id", "2"); // 1
+			Tuple t2 = new Tuple();
+			t2.setColumnValue("id", "3"); // 1
 
-			// Tuple t3 = new Tuple();
-			// t3.setColumnValue("id", "3"); // 2
+			Tuple t3 = new Tuple();
+			t3.setColumnValue("id", "4"); // 2
 
-			// Page p = new Page();
-			// p.addTuple(0, t1);
-			// p.addTuple(1, t2);
-			// p.addTuple(2, t3);
+			Page p = new Page();
+			p.addTuple(0, t1);
+			p.addTuple(1, t2);
+			p.addTuple(2, t3);
 
-			// int i = p.searchTuplesByClusteringKey("id", 2);
+			int i = p.searchTuplesByClusteringKey("id", 6);
 
-			// System.out.println(i);
+			System.out.println(i);
 			// Tuple t1 = new Tuple();
 			// Tuple t2 = new Tuple();
 			// t1.setColumnValue("name", "Ahmed");
@@ -336,11 +343,11 @@ public class DBApp {
 			// page.serialize("serializedPage.class"); // try to make it .class
 
 			// Later, you can deserialize the Page object from the file
-			Page deserializedPage = Page
-					.deserialize("serializedPage.class");
+			// Page deserializedPage = Page
+			// .deserialize("serializedPage.class");
 
-			// Now you can access the tuples
-			System.out.print(deserializedPage);
+			// // Now you can access the tuples
+			// System.out.print(deserializedPage);
 			// bplustree tree = new bplustree(3);
 
 			// tree.insert(1, "amr");

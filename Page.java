@@ -200,7 +200,8 @@ public class Page implements Serializable {
 
         }
 
-        throw new DBAppException("Column Value doesn't exist");
+        // throw new DBAppException("Column Value doesn't exist");
+        return left;
 
     }
 
