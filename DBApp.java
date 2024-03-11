@@ -3,6 +3,7 @@
 
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.Stack;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -15,11 +16,12 @@ import java.util.Hashtable;
 public class DBApp {
 	
 	private Metadata metadata;
-
+	private bplustree bpt= new bplustree(9);
 	public DBApp( ) throws FileNotFoundException, IOException{
 		metadata = new Metadata();
+		
 	}
-
+   
 	 
 
 	// this does whatever initialization you would like 
@@ -108,7 +110,10 @@ public class DBApp {
 	//TODO handle law empty arr
 
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, 
-									String[]  strarrOperators) throws DBAppException{
+									String[]  strarrOperators) throws DBAppException, ClassNotFoundException, IOException{
+		if(arrSQLTerms.length!= strarrOperators.length+1){
+			throw new DBAppException("something wrong in the input");
+		}
 		HashSet<String> hmkilobatata = new HashSet<>();
 		hmkilobatata.add("=");hmkilobatata.add("!=");hmkilobatata.add(">=");hmkilobatata.add("<=");hmkilobatata.add(">");;hmkilobatata.add("<");
 		for(int i=0;i<arrSQLTerms.length;i++){
@@ -129,8 +134,115 @@ public class DBApp {
 		else
 		throw new DBAppException("Table doesn't exist");
 	}
-		return null;
+	    // el hashes at end of if statements are stand by
+		Stack<SQLTerm> st = new Stack<>();
+		Stack<String> st2 = new Stack<>();
+		st.push(arrSQLTerms[0]);
+		if(strarrOperators.length==0){
+			if(arrSQLTerms[0]._strOperator.equals("=")){
+				if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+					
+					String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+					Page deserializedpage = Page.deserialize(strpage);
+					HashSet<Tuple> hstup=deserializedpage.eqsearch(strpage, arrSQLTerms[0]._objValue);
+					
+				}
+				else{
+					
+					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+					if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+						HashSet<Tuple> hstup= table.eqsearch(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+					}
+					else{
+						HashSet<Tuple> hstup= table.cleqsearch(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+					}
+				}
+				
+			}
+			else if(arrSQLTerms[0]._strOperator.equals(">")){
+				if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+					
+					String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+					HashSet<Tuple> hstup=table.greaterthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+					
+					
+				}
+				else{
+			
+					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+					if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+						HashSet<Tuple> hstup= table.greaterthannc(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+					}
+					else{
+						HashSet<Tuple> hstup= table.greaterthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+					}
+				}	
+			}else if(arrSQLTerms[0]._strOperator.equals(">=")){
+			if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+				
+				String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+				
+				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				HashSet<Tuple> hstup=table.greaterthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				
+			}
+			else{
+				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+					HashSet<Tuple> hstup= table.greaterthaneqnc(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+				}
+				else{
+					HashSet<Tuple> hstup= table.greaterthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			}	
+		}else if(arrSQLTerms[0]._strOperator.equals("<")){
+			if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+				
+				String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+				
+				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				HashSet<Tuple> hstup=table.lesserthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			else{
+				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+					HashSet<Tuple> hstup= table.lesserthannc(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+				}
+				else{
+					HashSet<Tuple> hstup= table.lesserthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			}	
+		}else if(arrSQLTerms[0]._strOperator.equals("<=")){
+			if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+				
+				String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+				
+				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				HashSet<Tuple> hstup=table.lesserthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			else{
+				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+					HashSet<Tuple> hstup= table.lesserthannceq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+				}
+				else{
+					HashSet<Tuple> hstup= table.lesserthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			}	
+		} else{   
+			Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+			HashSet<Tuple> hstup= table.noteqsearch(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+		}
+
+	// i have 2 ideas hena hab2a discuss ma3ako in meeting incase i didnt finish on my own
+	for(int i=0;i<strarrOperators.length;i++){
+		
 	}
+		
+	}
+
+}
 
 
 	public static void main( String[] args ){
