@@ -1,3 +1,5 @@
+
+
 import java.util.*;
 
 
@@ -55,15 +57,21 @@ public class Tuple {
     public String toString(){
 
         // TODO: remove last comma
+         boolean flag = true;
 
         String res = "";
 
         for(String column : hmTuple.keySet()){
-
+            if(!flag)
             res += hmTuple.get(column) + ",";
+            else 
+            {
+            flag=false;
+            res += hmTuple.get(column);
+            }
 
         }
-
+        res+=".";
         return res;
 
     }

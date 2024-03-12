@@ -17,6 +17,15 @@ public class Table implements Serializable{
     }
 
     /**
+     * This Java function returns the number of pages in a vector.
+     * 
+     * @return The method `getNumberOfPages` returns the number of elements in the `vecPages` vector.
+     */
+    public int getNumberOfPages(){
+        return vecPages.size();
+    }
+
+    /**
      * The `serialize` method writes the current object to a file using Java serialization.
      * 
      * @param strFileName The `strFileName` parameter in the `serialize` method is a `String` that
@@ -27,7 +36,7 @@ public class Table implements Serializable{
         
         // TODO: Exception Handling
 
-
+        strTableName = strFileName;
         FileOutputStream fos= new FileOutputStream(strFileName);
         ObjectOutputStream oos=new ObjectOutputStream(fos);
         oos.writeObject(this);
@@ -61,7 +70,69 @@ public class Table implements Serializable{
         return table;
 
     }
+    //get all the pages used to store the table's data
+    public Vector<String> getPages (){
+        return this.vecPages;
+    }
 
+    /**
+     * The `addPage` function in Java adds a page name to a vector.
+     * 
+     * @param strPageName The `strPageName` parameter is a `String` representing the name of the page
+     * that you want to add to the `vecPages` vector.
+     */
+    public void addPage(String strPageName){
+        vecPages.add(strPageName);
+    }
+
+    
+    /**
+     * The function `getPageAtIndex` returns the page at the specified index from a vector of pages.
+     * 
+     * @param i The parameter `i` in the `getPageAtIndex` method represents the index of the page you
+     * want to retrieve from the `vecPages` vector.
+     * @return The method `getPageAtIndex` is returning the page at the specified index `i` from the
+     * `vecPages` vector.
+     */
+    public String getPageAtIndex(int i){
+        return vecPages.get(i);
+    }
+
+    /**
+     * The `removePage` function removes a page with the specified name from a vector of pages.
+     * 
+     * @param strPageName The parameter `strPageName` is a String representing the name of the page
+     * that you want to remove from the `vecPages` vector.
+     */
+    public void removePage(String strPageName){
+        vecPages.remove(strPageName);
+    }
+
+    /**
+     * The function `printAllPages` iterates through all pages in a table, deserializes each page, and
+     * prints it to the console.
+     * 
+     */
+    public void printAllPages() throws IOException, ClassNotFoundException{
+        for(int i = 0; i < this.getNumberOfPages(); i++){
+
+            
+            String strPage = this.getPageAtIndex(i);
+            Page page = Page.deserialize(strPage + ".class");
+            System.out.println("#################################### PAGE " + i + " ########################################");
+            System.out.println(page);
+        }
+    }
+
+    /**
+     * The function getTableName() returns the name of the table as a String.
+     * 
+     * @return The method getTableName() returns the value of the variable strTableName, which is the
+     * name of the table.
+     */
+    public String getTableName(){
+        return strTableName;
+    }
     
 
 }

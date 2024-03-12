@@ -1,3 +1,5 @@
+
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -14,6 +16,11 @@ public class Metadata {
     // column names, and the values are Hashtables containing the column type, clustering key, index
     // name, and index type for each column.
     private Hashtable<String, Hashtable<String, Hashtable<String, String>>> htblMetadata;
+    
+    public Hashtable<String, Hashtable<String, String>> getTableMetadata(String tableName) {
+        return htblMetadata.get(tableName);
+    }
+
     
     // The `public Metadata() throws FileNotFoundException, IOException{}` constructor in the
     // `Metadata` class is responsible for initializing a new instance of the `Metadata` class. Here's
