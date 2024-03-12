@@ -200,7 +200,91 @@ public class Page implements Serializable {
 
         }
 
-        // throw new DBAppException("Column Value doesn't exist");
+        throw new DBAppException("Column Value doesn't exist");
+
+    }
+
+    /**
+     * This Java function searches for tuples by a given clustering key name and
+     * value using binary
+     * search.
+     * 
+     * @param strClusteringKeyName  The `strClusteringKeyName` parameter is the name
+     *                              of the clustering
+     *                              key that you want to search for in the list of
+     *                              tuples. It is used to identify the specific
+     *                              attribute or column in the tuple that serves as
+     *                              the clustering key for the data structure.
+     * @param strClusteringKeyValue The `strClusteringKeyValue` parameter represents
+     *                              the value of the
+     *                              clustering key that you are searching for within
+     *                              the list of tuples. The method
+     *                              `searchTuplesByClusteringKey` is designed to
+     *                              search for a specific tuple within the list of
+     *                              tuples based on the provided clustering key name
+     *                              and value.
+     * @return The method is returning the correct index position that the tuple
+     *         should be inserted in. (In vecTuples)
+     */
+    public int binarySearchTuples(String strClusteringKeyName, Object objClusteringKeyValue)
+            throws DBAppException {
+
+        int n = vecTuples.size();
+
+        int left = 0, right = n - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+
+            String strMidClusteringKeyValue = vecTuples.get(mid).getColumnValue(strClusteringKeyName).toString();
+
+            System.out.println(mid + " " + strMidClusteringKeyValue + " " + objClusteringKeyValue);
+
+            // convert the clustering key value to appropriate type for valid comparison
+            // for example, if the clustering key is of type integer, then convert the
+            // string value to integer
+            // if the clustering key is of type double, then convert the string value to
+            // double
+            // if the clustering key is of type string, then no conversion is needed
+
+            // TODO: REFACTOR THIS CODE
+
+            if (objClusteringKeyValue instanceof Integer) {
+                int intMidClusteringKeyValue = Integer.parseInt(strMidClusteringKeyValue);
+                int intClusteringKeyValue = (int) objClusteringKeyValue;
+
+                if (intMidClusteringKeyValue == intClusteringKeyValue) {
+                    return mid;
+                } else if (intMidClusteringKeyValue < intClusteringKeyValue) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            } else if (objClusteringKeyValue instanceof Double) {
+                double dblMidClusteringKeyValue = Double.parseDouble(strMidClusteringKeyValue);
+                double dblClusteringKeyValue = (double) objClusteringKeyValue;
+
+                if (dblMidClusteringKeyValue == dblClusteringKeyValue) {
+                    return mid;
+                } else if (dblMidClusteringKeyValue < dblClusteringKeyValue) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            } else {
+                String strClusteringKeyValue = (String) objClusteringKeyValue;
+
+                if (strMidClusteringKeyValue.equals(strClusteringKeyValue)) {
+                    return mid;
+                } else if (strMidClusteringKeyValue.compareTo(strClusteringKeyValue) < 0) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
+
+        }
+
         return left;
 
     }

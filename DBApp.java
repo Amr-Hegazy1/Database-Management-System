@@ -2,6 +2,7 @@
 /** * @author Wael Abouelsaadat */
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
@@ -106,6 +107,8 @@ public class DBApp {
 		HashSet<String> hsIndexedColumns = new HashSet<String>();// hashset to store indexed column names
 		Tuple tupleNewTuple = new Tuple(); // New Tuple to be filled with input data and added to Table.
 		String strClustKeyName = ""; // Name of Clustering Key Column
+		int intColCounter = 0;
+		// TODO
 
 		// Checking Table Existence, Correct Col Names, Correct Col Data Types
 		if (metadata.checkTableName(strTableName)) { // table existence check
@@ -118,6 +121,7 @@ public class DBApp {
 				} else {
 					String strCorrectDataType = metadata.getColumnType(strTableName, entry.getKey());
 					String strActualDataType = entry.getValue().getClass().getName();
+					intColCounter++;
 					if (!strCorrectDataType.equals(strActualDataType)) { // data type check
 						throw new DBAppException("Data Type Mismatch");
 					}
@@ -143,6 +147,11 @@ public class DBApp {
 
 			}
 		}
+		List<String> listColNames = metadata.getColumnNames(strTableName); // fetching correct column names
+		if (intColCounter != listColNames.size()) { // checking if all columns were included in insert
+			throw new DBAppException("Column(s) Missing, Please Enter All Columns");
+		}
+
 		// Table object that i ill use to add the tuple to it
 		Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 		Vector<String> vecPages = tblTable.getPageVector(); // Vector of Page names inside of Table object
@@ -197,7 +206,7 @@ public class DBApp {
 
 				if (!boolSkipPage) { // if page's Tuples are in range of my new tuple's clustering key, then i can
 										// insert
-					int index = page.searchTuplesByClusteringKey(strClustKeyName,
+					int index = page.binarySearchTuples(strClustKeyName,
 							htblColNameValue.get(strClustKeyName));
 					Tuple tuplecheckTuple = page.getTuple(index);
 
@@ -314,7 +323,7 @@ public class DBApp {
 			p.addTuple(1, t2);
 			p.addTuple(2, t3);
 
-			int i = p.searchTuplesByClusteringKey("id", 6);
+			int i = p.binarySearchTuples("id", 6);
 
 			System.out.println(i);
 			// Tuple t1 = new Tuple();
