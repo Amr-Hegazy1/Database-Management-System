@@ -15,6 +15,7 @@ import java.util.Vector;
 
 public class DBApp {
 	
+	private static final String clusteringKeyValue = null;
 	private Metadata metadata;
 	private Hashtable<String, Hashtable<String, bplustree>> htbltrees; //Table Name, Index Name, B+Tree
 
@@ -195,9 +196,19 @@ public class DBApp {
 					throw new DBAppException("Datatypes do not match for the column");
 				}
 			}
+			String clusteringKeyType = metadata.getColumnType(strTableName, strClusteringKeyValue);
+			
+			
+			if (clusteringKeyType.equals("java.lang.Integer")) {
+				int clusteringKeyValue = Integer.parseInt(strClusteringKeyValue);}
+			 else if (clusteringKeyType.equals("java.lang.Double")) {
+    			double clusteringKeyValue = Double.parseDouble(strClusteringKeyValue);}
+			 else 
+   				clusteringKeyValue = strClusteringKeyValue;
+					
 	
-			Page page = getPageByClusteringKey(strTableName, strClusteringKeyValue, htblColNameValue.get(strClusteringKeyValue));
-			int tupleIndex = page.searchTuplesByClusteringKey(strClusteringKeyValue, htblColNameValue.get(strClusteringKeyValue));
+			Page page = getPageByClusteringKey(strTableName, clusteringKeyValue, htblColNameValue.get(clusteringKeyValue));
+			int tupleIndex = page.searchTuplesByClusteringKey(clusteringKeyValue, htblColNameValue.get(clusteringKeyValue));
 	
 			if (page != null) {
 				
@@ -210,9 +221,6 @@ public class DBApp {
 					Object columnValue = htblColNameValue.get(columnName);
 					tuple.setColumnValue(columnName, columnValue);
 	
-				   // if (columnName.equals(strClusteringKeyValue)) {
-					 //   htblMetadata.get(strClusteringKeyValue).put("ClusteringKey", columnValue.toString()); 
-					//}
 				
 	 
 				page.serialize("tables/" + strTableName + "/" + page + ".class"); //notsure
@@ -232,13 +240,13 @@ public class DBApp {
 			   
 				if (boolindexorno) {
 					
-					String strindexName = metadata.getIndexName(strTableName, strClusteringKeyValue);
-					bplustree bptree = htbltrees.get(strTableName).get(strindexName);
+					String strindexName = metadata.getIndexName(strTableName, columnName);
+					bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strindexName + ".class");
 					
 				  //Comparable ComVar=(Comparable) value; 
 					
-					bptree.delete(strClusteringKeyValue);
-					bptree.insert(strClusteringKeyValue, htblColNameValue.get(strClusteringKeyValue));
+					bptree.delete(clusteringKeyValue);
+					bptree.insert(clusteringKeyValue, htblColNameValue.get(clusteringKeyValue));
 					
 					//tree.insert(key, ComVar); //typecast el value comparable
 	
