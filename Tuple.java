@@ -1,7 +1,9 @@
 import java.io.Serializable;
 import java.util.*;
 
-public class Tuple implements Serializable {
+
+public class Tuple implements Serializable, Comparable<Tuple>{
+    
 
     private HashMap<String, Object> hmTuple;
     private String strpageName;
@@ -30,8 +32,13 @@ public class Tuple implements Serializable {
      *         the specified column
      *         name from the `hmTuple` HashMap.
      */
-    public Object getColumnValue(String strColumnName) {
-        // TODO: What if column does not exist?
+
+    public Object getColumnValue(String strColumnName) throws DBAppException{
+        
+        if(!hmTuple.containsKey(strColumnName)){
+            throw new DBAppException("Column does not exist");
+        }
+
         return hmTuple.get(strColumnName);
     }
 
@@ -107,6 +114,63 @@ public class Tuple implements Serializable {
 
         return res;
 
+    }
+
+    /**
+     * The `compareTo` method compares the values of two tuples based on the values of their columns.
+     * 
+     * @param t The `t` parameter is a Tuple object that you want to compare to the current Tuple
+     * object.
+     * @return The `compareTo` method returns an integer value that represents the result of the
+     * comparison between the two Tuple objects. If the current Tuple object is less than the Tuple
+     * object `t`, the method returns a negative integer. If the current Tuple object is greater than
+     * the Tuple object `t`, the method returns a positive integer. If the two Tuple objects are equal,
+     * the method returns 0.
+     */
+    public int compareTo(Tuple t){
+        for(String column : hmTuple.keySet()){
+            if(!hmTuple.get(column).equals(t.hmTuple.get(column))){
+                return ((Comparable)hmTuple.get(column)).compareTo(t.hmTuple.get(column));
+            }
+        }
+        return 0;
+
+    }
+
+    /**
+     * The `equals` function compares two Tuple objects based on their key-value pairs in a HashMap.
+     * 
+     * @param t The `equals` method you provided is comparing two `Tuple` objects based on their
+     * key-value pairs in the `hmTuple` HashMap. The method iterates through each key in the HashMap
+     * and checks if the corresponding values in both `Tuple` objects are equal.
+     * @return The `equals` method is returning a boolean value. It will return `true` if all the
+     * values in the `hmTuple` map of the current `Tuple` object are equal to the corresponding values
+     * in the `hmTuple` map of the `Tuple` object passed as a parameter (`t`). If any of the values are
+     * not equal, it will return `false`.
+     */
+    public boolean equals(Tuple t){
+        
+        for(String column : hmTuple.keySet()){
+            if(!hmTuple.get(column).equals(t.hmTuple.get(column))){
+                
+                return false;
+            }
+        }
+
+        
+        return true;
+    }
+
+    
+
+    /**
+     * This Java hashCode function returns the hash code of the hmTuple object.
+     * 
+     * @return The `hashCode()` method is returning the hash code of the `hmTuple` object.
+     */
+    public int hashCode(){
+        System.out.println(hmTuple.hashCode());
+        return hmTuple.hashCode();
     }
 
 }
