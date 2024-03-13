@@ -33,26 +33,31 @@ public class Page implements Serializable {
     }
 
 
+    
     /**
-     * The addTuple function adds a Tuple object to a list of tuples.
+     * The addTuple function adds a Tuple object at a specified index in a list of Tuple objects.
      * 
-     * @param tupleTuple The parameter `tupleTuple` in the `addTuple` method is of
-     *                   type `Tuple`, which
-     *                   is the type of object that you are adding to the
-     *                   `vecTuples` collection.
+     * @param index The `index` parameter specifies the position at which the `Tuple` object should be
+     * added to the `vecTuples` vector.
+     * @param tupleTuple The parameter `tupleTuple` is an object of type `Tuple`. It represents a tuple
+     * that you want to add to a list of tuples at a specific index.
      */
     public void addTuple(int index, Tuple tupleTuple) {
         vecTuples.add(index, tupleTuple);
     }
 
     /**
-     * The getSize function returns number of tuples in the page.
+     * The addTuple function adds a Tuple object to a list of tuples.
      * 
-     * @return number of tuples in the page.
+     * @param tupleTuple The parameter `tupleTuple` in the `addTuple` method is of type `Tuple`, which
+     * is the type of object that you are adding to the `vecTuples` collection.
      */
-    public int getSize() {
-        return vecTuples.size();
+    public void addTuple(Tuple tupleTuple){
+        vecTuples.add(tupleTuple);
+        
     }
+
+    
 
     /**
      * The getFirstTuple function returns first tuple in the page.
@@ -96,6 +101,7 @@ public class Page implements Serializable {
         return vecTuples.get(i);
     }
 
+    /**
      * The getSize() function returns the size of a vector of tuples.
      * 
      * @return The `getSize` method is returning the size of the `vecTuples` collection.
@@ -151,57 +157,30 @@ public class Page implements Serializable {
 
             String strMidClusteringKeyValue = vecTuples.get(mid).getColumnValue(strClusteringKeyName).toString();
 
-            
 
-            // convert the clustering key value to appropriate type for valid comparison
-			// for example, if the clustering key is of type integer, then convert the string value to integer
-			// if the clustering key is of type double, then convert the string value to double
-			// if the clustering key is of type string, then no conversion is needed
+            Comparable midClusteringKeyValue = (Comparable) vecTuples.get(mid).getColumnValue(strClusteringKeyName);
 
-            // TODO: REFACTOR THIS CODE
+            Comparable compClusteringKeyValue = (Comparable) objClusteringKeyValue;
 
-            if(objClusteringKeyValue instanceof Integer){
-                int intMidClusteringKeyValue = Integer.parseInt(strMidClusteringKeyValue);
-                int intClusteringKeyValue = (int) objClusteringKeyValue;
-
-                if(intMidClusteringKeyValue == intClusteringKeyValue){
-                    return mid;
-                }else if(intMidClusteringKeyValue < intClusteringKeyValue){
-                    left = mid + 1;
-                }else{
-                    right = mid - 1;
-                }
-            }else if(objClusteringKeyValue instanceof Double){
-                double dblMidClusteringKeyValue = Double.parseDouble(strMidClusteringKeyValue);
-                double dblClusteringKeyValue = (double) objClusteringKeyValue;
-
-                if(dblMidClusteringKeyValue == dblClusteringKeyValue){
-                    return mid;
-                }else if(dblMidClusteringKeyValue < dblClusteringKeyValue){
-                    left = mid + 1;
-                }else{
-                    right = mid - 1;
-                }
+            if(midClusteringKeyValue.compareTo(compClusteringKeyValue) == 0){
+                return mid;
+            }else if(midClusteringKeyValue.compareTo(compClusteringKeyValue) < 0){
+                left = mid + 1;
             }else{
-                String strClusteringKeyValue = (String) objClusteringKeyValue;
-
-                if(strMidClusteringKeyValue.equals(strClusteringKeyValue)){
-                    return mid;
-                }else if(strMidClusteringKeyValue.compareTo(strClusteringKeyValue) < 0){
-                    left = mid + 1;
-                }else{
-                    right = mid - 1;
-                }
+                right = mid - 1;
             }
-            
-
-            
 
         }
+            
 
         throw new DBAppException("Column Value doesn't exist");
+            
+
+            
 
     }
+
+
 
     public void deleteTupleWithIndex(int i) throws DBAppException{
         if(i >= vecTuples.size()) 
@@ -213,10 +192,7 @@ public class Page implements Serializable {
     
 
 
-    // // Returns the Tuples Vector (All Tuples in the Page)
-    // public Vector<Tuple> getTuples() {
-    // return vecTuples;
-    // }
+    
 
     /**
      * The `toString` function iterates through a list of `Tuple` objects and
@@ -239,96 +215,6 @@ public class Page implements Serializable {
         return res;
     }
 
-    /**
-
-     * This Java function searches for tuples by a given clustering key name and
-     * value using binary
-     * search.
-     * 
-     * @param strClusteringKeyName  The `strClusteringKeyName` parameter is the name
-     *                              of the clustering
-     *                              key that you want to search for in the list of
-     *                              tuples. It is used to identify the specific
-     *                              attribute or column in the tuple that serves as
-     *                              the clustering key for the data structure.
-     * @param strClusteringKeyValue The `strClusteringKeyValue` parameter represents
-     *                              the value of the
-     *                              clustering key that you are searching for within
-     *                              the list of tuples. The method
-     *                              `searchTuplesByClusteringKey` is designed to
-     *                              search for a specific tuple within the list of
-     *                              tuples based on the provided clustering key name
-     *                              and value.
-     * @return The method is returning the index of the tuple in the `vecTuples`
-     *         list that matches the
-     *         provided clustering key name and value. If a match is found, the
-     *         method returns the index of
-     *         that tuple. If no match is found after the binary search, it throws a
-     *         `DBAppException` with the
-     *         message "Column Value doesn't exist".
-     */
-    public int searchTuplesByClusteringKey(String strClusteringKeyName, Object objClusteringKeyValue)
-            throws DBAppException {
-
-        int n = vecTuples.size();
-
-        int left = 0, right = n - 1;
-
-        while (left <= right) {
-            int mid = left + (right - left) / 2;
-
-            String strMidClusteringKeyValue = vecTuples.get(mid).getColumnValue(strClusteringKeyName).toString();
-
-            System.out.println(mid + " " + strMidClusteringKeyValue + " " + objClusteringKeyValue);
-
-            // convert the clustering key value to appropriate type for valid comparison
-            // for example, if the clustering key is of type integer, then convert the
-            // string value to integer
-            // if the clustering key is of type double, then convert the string value to
-            // double
-            // if the clustering key is of type string, then no conversion is needed
-
-            // TODO: REFACTOR THIS CODE
-
-            if (objClusteringKeyValue instanceof Integer) {
-                int intMidClusteringKeyValue = Integer.parseInt(strMidClusteringKeyValue);
-                int intClusteringKeyValue = (int) objClusteringKeyValue;
-
-                if (intMidClusteringKeyValue == intClusteringKeyValue) {
-                    return mid;
-                } else if (intMidClusteringKeyValue < intClusteringKeyValue) {
-                    left = mid + 1;
-                } else {
-                    right = mid - 1;
-                }
-            } else if (objClusteringKeyValue instanceof Double) {
-                double dblMidClusteringKeyValue = Double.parseDouble(strMidClusteringKeyValue);
-                double dblClusteringKeyValue = (double) objClusteringKeyValue;
-
-                if (dblMidClusteringKeyValue == dblClusteringKeyValue) {
-                    return mid;
-                } else if (dblMidClusteringKeyValue < dblClusteringKeyValue) {
-                    left = mid + 1;
-                } else {
-                    right = mid - 1;
-                }
-            } else {
-                String strClusteringKeyValue = (String) objClusteringKeyValue;
-
-                if (strMidClusteringKeyValue.equals(strClusteringKeyValue)) {
-                    return mid;
-                } else if (strMidClusteringKeyValue.compareTo(strClusteringKeyValue) < 0) {
-                    left = mid + 1;
-                } else {
-                    right = mid - 1;
-                }
-            }
-
-        }
-
-        throw new DBAppException("Column Value doesn't exist");
-
-    }
      /*
      * The function `getPageName` returns the value of the `strPageName` variable as a String.
      * 
@@ -400,47 +286,16 @@ public class Page implements Serializable {
 
             System.out.println(mid + " " + strMidClusteringKeyValue + " " + objClusteringKeyValue);
 
-            // convert the clustering key value to appropriate type for valid comparison
-            // for example, if the clustering key is of type integer, then convert the
-            // string value to integer
-            // if the clustering key is of type double, then convert the string value to
-            // double
-            // if the clustering key is of type string, then no conversion is needed
+            Comparable midClusteringKeyValue = (Comparable) vecTuples.get(mid).getColumnValue(strClusteringKeyName);
 
-            // TODO: REFACTOR THIS CODE
+            Comparable compClusteringKeyValue = (Comparable) objClusteringKeyValue;
 
-            if (objClusteringKeyValue instanceof Integer) {
-                int intMidClusteringKeyValue = Integer.parseInt(strMidClusteringKeyValue);
-                int intClusteringKeyValue = (int) objClusteringKeyValue;
-
-                if (intMidClusteringKeyValue == intClusteringKeyValue) {
-                    return mid;
-                } else if (intMidClusteringKeyValue < intClusteringKeyValue) {
-                    left = mid + 1;
-                } else {
-                    right = mid - 1;
-                }
-            } else if (objClusteringKeyValue instanceof Double) {
-                double dblMidClusteringKeyValue = Double.parseDouble(strMidClusteringKeyValue);
-                double dblClusteringKeyValue = (double) objClusteringKeyValue;
-
-                if (dblMidClusteringKeyValue == dblClusteringKeyValue) {
-                    return mid;
-                } else if (dblMidClusteringKeyValue < dblClusteringKeyValue) {
-                    left = mid + 1;
-                } else {
-                    right = mid - 1;
-                }
+            if (midClusteringKeyValue.compareTo(compClusteringKeyValue) == 0) {
+                return mid;
+            } else if (midClusteringKeyValue.compareTo(compClusteringKeyValue) < 0) {
+                left = mid + 1;
             } else {
-                String strClusteringKeyValue = (String) objClusteringKeyValue;
-
-                if (strMidClusteringKeyValue.equals(strClusteringKeyValue)) {
-                    return mid;
-                } else if (strMidClusteringKeyValue.compareTo(strClusteringKeyValue) < 0) {
-                    left = mid + 1;
-                } else {
-                    right = mid - 1;
-                }
+                right = mid - 1;
             }
 
         }
@@ -525,7 +380,7 @@ public class Page implements Serializable {
 
     public static void main(String[] args) {
         // create 5 page objects with 5 tuples and serialize them
-
+        String strTableName = "Student";
         int intPageSize = 200;
         
         for(int i = 0; i < 5; i++){
@@ -533,15 +388,15 @@ public class Page implements Serializable {
             for(int j = 0; j < intPageSize; j++){
                 Tuple tuple = new Tuple();
                 for(int k = 0; k < 5; k++){
-                    tuple.setColumnValue("ID", i * intPageSize + j);
-                    tuple.setColumnValue("Name", "Ahmed" + i + j);
-                    tuple.setColumnValue("Age", 20);
+                    tuple.setColumnValue("id", i * intPageSize + j);
+                    tuple.setColumnValue("name", "Ahmed" + i + j);
+                    tuple.setColumnValue("gpa", 20);
 
                 }
                 page.addTuple(tuple);
             }
             try {
-                page.serialize("CityShop_" + i + ".class");
+                page.serialize("tables/" + strTableName + "/" + strTableName + "_" +  i + ".class");
             } catch (IOException e) {
                 e.printStackTrace();
             }
