@@ -78,6 +78,7 @@ public class DBApp  {
 							Hashtable<String,String> htblColNameType) throws DBAppException , IOException{
 		
 		metadata.addTable(strTableName, strClusteringKeyColumn, htblColNameType);
+		metadata.save();
 		Table tblTable = new Table(strTableName);
 		File fileTableFolder = new File("tables/" + strTableName);
 		if(!fileTableFolder.exists()){
@@ -225,7 +226,7 @@ public class DBApp  {
 
             
 
-            Page pageMiddlePage = Page.deserialize(strMiddlePage + ".class");
+            Page pageMiddlePage = Page.deserialize("tables/" + strTableName + "/" + strMiddlePage + ".class");
 
             int intMiddlePageSize = pageMiddlePage.getSize();
 
@@ -233,75 +234,26 @@ public class DBApp  {
 
             Tuple tupleMiddlePageBottomTuple = pageMiddlePage.getTupleWithIndex(intMiddlePageSize - 1);
 
-			// convert the clustering key value to appropriate type for valid comparison
-			// for example, if the clustering key is of type integer, then convert the string value to integer
-			// if the clustering key is of type double, then convert the string value to double
-			// if the clustering key is of type string, then no conversion is needed
-
-			// TODO: REFACTOR
 			
-			if(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey) instanceof Integer){
-				objClusteringKeyValue = (Integer) objClusteringKeyValue;
-				Integer topTupleValue = (Integer) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
-				Integer bottomTupleValue = (Integer) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
-				
 
-				// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
-				if((Integer) objClusteringKeyValue >= topTupleValue && (Integer) objClusteringKeyValue <= bottomTupleValue){
-					return pageMiddlePage;
+			
+			// convert the object to comparable to compare it with the clustering key
+			
+			Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
 
-				}else if((Integer) objClusteringKeyValue < topTupleValue){
-					intBottomPageIndex = intMiddlePageIndex - 1;
-				}else{
-					intTopPageIndex = intMiddlePageIndex + 1;
-				}
-
-			}else if(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey) instanceof Double){
-				objClusteringKeyValue = (Double) objClusteringKeyValue;
-				Double topTupleValue = (Double) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
-				Double bottomTupleValue = (Double) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
-				
-
-				// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
-
-				if((Double) objClusteringKeyValue >= topTupleValue && (Double) objClusteringKeyValue <= bottomTupleValue){
-					return pageMiddlePage;
-
-				}else if((Double) objClusteringKeyValue < topTupleValue){
-					intBottomPageIndex = intMiddlePageIndex - 1;
-				}else{
-					intTopPageIndex = intMiddlePageIndex + 1;
-				}
-
-
+			// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
+			if(cmpClusteringKeyValue.compareTo(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey)) >= 0 && cmpClusteringKeyValue.compareTo(tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey)) <= 0){
+				return pageMiddlePage;
+			}else if(cmpClusteringKeyValue.compareTo(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey)) < 0){
+				intBottomPageIndex = intMiddlePageIndex - 1;
 			}else{
-				objClusteringKeyValue = (String) objClusteringKeyValue;
-				String topTupleValue = (String) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
-				String bottomTupleValue = (String) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
-				
-				
-				// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
-				if(((String) objClusteringKeyValue).compareTo(topTupleValue) >= 0 && ((String) objClusteringKeyValue).compareTo(bottomTupleValue) <= 0){
-					return pageMiddlePage;
-				}else if(((String) objClusteringKeyValue).compareTo(topTupleValue) < 0){
-					intBottomPageIndex = intMiddlePageIndex - 1;
-				}else{
-					intTopPageIndex = intMiddlePageIndex + 1;
-				}
-
+				intTopPageIndex = intMiddlePageIndex + 1;
 			}
+		}
 
-            
+		return null;
 			
-
 			
-
-
-
-
-        }
-
-        return null;
 	}
 
 
@@ -323,7 +275,18 @@ public class DBApp  {
 		
         Object objClusteringKeyValue = htblColNameValue.get(strClusteringKey);
 		Page pagePage = getPageByClusteringKey(strTableName, strClusteringKey, objClusteringKeyValue, table);
+
+		// if the page is null, then the tuple does not exist
+		if(pagePage == null){
+			return;
+		}
+
+
         int intTupleIndex = pagePage.searchTuplesByClusteringKey(strClusteringKey, objClusteringKeyValue);
+		Tuple tupleTuple = pagePage.getTupleWithIndex(intTupleIndex);
+		if(!tupleSatisfiesAndedConditions(tupleTuple, htblColNameValue)){
+			return;
+		}
 		pagePage.deleteTupleWithIndex(intTupleIndex);
 		pagePage.serialize(pagePage.getPageName());
 		if(pagePage.getSize() == 0){
@@ -431,7 +394,7 @@ public class DBApp  {
 
 		for(int intPageIndex = 0; intPageIndex < intNumberOfPages; intPageIndex++){
 			String pageCurrentPageName = table.getPageAtIndex(intPageIndex);
-			Page pageCurrentPage = Page.deserialize(pageCurrentPageName + ".class");
+			Page pageCurrentPage = Page.deserialize("tables/" + strTableName + "/" + pageCurrentPageName + ".class");
 			
 			
 			// Linearly search every page
@@ -458,9 +421,20 @@ public class DBApp  {
 				
 			}
 
-			// TODO: Don't do this step if not necessary
+			if(pageCurrentPage.getSize() == 0){
+				pageCurrentPage.deletePage();
+				table.removePage(pageCurrentPage.getPageName());
+				table.serialize(table.getTableName());
+			}else{
+				// TODO: Don't do this step if no tuples were deleted
+				pageCurrentPage.serialize(strTableName + "/" + pageCurrentPageName + ".class");
+			}
 
-			pageCurrentPage.serialize(pageCurrentPageName + ".class");
+			
+
+
+
+			
 			
 
 		}
@@ -503,7 +477,7 @@ public class DBApp  {
 			for(Tuple tuple : htblTuples.keySet()){
 				String strPageName = htblTuples.get(tuple);
 				
-				Page pagePage = Page.deserialize(strPageName + ".class");
+				Page pagePage = Page.deserialize("tables/" + strTableName + "/" + strPageName + ".class");
 				
 				
 				pagePage.deleteTuple(tuple);
@@ -602,7 +576,25 @@ public class DBApp  {
 
 	try{
 
-			
+			DBApp dbApp = new DBApp( );
+
+			dbApp.init( );
+
+			Hashtable<String,String> htblColNameType = new Hashtable( );
+			htblColNameType.put("id", "java.lang.Integer");
+			htblColNameType.put("name", "java.lang.String");
+			htblColNameType.put("gpa", "java.lang.double");
+
+			// dbApp.createTable("Student", "id", htblColNameType );
+
+			Hashtable<String,Object> htblColNameValue = new Hashtable( );
+
+			htblColNameValue.put("id", new Integer( 0 ));
+			// htblColNameValue.put("name", new String("Ahmed Noor" ) );
+			// htblColNameValue.put("gpa", new Double( 0.95 ) );
+
+
+			dbApp.deleteFromTable("Student", htblColNameValue);
 
 			
 
