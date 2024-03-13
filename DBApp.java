@@ -466,6 +466,18 @@ public class DBApp  {
 			table.removePage(pagePage.getPageName());
 			table.serialize(table.getTableName());
 		}
+
+		// delete from all relevant indices
+
+		for(String col : htblColNameValue.keySet()){
+			if(metadata.isColumnIndexed(strTableName, col)){
+				String strIndexName = metadata.getIndexName(strTableName, col);
+				bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
+				bptTree.delete((Comparable) tupleTuple.getColumnValue(col));
+				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
+			}
+		}
+
 	}
 
 	/**
@@ -658,6 +670,17 @@ public class DBApp  {
 					pagePage.deletePage();
 					table.removePage(pagePage.getPageName());
 					table.serialize(table.getTableName());
+				}
+
+				// delete from all relevant indices
+
+				for(String col : htblColNameValue.keySet()){
+					if(metadata.isColumnIndexed(strTableName, col)){
+						String strIndexName = metadata.getIndexName(strTableName, col);
+						bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
+						bptTree.delete((Comparable) tuple.getColumnValue(col));
+						bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
+					}
 				}
 			}
 			return;
