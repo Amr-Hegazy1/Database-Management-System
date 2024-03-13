@@ -190,9 +190,8 @@ public class DBApp {
 				
 				String columnTypeMetadata = metadata.getColumnType(strTableName, columnName);
 				Object columnValue = htblColNameValue.get(columnName);
-				String strcolumneldakhel = htblColNameValue.keys().nextElement();
-				
-				if (!columnTypeMetadata.equals(strcolumneldakhel)) {
+				String strdatatype = columnValue.getClass().getSimpleName();
+				if (!columnTypeMetadata.equals(strdatatype)) {
 					throw new DBAppException("Datatypes do not match for the column");
 				}
 			}
@@ -211,15 +210,15 @@ public class DBApp {
 					Object columnValue = htblColNameValue.get(columnName);
 					tuple.setColumnValue(columnName, columnValue);
 	
-					if (columnName.equals(strClusteringKeyValue)) {
-						htblMetadata.get(strClusteringKeyValue).put("ClusteringKey", columnValue.toString()); 
-					}
+				   // if (columnName.equals(strClusteringKeyValue)) {
+					 //   htblMetadata.get(strClusteringKeyValue).put("ClusteringKey", columnValue.toString()); 
+					//}
 				
 	 
 				page.serialize("tables/" + strTableName + "/" + page + ".class"); //notsure
 	
 				boolean boolindexorno = false;
-				if (htblMetadata.containsKey(columnName) && metadata.getIndexName(strTableName, strClusteringKeyValue) != null) {
+				if (htblMetadata.containsKey(columnName) && metadata.getIndexName(strTableName, columnName) != null) {
 					
 					String strindexName = metadata.getIndexName(strTableName,columnName);
 					if(strindexName!=null){
@@ -253,7 +252,6 @@ public class DBApp {
 			throw new DBAppException("Exception occurred: " + e.getMessage());
 		}
 	}
-
 
 
 							
