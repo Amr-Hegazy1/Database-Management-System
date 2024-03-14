@@ -358,13 +358,14 @@ public class DBApp  {
 	// htblColNameValue will not include clustering key as column name
 	// strClusteringKeyValue is the value to look for to find the row to update.
 	public void updateTable(String strTableName,
-			String strClusteringKeyValue,
+			
 			Hashtable<String, Object> htblColNameValue) throws DBAppException {
 
 		throw new DBAppException("not implemented yet");
 	}
 	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
 		try {
+			
 			
 			if (metadata.checkTableName(strTableName)) 
 				throw new DBAppException("Table does not exist");
@@ -439,9 +440,9 @@ public class DBApp  {
 				bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strindexName + ".class");
 					
 				  //Comparable ComVar=(Comparable) value; 
-					
-					bptree.delete(clusteringKeyValue);
-					bptree.insert(clusteringKeyValue, htblColNameValue.get(clusteringKeyValue));
+				  	Comparable compClusteringKeyValue = (Comparable) objclusteringKeyValue;
+					bptTree.delete(compClusteringKeyValue);
+					bptTree.insert(compClusteringKeyValue, htblColNameValue.get(objclusteringKeyValue));
 					
 					//tree.insert(key, ComVar); //typecast el value comparable
 	
@@ -944,3 +945,4 @@ public class DBApp  {
 
 		}
 	}
+}

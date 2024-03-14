@@ -404,7 +404,15 @@ public class Page implements Serializable {
     }
 
     
-
+    /**
+     * The function `getVecTuples` returns a Vector of Tuple objects.
+     * 
+     * @return A Vector of Tuple objects named vecTuples is being returned.
+     */
+    public Vector<Tuple> getVecTuples() {
+		
+		return vecTuples;
+	}
 
     
     
