@@ -1,4 +1,4 @@
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 
 
@@ -103,15 +103,17 @@ public class Tuple implements Serializable, Comparable<Tuple>{
     public String toString() {
 
         // TODO: remove last comma
+         
 
         String res = "";
 
         for (String column : hmTuple.keySet()) {
 
             res += hmTuple.get(column) + ",";
+            
 
         }
-
+        
         return res;
 
     }

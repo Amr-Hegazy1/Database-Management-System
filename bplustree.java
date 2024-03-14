@@ -799,7 +799,7 @@ public class bplustree<T extends Comparable<T> , K> implements Serializable {
 	 * This class represents a general node within the B+ tree and serves as a
 	 * superclass of InternalNode and LeafNode.
 	 */
-	public class Node {
+	public class  Node{
 		InternalNode parent;
 	}
 

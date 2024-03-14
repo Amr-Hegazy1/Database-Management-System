@@ -363,6 +363,99 @@ public class DBApp  {
 
 		throw new DBAppException("not implemented yet");
 	}
+	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
+		try {
+			
+			if (metadata.checkTableName(strTableName)) 
+				throw new DBAppException("Table does not exist");
+			
+			if (strClusteringKeyValue == null) {
+				throw new DBAppException("Clustering key value is null");
+			}
+			if (htblColNameValue.isEmpty()) {
+				throw new DBAppException("no column to update");
+			}
+			
+			if (!metadata.checkColumnName(strTableName, strClusteringKeyValue)) {
+				throw new DBAppException("Clustering key column does not exist");
+			}
+			
+			for (String columnName : htblColNameValue.keySet()) {
+				
+				String columnTypeMetadata = metadata.getColumnType(strTableName, columnName);
+				Object columnValue = htblColNameValue.get(columnName);
+				String strdatatype = columnValue.getClass().getSimpleName();
+				if (!columnTypeMetadata.equals(strdatatype)) {
+					throw new DBAppException("Datatypes do not match for the column");
+				}
+			}
+			String clusteringKeyType = metadata.getColumnType(strTableName, strClusteringKeyValue);
+			Object objclusteringKeyValue;
+			
+			if (clusteringKeyType.equals("java.lang.Integer")) {
+				objclusteringKeyValue = Integer.parseInt(strClusteringKeyValue);}
+			else if (clusteringKeyType.equals("java.lang.Double")) {
+    			objclusteringKeyValue = Double.parseDouble(strClusteringKeyValue);}
+			else 
+			 	objclusteringKeyValue = strClusteringKeyValue.toString();
+
+			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
+			String key=metadata.getClusteringkey(strTableName);
+
+			Page page = getPageByClusteringKey(strTableName,key, objclusteringKeyValue,tblTable);
+			int tupleIndex = page.searchTuplesByClusteringKey(key, objclusteringKeyValue);
+	
+			if (page != null) {
+				
+				Vector<Tuple> tuples = page.getVecTuples();
+				Tuple tuple = tuples.get(tupleIndex);
+				Hashtable<String, Hashtable<String, String>> htblMetadata = metadata.getTableMetadata(strTableName);
+				
+				for (String columnName : htblColNameValue.keySet()) {
+					
+					Object columnValue = htblColNameValue.get(columnName);
+					tuple.setColumnValue(columnName, columnValue);
+	
+				
+	 
+				page.serialize("tables/" + strTableName + "/" + page + ".class"); //notsure
+	
+				boolean boolindexorno = false;
+				if (htblMetadata.containsKey(columnName) && metadata.getIndexName(strTableName, columnName) != null) {
+					
+					String strindexName = metadata.getIndexName(strTableName,columnName);
+					if(strindexName!=null){
+						
+						boolindexorno=true;
+						}
+					 else
+						 
+						 boolindexorno=false;        
+			}
+			   
+				if (boolindexorno) {
+					
+				String strindexName = metadata.getIndexName(strTableName, columnName);
+				bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strindexName + ".class");
+					
+				  //Comparable ComVar=(Comparable) value; 
+					
+					bptree.delete(clusteringKeyValue);
+					bptree.insert(clusteringKeyValue, htblColNameValue.get(clusteringKeyValue));
+					
+					//tree.insert(key, ComVar); //typecast el value comparable
+	
+				}
+				}
+			} else {
+				throw new DBAppException("Page not found for the given clustering key.");
+			}
+			
+		} catch (IOException | ClassNotFoundException e) {
+			throw new DBAppException("Exception occurred: " + e.getMessage());
+		}
+	}
+
 
 
 	/**
@@ -830,18 +923,17 @@ public class DBApp  {
 			// htblColNameValue.put("gpa", new Double( 0.88 ) );
 			// dbApp.insertIntoTable( strTableName , htblColNameValue );
 
-
 			// SQLTerm[] arrSQLTerms;
 			// arrSQLTerms = new SQLTerm[2];
-			// arrSQLTerms[0]._strTableName =  "Student";
-			// arrSQLTerms[0]._strColumnName=  "name";
-			// arrSQLTerms[0]._strOperator  =  "=";
-			// arrSQLTerms[0]._objValue     =  "John Noor";
+			// arrSQLTerms[0]._strTableName = "Student";
+			// arrSQLTerms[0]._strColumnName= "name";
+			// arrSQLTerms[0]._strOperator = "=";
+			// arrSQLTerms[0]._objValue = "John Noor";
 
-			// arrSQLTerms[1]._strTableName =  "Student";
-			// arrSQLTerms[1]._strColumnName=  "gpa";
-			// arrSQLTerms[1]._strOperator  =  "=";
-			// arrSQLTerms[1]._objValue     =  new Double( 1.5 );
+			// arrSQLTerms[1]._strTableName = "Student";
+			// arrSQLTerms[1]._strColumnName= "gpa";
+			// arrSQLTerms[1]._strOperator = "=";
+			// arrSQLTerms[1]._objValue = new Double( 1.5 );
 
 
 
@@ -852,5 +944,3 @@ public class DBApp  {
 
 		}
 	}
-
-}

@@ -77,8 +77,10 @@ public class Table implements Serializable {
 
         // TODO: Exception Handling
 
-        FileOutputStream fos = new FileOutputStream(strFileName);
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
+      
+        strTableName = strFileName;
+        FileOutputStream fos= new FileOutputStream(strFileName);
+        ObjectOutputStream oos=new ObjectOutputStream(fos);
         oos.writeObject(this);
 
         oos.close();
