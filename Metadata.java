@@ -20,6 +20,7 @@ public class Metadata {
     public Hashtable<String, Hashtable<String, String>> getTableMetadata(String tableName) {
         return htblMetadata.get(tableName);
     }
+    
 
     
     // The `public Metadata() throws FileNotFoundException, IOException{}` constructor in the
@@ -103,6 +104,15 @@ public class Metadata {
 
         
         
+    }
+    public String getClusteringkey(String tableName){
+        List<String> x=getColumnNames(tableName);
+        for (String strColumnName : x) {
+           if(isClusteringKey(tableName,strColumnName)){
+            return strColumnName;
+           }
+        }
+            return "";
     }
 
     /**
@@ -188,6 +198,7 @@ public class Metadata {
     public List<String> getColumnNames(String strTableName){
         return new ArrayList<>(htblMetadata.get(strTableName).keySet());
     }
+
     public boolean checkColumnName(String strTableName, String strColumnName){
         return htblMetadata.get(strTableName).containsKey(strColumnName);
     } 

@@ -15,7 +15,6 @@ import java.util.Vector;
 
 public class DBApp {
 	
-	private static final String clusteringKeyValue = null;
 	private Metadata metadata;
 	private Hashtable<String, Hashtable<String, bplustree>> htbltrees; //Table Name, Index Name, B+Tree
 
@@ -84,88 +83,45 @@ public class DBApp {
 		throw new DBAppException("not implemented yet");
 	}
 
-	private Page getPageByClusteringKey(String strTableName, String strClusteringKey, Object objClusteringKeyValue) throws IOException, ClassNotFoundException, DBAppException{
-	Table table=new Table(strTableName);
-    int intTableSize = table.getNumberOfPages();
-    int intTopPageIndex = 0;
-    int intBottomPageIndex = intTableSize - 1;
+	private Page getPageByClusteringKey(String strTableName, String strClusteringKey, Object objClusteringKeyValue, Table table) throws IOException, ClassNotFoundException, DBAppException{
 
-    while(intTopPageIndex <= intBottomPageIndex){
-
-        int intMiddlePageIndex = intTopPageIndex + (intBottomPageIndex - intTopPageIndex) / 2;
-
-        String strMiddlePage = table.getPageAtIndex(intMiddlePageIndex);
-
-        System.out.println(intMiddlePageIndex);
-
-        Page pageMiddlePage = Page.deserialize(strMiddlePage + ".class");
-
-        int intMiddlePageSize = pageMiddlePage.getSize();
-
-        Tuple tupleMiddlePageTopTuple = pageMiddlePage.getTupleWithIndex(0);
-
-        Tuple tupleMiddlePageBottomTuple = pageMiddlePage.getTupleWithIndex(intMiddlePageSize - 1);
-
-		// convert the clustering key value to appropriate type for valid comparison
-		// for example, if the clustering key is of type integer, then convert the string value to integer
-		// if the clustering key is of type double, then convert the string value to double
-		// if the clustering key is of type string, then no conversion is needed
-
-		// TODO: REFACTOR
+        int intTableSize = table.getNumberOfPages();
+        int intTopPageIndex = 0;
+        int intBottomPageIndex = intTableSize - 1;
 		
-		if(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey) instanceof Integer){
-			objClusteringKeyValue = (Integer) objClusteringKeyValue;
-			Integer topTupleValue = (Integer) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
-			Integer bottomTupleValue = (Integer) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
-			System.out.println("Integer");
 
-			// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
-			if((Integer) objClusteringKeyValue >= topTupleValue && (Integer) objClusteringKeyValue <= bottomTupleValue){
-				return pageMiddlePage;
+        while(intTopPageIndex <= intBottomPageIndex){
 
-			}else if((Integer) objClusteringKeyValue < topTupleValue){
-				intBottomPageIndex = intMiddlePageIndex - 1;
-			}else{
-				intTopPageIndex = intMiddlePageIndex + 1;
-			}
+            int intMiddlePageIndex = intTopPageIndex + (intBottomPageIndex - intTopPageIndex) / 2;
 
-		}else if(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey) instanceof Double){
-			objClusteringKeyValue = (Double) objClusteringKeyValue;
-			Double topTupleValue = (Double) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
-			Double bottomTupleValue = (Double) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
-			System.out.println("Double");
+            String strMiddlePage = table.getPageAtIndex(intMiddlePageIndex);  
 
-			// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
+            Page pageMiddlePage = Page.deserialize("tables/" + strTableName + "/" + strMiddlePage + ".class");
 
-			if((Double) objClusteringKeyValue >= topTupleValue && (Double) objClusteringKeyValue <= bottomTupleValue){
-				return pageMiddlePage;
+            int intMiddlePageSize = pageMiddlePage.getSize();
 
-			}else if((Double) objClusteringKeyValue < topTupleValue){
-				intBottomPageIndex = intMiddlePageIndex - 1;
-			}else{
-				intTopPageIndex = intMiddlePageIndex + 1;
-			}
+            Tuple tupleMiddlePageTopTuple = pageMiddlePage.getTupleWithIndex(0);
 
+            Tuple tupleMiddlePageBottomTuple = pageMiddlePage.getTupleWithIndex(intMiddlePageSize - 1);
 
-		}else{
-			objClusteringKeyValue = (String) objClusteringKeyValue;
-			String topTupleValue = (String) tupleMiddlePageTopTuple.getColumnValue(strClusteringKey);
-			String bottomTupleValue = (String) tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey);
-			System.out.println("String");
+			// convert the object to comparable to compare it with the clustering key
 			
+			Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
+
 			// check if the clustering key is in the page by checking if the value is between the top and bottom tuple
-			if(((String) objClusteringKeyValue).compareTo(topTupleValue) >= 0 && ((String) objClusteringKeyValue).compareTo(bottomTupleValue) <= 0){
+			if(cmpClusteringKeyValue.compareTo(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey)) >= 0 && cmpClusteringKeyValue.compareTo(tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey)) <= 0){
 				return pageMiddlePage;
-			}else if(((String) objClusteringKeyValue).compareTo(topTupleValue) < 0){
+			}else if(cmpClusteringKeyValue.compareTo(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey)) < 0){
 				intBottomPageIndex = intMiddlePageIndex - 1;
 			}else{
 				intTopPageIndex = intMiddlePageIndex + 1;
 			}
 		}
-		}
-	return null;
 
-    }
+		return null;
+			
+			
+	}
 
 	// following method updates one row only
 	// htblColNameValue holds the key and new value 
@@ -173,6 +129,7 @@ public class DBApp {
 	// strClusteringKeyValue is the value to look for to find the row to update.
 	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
 		try {
+			
 			if (metadata.checkTableName(strTableName)) 
 				throw new DBAppException("Table does not exist");
 			
@@ -197,18 +154,20 @@ public class DBApp {
 				}
 			}
 			String clusteringKeyType = metadata.getColumnType(strTableName, strClusteringKeyValue);
-			
+			Object objclusteringKeyValue;
 			
 			if (clusteringKeyType.equals("java.lang.Integer")) {
-				int clusteringKeyValue = Integer.parseInt(strClusteringKeyValue);}
-			 else if (clusteringKeyType.equals("java.lang.Double")) {
-    			double clusteringKeyValue = Double.parseDouble(strClusteringKeyValue);}
-			 else 
-   				clusteringKeyValue = strClusteringKeyValue;
-					
-	
-			Page page = getPageByClusteringKey(strTableName, clusteringKeyValue, htblColNameValue.get(clusteringKeyValue));
-			int tupleIndex = page.searchTuplesByClusteringKey(clusteringKeyValue, htblColNameValue.get(clusteringKeyValue));
+				objclusteringKeyValue = Integer.parseInt(strClusteringKeyValue);}
+			else if (clusteringKeyType.equals("java.lang.Double")) {
+    			objclusteringKeyValue = Double.parseDouble(strClusteringKeyValue);}
+			else 
+			 	objclusteringKeyValue = strClusteringKeyValue.toString();
+
+			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
+			String key=metadata.getClusteringkey(strTableName);
+
+			Page page = getPageByClusteringKey(strTableName,key, objclusteringKeyValue,tblTable);
+			int tupleIndex = page.searchTuplesByClusteringKey(key, objclusteringKeyValue);
 	
 			if (page != null) {
 				
@@ -240,8 +199,8 @@ public class DBApp {
 			   
 				if (boolindexorno) {
 					
-					String strindexName = metadata.getIndexName(strTableName, columnName);
-					bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strindexName + ".class");
+				String strindexName = metadata.getIndexName(strTableName, columnName);
+				bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strindexName + ".class");
 					
 				  //Comparable ComVar=(Comparable) value; 
 					
