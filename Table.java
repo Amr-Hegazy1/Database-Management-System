@@ -35,6 +35,7 @@ public class Table implements Serializable {
     public String addPage() {
         int newPageNum = vecPages.size();
         String newPage = strTableName + "_" + newPageNum;
+        System.out.println("New Page: " + strTableName);
         vecPages.add(newPage);
         return newPage;
     }
@@ -71,14 +72,12 @@ public class Table implements Serializable {
      *                    serialized form.
      */
     public void serialize(String strFileName) throws IOException {
-
-        strTableName = strFileName;
-
-
+        
+        
         // TODO: Exception Handling
 
       
-        strTableName = strFileName;
+        
         FileOutputStream fos= new FileOutputStream(strFileName);
         ObjectOutputStream oos=new ObjectOutputStream(fos);
         oos.writeObject(this);
@@ -139,7 +138,9 @@ public class Table implements Serializable {
      * that you want to remove from the `vecPages` vector.
      */
     public void removePage(String strPageName){
+        
         vecPages.remove(strPageName);
+        
     }
 
     /**

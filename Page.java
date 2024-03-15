@@ -19,16 +19,12 @@ public class Page implements Serializable {
 
 
 
-    // The `public Page()` constructor in the `Page` class is initializing a new
-    // instance of the `Page`
-    // class. Inside the constructor, it initializes the `vecTuples` member variable
-    // as a new `Vector`
-    // object that can hold elements of type `Tuple`. This means that when a new
-    // `Page` object is
-    // created, it will have an empty vector `vecTuples` ready to store `Tuple`
-    // objects.
-    public Page() {
-
+    
+    // The above code is a constructor for a Java class named `Page`. It takes a `String` parameter
+    // `strTableName` and initializes the `strPageName` attribute of the `Page` object with the value
+    // of `strTableName`. It also initializes a `Vector` named `vecTuples` to store `Tuple` objects.
+    public Page(String strTableName) {
+        this.strPageName = strTableName;
         vecTuples = new Vector<Tuple>();
     }
 
@@ -155,8 +151,7 @@ public class Page implements Serializable {
 
             
 
-            String strMidClusteringKeyValue = vecTuples.get(mid).getColumnValue(strClusteringKeyName).toString();
-
+            
 
             Comparable midClusteringKeyValue = (Comparable) vecTuples.get(mid).getColumnValue(strClusteringKeyName);
 
@@ -226,9 +221,12 @@ public class Page implements Serializable {
     }
 
     /**
-     * The `deletePage` function deletes a file with the given name in Java and throws an IOException
-     */
-    public void deletePage() throws IOException{
+     * The function `setPageName` sets the value of the `strPageName` variable to the specified
+     * parameter `strPageName`.
+     * 
+     * @param strPageName The `strPageName` parameter is a `String` that represents the name of a page.
+     */    
+    public static void deletePage(String strPageName) throws IOException {
         
         
 
@@ -318,6 +316,8 @@ public class Page implements Serializable {
 
         // TODO: Exception Handling
 
+        
+
         FileOutputStream fos = new FileOutputStream(strFileName);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(this);
@@ -384,7 +384,7 @@ public class Page implements Serializable {
         int intPageSize = 200;
         
         for(int i = 0; i < 5; i++){
-            Page page = new Page();
+            Page page = new Page(strTableName + "_" + i);
             for(int j = 0; j < intPageSize; j++){
                 Tuple tuple = new Tuple();
                 for(int k = 0; k < 5; k++){

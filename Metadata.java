@@ -152,7 +152,7 @@ public class Metadata {
         if(!htblMetadata.get(strTableName).containsKey(strColumnName))
             throw new DBAppException("Column does not exist");
         
-        return !htblMetadata.get(strTableName).get(strColumnName).get("IndexName").equals("N/A");
+        return !htblMetadata.get(strTableName).get(strColumnName).get("IndexName").equals("null");
     }
 
     /**
@@ -306,8 +306,8 @@ public class Metadata {
                 htblMetadata.get(strTableName).put(strColumnName, new Hashtable<>());
                 htblMetadata.get(strTableName).get(strColumnName).put("Column Type", htblColNameType.get(strColumnName));
                 htblMetadata.get(strTableName).get(strColumnName).put("ClusteringKey", strColumnName.equals(strClusteringKey) ? "true" : "false");
-                htblMetadata.get(strTableName).get(strColumnName).put("IndexName", "N/A");
-                htblMetadata.get(strTableName).get(strColumnName).put("IndexType", "N/A");
+                htblMetadata.get(strTableName).get(strColumnName).put("IndexName", "null");
+                htblMetadata.get(strTableName).get(strColumnName).put("IndexType", "null");
             }
         }
         
@@ -364,8 +364,8 @@ public class Metadata {
      */
     public void deleteIndex(String strTableName, String strColName) throws IOException{
         if(htblMetadata.containsKey(strTableName)){
-            htblMetadata.get(strTableName).get(strColName).put("IndexName", "N/A");
-            htblMetadata.get(strTableName).get(strColName).put("IndexType", "N/A");
+            htblMetadata.get(strTableName).get(strColName).put("IndexName", "null");
+            htblMetadata.get(strTableName).get(strColName).put("IndexType", "null");
         }
         else{
             throw new IOException("Table does not exist");
