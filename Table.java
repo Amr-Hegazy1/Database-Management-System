@@ -71,19 +71,23 @@ public class Table implements Serializable {
      *                    the file path where the object will be written in
      *                    serialized form.
      */
-    public void serialize(String strFileName) throws IOException {
+    public void serialize(String strFileName) throws DBAppException {
         
         
-        // TODO: Exception Handling
-
+        
+        try{
       
-        
-        FileOutputStream fos= new FileOutputStream(strFileName);
-        ObjectOutputStream oos=new ObjectOutputStream(fos);
-        oos.writeObject(this);
+            
+            FileOutputStream fos= new FileOutputStream(strFileName);
+            ObjectOutputStream oos=new ObjectOutputStream(fos);
+            oos.writeObject(this);
 
-        oos.close();
-        fos.close();
+            oos.close();
+            fos.close();
+
+        }catch(IOException ioe){
+            throw new DBAppException("Error in Serialization");
+        }
 
     }
 
@@ -97,18 +101,24 @@ public class Table implements Serializable {
      *                    `Table` object will be deserialized.
      * @return The `deserialize` method is returning an object of type `Table`.
      */
-    public static Table deserialize(String strFileName) throws IOException, ClassNotFoundException {
+    public static Table deserialize(String strFileName) throws DBAppException {
 
-        // TODO: Exception Handling
+        try{
 
-        FileInputStream fis = new FileInputStream(strFileName);
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        Table table = (Table) ois.readObject();
+            FileInputStream fis = new FileInputStream(strFileName);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            Table table = (Table) ois.readObject();
 
-        ois.close();
-        fis.close();
+            ois.close();
+            fis.close();
+            return table;
+        }catch(IOException ioe){
+            throw new DBAppException("Error in Deserialization");
+        }catch(ClassNotFoundException c){
+            throw new DBAppException("Class not found");
+        }
 
-        return table;
+        
 
     }
     //get all the pages used to store the table's data
@@ -148,7 +158,7 @@ public class Table implements Serializable {
      * prints it to the console.
      * 
      */
-    public void printAllPages() throws IOException, ClassNotFoundException{
+    public void printAllPages() throws DBAppException{
         for(int i = 0; i < this.getNumberOfPages(); i++){
 
             

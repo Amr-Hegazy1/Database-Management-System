@@ -102,7 +102,7 @@ public class Tuple implements Serializable, Comparable<Tuple>{
      */
     public String toString() {
 
-        // TODO: remove last comma
+        
          
 
         String res = "";
@@ -112,6 +112,11 @@ public class Tuple implements Serializable, Comparable<Tuple>{
             res += hmTuple.get(column) + ",";
             
 
+        }
+
+        // remove the last comma
+        if (res.length() > 0) {
+            res = res.substring(0, res.length() - 1);
         }
         
         return res;
