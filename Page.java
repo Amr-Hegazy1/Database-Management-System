@@ -15,28 +15,29 @@ public class Page implements Serializable {
     public static int intPageSize;
 
     private String strPageName;
-    
 
-
-
-    
-    // The above code is a constructor for a Java class named `Page`. It takes a `String` parameter
-    // `strTableName` and initializes the `strPageName` attribute of the `Page` object with the value
-    // of `strTableName`. It also initializes a `Vector` named `vecTuples` to store `Tuple` objects.
+    // The above code is a constructor for a Java class named `Page`. It takes a
+    // `String` parameter
+    // `strTableName` and initializes the `strPageName` attribute of the `Page`
+    // object with the value
+    // of `strTableName`. It also initializes a `Vector` named `vecTuples` to store
+    // `Tuple` objects.
     public Page(String strTableName) {
         this.strPageName = strTableName;
         vecTuples = new Vector<Tuple>();
     }
 
-
-    
     /**
-     * The addTuple function adds a Tuple object at a specified index in a list of Tuple objects.
+     * The addTuple function adds a Tuple object at a specified index in a list of
+     * Tuple objects.
      * 
-     * @param index The `index` parameter specifies the position at which the `Tuple` object should be
-     * added to the `vecTuples` vector.
-     * @param tupleTuple The parameter `tupleTuple` is an object of type `Tuple`. It represents a tuple
-     * that you want to add to a list of tuples at a specific index.
+     * @param index      The `index` parameter specifies the position at which the
+     *                   `Tuple` object should be
+     *                   added to the `vecTuples` vector.
+     * @param tupleTuple The parameter `tupleTuple` is an object of type `Tuple`. It
+     *                   represents a tuple
+     *                   that you want to add to a list of tuples at a specific
+     *                   index.
      */
     public void addTuple(int index, Tuple tupleTuple) {
         vecTuples.add(index, tupleTuple);
@@ -45,15 +46,15 @@ public class Page implements Serializable {
     /**
      * The addTuple function adds a Tuple object to a list of tuples.
      * 
-     * @param tupleTuple The parameter `tupleTuple` in the `addTuple` method is of type `Tuple`, which
-     * is the type of object that you are adding to the `vecTuples` collection.
+     * @param tupleTuple The parameter `tupleTuple` in the `addTuple` method is of
+     *                   type `Tuple`, which
+     *                   is the type of object that you are adding to the
+     *                   `vecTuples` collection.
      */
-    public void addTuple(Tuple tupleTuple){
+    public void addTuple(Tuple tupleTuple) {
         vecTuples.add(tupleTuple);
-        
-    }
 
-    
+    }
 
     /**
      * The getFirstTuple function returns first tuple in the page.
@@ -100,94 +101,95 @@ public class Page implements Serializable {
     /**
      * The getSize() function returns the size of a vector of tuples.
      * 
-     * @return The `getSize` method is returning the size of the `vecTuples` collection.
+     * @return The `getSize` method is returning the size of the `vecTuples`
+     *         collection.
      */
-    public int getSize(){
+    public int getSize() {
         return vecTuples.size();
     }
 
-   
     /**
-     * This Java function retrieves a Tuple object from a list based on a specified index, throwing an
+     * This Java function retrieves a Tuple object from a list based on a specified
+     * index, throwing an
      * exception if the index is out of bounds.
      * 
-     * @param i The parameter `i` represents the index of the tuple that you want to retrieve from the
-     * `vecTuples` list. If `i` is within the valid range of indices in the list, the method will
-     * return the tuple at that index. Otherwise, it will throw a `DBAppException`
+     * @param i The parameter `i` represents the index of the tuple that you want to
+     *          retrieve from the
+     *          `vecTuples` list. If `i` is within the valid range of indices in the
+     *          list, the method will
+     *          return the tuple at that index. Otherwise, it will throw a
+     *          `DBAppException`
      * @return A Tuple object is being returned.
      */
-    public Tuple getTupleWithIndex(int i) throws DBAppException{
+    public Tuple getTupleWithIndex(int i) throws DBAppException {
 
-        if(i >= vecTuples.size()) 
+        if (i >= vecTuples.size())
             throw new DBAppException("Attempting to access a wrong tuple index");
 
         return vecTuples.get(i);
     }
 
     /**
-     * This Java function searches for tuples by a given clustering key name and value using binary
+     * This Java function searches for tuples by a given clustering key name and
+     * value using binary
      * search.
      * 
-     * @param strClusteringKeyName The `strClusteringKeyName` parameter is the name of the clustering
-     * key that you want to search for in the list of tuples. It is used to identify the specific
-     * attribute or column in the tuple that serves as the clustering key for the data structure.
-     * @param strClusteringKeyValue The `strClusteringKeyValue` parameter represents the value of the
-     * clustering key that you are searching for within the list of tuples. The method
-     * `searchTuplesByClusteringKey` is designed to search for a specific tuple within the list of
-     * tuples based on the provided clustering key name and value.
-     * @return The method is returning the index of the tuple in the `vecTuples` list that matches the
-     * provided clustering key name and value. If a match is found, the method returns the index of
-     * that tuple. If no match is found after the binary search, it throws a `DBAppException` with the
-     * message "Column Value doesn't exist".
+     * @param strClusteringKeyName  The `strClusteringKeyName` parameter is the name
+     *                              of the clustering
+     *                              key that you want to search for in the list of
+     *                              tuples. It is used to identify the specific
+     *                              attribute or column in the tuple that serves as
+     *                              the clustering key for the data structure.
+     * @param strClusteringKeyValue The `strClusteringKeyValue` parameter represents
+     *                              the value of the
+     *                              clustering key that you are searching for within
+     *                              the list of tuples. The method
+     *                              `searchTuplesByClusteringKey` is designed to
+     *                              search for a specific tuple within the list of
+     *                              tuples based on the provided clustering key name
+     *                              and value.
+     * @return The method is returning the index of the tuple in the `vecTuples`
+     *         list that matches the
+     *         provided clustering key name and value. If a match is found, the
+     *         method returns the index of
+     *         that tuple. If no match is found after the binary search, it throws a
+     *         `DBAppException` with the
+     *         message "Column Value doesn't exist".
      */
-    public int searchTuplesByClusteringKey(String strClusteringKeyName, Object objClusteringKeyValue) throws DBAppException{
+    public int searchTuplesByClusteringKey(String strClusteringKeyName, Object objClusteringKeyValue)
+            throws DBAppException {
 
         int n = vecTuples.size();
 
         int left = 0, right = n - 1;
 
-        while(left <= right){
+        while (left <= right) {
             int mid = left + (right - left) / 2;
-
-            
-
-            
 
             Comparable midClusteringKeyValue = (Comparable) vecTuples.get(mid).getColumnValue(strClusteringKeyName);
 
             Comparable compClusteringKeyValue = (Comparable) objClusteringKeyValue;
 
-            if(midClusteringKeyValue.compareTo(compClusteringKeyValue) == 0){
+            if (midClusteringKeyValue.compareTo(compClusteringKeyValue) == 0) {
                 return mid;
-            }else if(midClusteringKeyValue.compareTo(compClusteringKeyValue) < 0){
+            } else if (midClusteringKeyValue.compareTo(compClusteringKeyValue) < 0) {
                 left = mid + 1;
-            }else{
+            } else {
                 right = mid - 1;
             }
 
         }
-            
 
         throw new DBAppException("Column Value doesn't exist");
-            
-
-            
 
     }
 
-
-
-    public void deleteTupleWithIndex(int i) throws DBAppException{
-        if(i >= vecTuples.size()) 
+    public void deleteTupleWithIndex(int i) throws DBAppException {
+        if (i >= vecTuples.size())
             throw new DBAppException("Attempting to access a wrong tuple index");
-            
+
         vecTuples.remove(i);
     }
-
-    
-
-
-    
 
     /**
      * The `toString` function iterates through a list of `Tuple` objects and
@@ -210,41 +212,37 @@ public class Page implements Serializable {
         return res;
     }
 
-     /*
-     * The function `getPageName` returns the value of the `strPageName` variable as a String.
+    /*
+     * The function `getPageName` returns the value of the `strPageName` variable as
+     * a String.
      * 
-     * @return The method `getPageName()` is returning the value of the variable `strPageName`, which
+     * @return The method `getPageName()` is returning the value of the variable
+     * `strPageName`, which
      * presumably holds the name of a page.
      */
-    public String getPageName(){
+    public String getPageName() {
         return strPageName;
     }
 
     /**
-     * The function `setPageName` sets the value of the `strPageName` variable to the specified
+     * The function `setPageName` sets the value of the `strPageName` variable to
+     * the specified
      * parameter `strPageName`.
      * 
-     * @param strPageName The `strPageName` parameter is a `String` that represents the name of a page.
-     */    
+     * @param strPageName The `strPageName` parameter is a `String` that represents
+     *                    the name of a page.
+     */
     public static void deletePage(String strPageName) throws IOException {
-        
-        
 
         File filePage = new File(strPageName);
 
-        if(filePage.delete()){
+        if (filePage.delete()) {
             System.out.println(filePage.getName() + " is deleted!");
-        }else{
+        } else {
             System.out.println("Delete operation is failed.");
         }
-        
-        
-    
 
     }
-
-    
-
 
     /**
      * This Java function searches for tuples by a given clustering key name and
@@ -275,7 +273,6 @@ public class Page implements Serializable {
         int n = vecTuples.size();
 
         int left = 0, right = n - 1;
-
 
         while (left <= right) {
             int mid = left + (right - left) / 2;
@@ -316,8 +313,6 @@ public class Page implements Serializable {
 
         // TODO: Exception Handling
 
-        
-
         FileOutputStream fos = new FileOutputStream(strFileName);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(this);
@@ -353,41 +348,42 @@ public class Page implements Serializable {
         return page;
 
     }
-    //get all tuples in the page
-    public Vector<Tuple> getTuples(){
+
+    // get all tuples in the page
+    public Vector<Tuple> getTuples() {
         return this.vecTuples;
     }
 
     /**
      * The `deleteTuple` function removes a specified tuple from a vector of tuples.
      * 
-     * @param tuple The `deleteTuple` method takes a `Tuple` object as a parameter. This `Tuple` object
-     * is used to identify and remove a specific tuple from the `vecTuples` collection.
+     * @param tuple The `deleteTuple` method takes a `Tuple` object as a parameter.
+     *              This `Tuple` object
+     *              is used to identify and remove a specific tuple from the
+     *              `vecTuples` collection.
      */
     public void deleteTuple(Tuple tuple) {
         // TODO: make vecTuple.remove() work
-        
-        for(int i = 0; i < vecTuples.size(); i++){
-            if(vecTuples.get(i).equals(tuple)){
-                
+
+        for (int i = 0; i < vecTuples.size(); i++) {
+            if (vecTuples.get(i).equals(tuple)) {
+
                 vecTuples.remove(i);
                 return;
             }
         }
     }
 
-
-
     public static void main(String[] args) {
         // create 5 page objects with 5 tuples and serialize them
         String strTableName = "Student";
         int intPageSize = 200;
-        
-        for(int i = 0; i < 5; i++){
+
+        for (int i = 0; i < 5; i++) {
             Page page = new Page(strTableName + "_" + i);
-            for(int j = 0; j < intPageSize; j++){
+            for (int j = 0; j < intPageSize; j++) {
                 Tuple tuple = new Tuple();
-                for(int k = 0; k < 5; k++){
+                for (int k = 0; k < 5; k++) {
                     tuple.setColumnValue("id", i * intPageSize + j);
                     tuple.setColumnValue("name", "Ahmed" + i + j);
                     tuple.setColumnValue("gpa", 20);
@@ -396,25 +392,21 @@ public class Page implements Serializable {
                 page.addTuple(tuple);
             }
             try {
-                page.serialize("tables/" + strTableName + "/" + strTableName + "_" +  i + ".class");
+                page.serialize("tables/" + strTableName + "/" + strTableName + "_" + i + ".class");
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    
     /**
      * The function `getVecTuples` returns a Vector of Tuple objects.
      * 
      * @return A Vector of Tuple objects named vecTuples is being returned.
      */
     public Vector<Tuple> getVecTuples() {
-		
-		return vecTuples;
-	}
 
-    
-    
+        return vecTuples;
+    }
 
 }
