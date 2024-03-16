@@ -226,7 +226,7 @@ public class Page implements Serializable {
      * 
      * @param strPageName The `strPageName` parameter is a `String` that represents the name of a page.
      */    
-    public static void deletePage(String strPageName) throws IOException {
+    public static void deletePage(String strPageName) throws DBAppException {
         
         
 
@@ -312,18 +312,22 @@ public class Page implements Serializable {
      *                    be serialized. This parameter specifies
      *                    the file path where the serialized object will be saved.
      */
-    public void serialize(String strFileName) throws IOException {
-
-        // TODO: Exception Handling
+    public void serialize(String strFileName) throws DBAppException {
 
         
 
-        FileOutputStream fos = new FileOutputStream(strFileName);
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
-        oos.writeObject(this);
+        try{
 
-        oos.close();
-        fos.close();
+            FileOutputStream fos = new FileOutputStream(strFileName);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(this);
+
+            oos.close();
+            fos.close();
+        }catch(IOException ioe){
+            throw new DBAppException("Error in Serialization");
+        }
+
 
     }
 
@@ -339,20 +343,27 @@ public class Page implements Serializable {
      *         has been
      *         deserialized from the file specified by the `strFileName` parameter.
      */
-    public static Page deserialize(String strFileName) throws IOException, ClassNotFoundException {
+    public static Page deserialize(String strFileName) throws DBAppException {
 
-        // TODO: Exception Handling
+        try{
 
-        FileInputStream fis = new FileInputStream(strFileName);
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        Page page = (Page) ois.readObject();
+            FileInputStream fis = new FileInputStream(strFileName);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            Page page = (Page) ois.readObject();
 
-        ois.close();
-        fis.close();
+            ois.close();
+            fis.close();
 
-        return page;
+            return page;
+        }catch(IOException ioe){
+            throw new DBAppException("Error in Deserialization");
+        }catch(ClassNotFoundException c){
+            throw new DBAppException("Class not found");
+        }
 
     }
+
+
     //get all tuples in the page
     public Vector<Tuple> getTuples(){
         return this.vecTuples;
@@ -397,7 +408,7 @@ public class Page implements Serializable {
             }
             try {
                 page.serialize("tables/" + strTableName + "/" + strTableName + "_" +  i + ".class");
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

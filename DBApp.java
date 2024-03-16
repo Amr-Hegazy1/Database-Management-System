@@ -23,7 +23,7 @@ public class DBApp  {
 	and the value is the index itself*/
 	private Hashtable<String, bplustree> htbIndex ;
 
-	public DBApp( ) throws FileNotFoundException, IOException, ClassNotFoundException{
+	public DBApp( ) throws DBAppException{
 		metadata = new Metadata();
 		htbIndex = new Hashtable<>();
 
@@ -69,26 +69,24 @@ public class DBApp  {
 	 * 
 	 * @throws DBAppException The `DBAppException` will be thrown if there exists a
 	 *                        table with
-	 *                        the same name.
+	 *                        the same name, or if it cannot create a folder for the
+	 * 					  	  table.
 	 * 
-	 * @throws IOExecption    The `IOExecption` will be thrown if the function fails
-	 *                        to create the
-	 *                        folder or fails to serialize the table.
 	 */
 	public void createTable(String strTableName,
 			String strClusteringKeyColumn,
-			Hashtable<String, String> htblColNameType) throws DBAppException, IOException {
+			Hashtable<String, String> htblColNameType) throws DBAppException {
 
 		metadata.addTable(strTableName, strClusteringKeyColumn, htblColNameType);
 		metadata.save();
 		Table tblTable = new Table(strTableName);
 		File fileTableFolder = new File("tables/" + strTableName);
 		if (!fileTableFolder.exists()) {
-			boolean boolSuccess = fileTableFolder.mkdir();
+			boolean boolSuccess = fileTableFolder.mkdirs();
 			if (boolSuccess) {
-				tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
+				tblTable.serialize("tables//" + strTableName + "//" + strTableName + ".class");
 			} else {
-				throw new IOException("Can't create a Folder!");
+				throw new DBAppException("Can't create a Folder!");
 			}
 		} else {
 			throw new DBAppException("Table already exists!");
@@ -114,7 +112,7 @@ public class DBApp  {
 	 * in the memory and put the  tree in the htbIndex so it can be accessed if needed anytime in the other code segments
 	 */
 	
-	public void createIndex(String strTableName,String strColName,String strIndexName) throws DBAppException, IOException, ClassNotFoundException{
+	public void createIndex(String strTableName,String strColName,String strIndexName) throws DBAppException{
         if(!metadata.checkTableName(strTableName)){
             throw new DBAppException("This table does not exist");
 
@@ -177,7 +175,7 @@ public class DBApp  {
 	// following method inserts one row only. 
 	// htblColNameValue must include a value for the primary key
 	public void insertIntoTable(String strTableName,
-			Hashtable<String, Object> htblColNameValue) throws DBAppException, ClassNotFoundException, IOException {
+			Hashtable<String, Object> htblColNameValue) throws DBAppException {
 
 		HashSet<String> hsIndexedColumns = new HashSet<String>();// hashset to store indexed column names
 		Tuple tupleNewTuple = new Tuple(); // New Tuple to be filled with input data and added to Table.
@@ -227,137 +225,143 @@ public class DBApp  {
 		if (intColCounter != listColNames.size()) { // checking if all columns were included in insert
 			throw new DBAppException("Column(s) Missing, Please Enter All Columns");
 		}
+		try{
+			// Table object that i ill use to add the tuple to it
+			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
+			Vector<String> vecPages = tblTable.getPageVector(); // Vector of Page names inside of Table object
 
-		// Table object that i ill use to add the tuple to it
-		Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
-		Vector<String> vecPages = tblTable.getPageVector(); // Vector of Page names inside of Table object
-
-		Properties prop = new Properties();
-		String fileName = "DBApp.config";
-		FileInputStream fis = new FileInputStream(fileName);
-		prop.load(fis);
-
-		// Inserting w/o any Indicies
-
-		int intMaxSize = Integer.parseInt(prop.getProperty("MaximumRowsCountinPage")); // Max allowed Tuples per page.
-		int intpageNum = tblTable.getNumofPages(); // Only used to check if Table has existing pages or not
-		boolean boolMaxValueisPassed = false; // to check if page overflowed
-		boolean boolSkipPage = false; // to check if page is in range of clustering key, if not skip it
-		Tuple tupleLastTuple = new Tuple(); // tuple i remove incase of overflow
-		String strFinalPageName = ""; // the name of the page that the tuple was inserted in
-		
-		if (intpageNum != 0) {// if table already has pages, traverse them while checking ranges of clust key
-			for (String strPageName : vecPages) {
-				boolSkipPage = false;
-				boolMaxValueisPassed = false;
-				Page page = Page.deserialize("tables/" + strTableName + "/" + strPageName + ".class");
-
-				// checking if page has correct range for the clustering key
-				Tuple firstTuple = page.getFirstTuple(); // tuple i use to check range(min)
-				Tuple lastTuple = page.getLastTuple(); // tuple i use to check range(max)
-
-				// checking range of clustering key(whether its int, double or string)
-				if (firstTuple.getColumnValue(strClustKeyName) instanceof Integer) {
-					int first = (int) firstTuple.getColumnValue(strClustKeyName);
-					int last = (int) lastTuple.getColumnValue(strClustKeyName);
-					int input = (int) htblColNameValue.get(strClustKeyName);
-					if (input < first || input > last) {
-						boolSkipPage = true;
-					}
-				} else if (firstTuple.getColumnValue(strClustKeyName) instanceof Double) {
-					double first = (double) firstTuple.getColumnValue(strClustKeyName);
-					double last = (double) lastTuple.getColumnValue(strClustKeyName);
-					double input = (double) htblColNameValue.get(strClustKeyName);
-					if (input < first || input > last) {
-						boolSkipPage = true;
-					}
-				} else {
-					String first = (String) firstTuple.getColumnValue(strClustKeyName);
-					String last = (String) lastTuple.getColumnValue(strClustKeyName);
-					String input = (String) htblColNameValue.get(strClustKeyName);
-					if (input.compareTo(first) < 0 || input.compareTo(last) > 0) {
-						boolSkipPage = true;
-					}
-				}
-
-				
-
-				if (!boolSkipPage) { // if page's Tuples are in range of my new tuple's clustering key, then i can
-										// insert
-					int index = page.binarySearchTuples(strClustKeyName,
-							htblColNameValue.get(strClustKeyName));
-					Tuple tuplecheckTuple = page.getTuple(index);
-
-					// make sure new clustering key is not a duplicate
-					if (tuplecheckTuple.getColumnValue(strClustKeyName) == htblColNameValue.get(strClustKeyName)
-							|| tuplecheckTuple.getColumnValue(strClustKeyName)
-									.equals(htblColNameValue.get(strClustKeyName))) {
-						throw new DBAppException("Primary Key Already Exists");
-					}
-					page.addTuple(index, tupleNewTuple);
-					System.out.println("Page Size: " + page.getSize());
-					if (page.getSize() > intMaxSize) {
-						boolMaxValueisPassed = true;
-						tupleLastTuple = page.removeLastTuple(); // getLastTuple() returns the last tuple and
-																	// removes it
-																	// from the page
-						page.serialize("tables/" + strTableName + "/" + strPageName + ".class");
-					} else {
-						page.serialize("tables/" + strTableName + "/" + strPageName + ".class");
-					}
-
-					if (boolMaxValueisPassed) { // if overflow occurs, create a new page with the last tuple removed
-												// from the previous page
-						
-						String strNewPageName = tblTable.addPage(); // addPage() adds page to the table Vector and
-																	// assigns
-																	// it an automated Page Name & returns that name
-
-						Page newPage = new Page(strNewPageName);
-						newPage.addTuple(0, tupleLastTuple);
-
-						if (!tupleLastTuple.equals(tupleNewTuple)) {// ensure which page name my tuple was inserted into
-							strFinalPageName = strPageName;
-							tupleNewTuple.setPageName(strFinalPageName);
-						} else {
-							strFinalPageName = strNewPageName;
-							tupleNewTuple.setPageName(strFinalPageName);
-						}
-						newPage.serialize("tables/" + strTableName + "/" + strNewPageName + ".class");
-					}
-				}
-
-			}
-
-		} else {// if table has no pages to begin with
 			
-			String strPageName = tblTable.addPage(); // addPage() adds page to the table Vector and assigns it an
-														// automated Page Name & returns that name
-			Page newPage = new Page(strPageName);
-			tupleNewTuple.setPageName(strPageName);
-			newPage.addTuple(0, tupleNewTuple);
-			System.out.println("Page Name: " + strPageName);
-			newPage.serialize("tables/" + strTableName + "/" + strPageName + ".class");
-		}
+				Properties prop = new Properties();
+				String fileName = "DBApp.config";
+				FileInputStream fis = new FileInputStream(fileName);
+				prop.load(fis);
+				fis.close();
+			
 
-		// Adjusting Indicies (If any)
-		if (hsIndexedColumns.size() > 0) {
-			for (String strColName : hsIndexedColumns) {
-				String strIndexName = metadata.getIndexName(strTableName, strColName); // getting index name
-				bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class"); // getting
-																														// the
-																														// tree
-																														// object
-				Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
-																								// Comparable
-				bptTree.insert(colValue, tupleNewTuple); // inserting col value(key) and tuple object(value) into bTree
+			// Inserting w/o any Indicies
 
-				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
+			int intMaxSize = Integer.parseInt(prop.getProperty("MaximumRowsCountinPage")); // Max allowed Tuples per page.
+			int intpageNum = tblTable.getNumofPages(); // Only used to check if Table has existing pages or not
+			boolean boolMaxValueisPassed = false; // to check if page overflowed
+			boolean boolSkipPage = false; // to check if page is in range of clustering key, if not skip it
+			Tuple tupleLastTuple = new Tuple(); // tuple i remove incase of overflow
+			String strFinalPageName = ""; // the name of the page that the tuple was inserted in
+			
+			if (intpageNum != 0) {// if table already has pages, traverse them while checking ranges of clust key
+				for (String strPageName : vecPages) {
+					boolSkipPage = false;
+					boolMaxValueisPassed = false;
+					Page page = Page.deserialize("tables/" + strTableName + "/" + strPageName + ".class");
+
+					// checking if page has correct range for the clustering key
+					Tuple firstTuple = page.getFirstTuple(); // tuple i use to check range(min)
+					Tuple lastTuple = page.getLastTuple(); // tuple i use to check range(max)
+
+					// checking range of clustering key(whether its int, double or string)
+					if (firstTuple.getColumnValue(strClustKeyName) instanceof Integer) {
+						int first = (int) firstTuple.getColumnValue(strClustKeyName);
+						int last = (int) lastTuple.getColumnValue(strClustKeyName);
+						int input = (int) htblColNameValue.get(strClustKeyName);
+						if (input < first || input > last) {
+							boolSkipPage = true;
+						}
+					} else if (firstTuple.getColumnValue(strClustKeyName) instanceof Double) {
+						double first = (double) firstTuple.getColumnValue(strClustKeyName);
+						double last = (double) lastTuple.getColumnValue(strClustKeyName);
+						double input = (double) htblColNameValue.get(strClustKeyName);
+						if (input < first || input > last) {
+							boolSkipPage = true;
+						}
+					} else {
+						String first = (String) firstTuple.getColumnValue(strClustKeyName);
+						String last = (String) lastTuple.getColumnValue(strClustKeyName);
+						String input = (String) htblColNameValue.get(strClustKeyName);
+						if (input.compareTo(first) < 0 || input.compareTo(last) > 0) {
+							boolSkipPage = true;
+						}
+					}
+
+					
+
+					if (!boolSkipPage) { // if page's Tuples are in range of my new tuple's clustering key, then i can
+											// insert
+						int index = page.binarySearchTuples(strClustKeyName,
+								htblColNameValue.get(strClustKeyName));
+						Tuple tuplecheckTuple = page.getTuple(index);
+
+						// make sure new clustering key is not a duplicate
+						if (tuplecheckTuple.getColumnValue(strClustKeyName) == htblColNameValue.get(strClustKeyName)
+								|| tuplecheckTuple.getColumnValue(strClustKeyName)
+										.equals(htblColNameValue.get(strClustKeyName))) {
+							throw new DBAppException("Primary Key Already Exists");
+						}
+						page.addTuple(index, tupleNewTuple);
+						System.out.println("Page Size: " + page.getSize());
+						if (page.getSize() > intMaxSize) {
+							boolMaxValueisPassed = true;
+							tupleLastTuple = page.removeLastTuple(); // getLastTuple() returns the last tuple and
+																		// removes it
+																		// from the page
+							page.serialize("tables/" + strTableName + "/" + strPageName + ".class");
+						} else {
+							page.serialize("tables/" + strTableName + "/" + strPageName + ".class");
+						}
+
+						if (boolMaxValueisPassed) { // if overflow occurs, create a new page with the last tuple removed
+													// from the previous page
+							
+							String strNewPageName = tblTable.addPage(); // addPage() adds page to the table Vector and
+																		// assigns
+																		// it an automated Page Name & returns that name
+
+							Page newPage = new Page(strNewPageName);
+							newPage.addTuple(0, tupleLastTuple);
+
+							if (!tupleLastTuple.equals(tupleNewTuple)) {// ensure which page name my tuple was inserted into
+								strFinalPageName = strPageName;
+								tupleNewTuple.setPageName(strFinalPageName);
+							} else {
+								strFinalPageName = strNewPageName;
+								tupleNewTuple.setPageName(strFinalPageName);
+							}
+							newPage.serialize("tables/" + strTableName + "/" + strNewPageName + ".class");
+						}
+					}
+
+				}
+
+			} else {// if table has no pages to begin with
+				
+				String strPageName = tblTable.addPage(); // addPage() adds page to the table Vector and assigns it an
+															// automated Page Name & returns that name
+				Page newPage = new Page(strPageName);
+				tupleNewTuple.setPageName(strPageName);
+				newPage.addTuple(0, tupleNewTuple);
+				System.out.println("Page Name: " + strPageName);
+				newPage.serialize("tables/" + strTableName + "/" + strPageName + ".class");
 			}
-		}
 
-		// Serializing Table
-		tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
+			// Adjusting Indicies (If any)
+			if (hsIndexedColumns.size() > 0) {
+				for (String strColName : hsIndexedColumns) {
+					String strIndexName = metadata.getIndexName(strTableName, strColName); // getting index name
+					bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class"); // getting
+																															// the
+																															// tree
+																															// object
+					Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
+																									// Comparable
+					bptTree.insert(colValue, tupleNewTuple); // inserting col value(key) and tuple object(value) into bTree
+
+					bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
+				}
+			}
+
+			// Serializing Table
+			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
+		}catch (IOException ex) {
+			throw new DBAppException("Error in reading the config file");
+		}
 
 	}
 
@@ -372,7 +376,7 @@ public class DBApp  {
 		throw new DBAppException("not implemented yet");
 	}
 	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
-		try {
+		
 			
 			
 			if (!metadata.checkTableName(strTableName)) 
@@ -462,10 +466,7 @@ public class DBApp  {
 				throw new DBAppException("Page not found for the given clustering key.");
 			}
 			
-		} catch (IOException | ClassNotFoundException e) {
-			e.printStackTrace();
-			throw new DBAppException("Exception occurred: " + e.getMessage());
-		}
+		
 	}
 
 
@@ -489,7 +490,7 @@ public class DBApp  {
 	 * not found within the range, the method will continue searching through the pages until it either
 	 * finds the key or exhausts all pages, in which case it will return `null`.
 	 */
-	private Page getPageByClusteringKey(String strTableName, String strClusteringKey, Object objClusteringKeyValue, Table table) throws IOException, ClassNotFoundException, DBAppException{
+	private Page getPageByClusteringKey(String strTableName, String strClusteringKey, Object objClusteringKeyValue, Table table) throws DBAppException{
 
         int intTableSize = table.getNumberOfPages();
         int intTopPageIndex = 0;
@@ -548,7 +549,7 @@ public class DBApp  {
 	 * columns for the record that you want to delete.
 	 * @param table 
 	 */
-	private void deleteWithClusteringKey(String strTableName, String strClusteringKey, Hashtable<String,Object> htblColNameValue, Table table) throws IOException,ClassNotFoundException, DBAppException{
+	private void deleteWithClusteringKey(String strTableName, String strClusteringKey, Hashtable<String,Object> htblColNameValue, Table table) throws DBAppException{
 		
         Object objClusteringKeyValue = htblColNameValue.get(strClusteringKey);
 		Page pagePage = getPageByClusteringKey(strTableName, strClusteringKey, objClusteringKeyValue, table);
@@ -602,7 +603,7 @@ public class DBApp  {
 	 * @return This method returns a Hashtable containing tuples and their corresponding page names that
 	 * match the given indexed column value in the specified table.
 	 */
-	private Hashtable<Tuple, String> getTuplesFromIndex(String strTableName, String strIndexedColumn, Hashtable<String,Object> htblColNameValue) throws IOException, ClassNotFoundException, DBAppException{
+	private Hashtable<Tuple, String> getTuplesFromIndex(String strTableName, String strIndexedColumn, Hashtable<String,Object> htblColNameValue) throws DBAppException{
 
 		String strIndexName = metadata.getIndexName(strTableName, strIndexedColumn);
 		System.out.println(strIndexName);
@@ -676,7 +677,7 @@ public class DBApp  {
 	 * pages in a table, then iterates through all tuples in each page. For each tuple, it checks if the
 	 * values in
 	 */
-	private void deleteNonClusterinKeyWithoutIndex(String strTableName, Hashtable<String,Object> htblColNameValue, Table table) throws IOException, ClassNotFoundException, DBAppException{
+	private void deleteNonClusterinKeyWithoutIndex(String strTableName, Hashtable<String,Object> htblColNameValue, Table table) throws DBAppException{
 
 		// Linear search
 
@@ -744,7 +745,7 @@ public class DBApp  {
 	 * for deleting records.
 	 * @param table 
 	 */
-	private void deleteWithoutClusteringKey(String strTableName, Hashtable<String,Object> htblColNameValue, Table table) throws IOException, ClassNotFoundException, DBAppException{
+	private void deleteWithoutClusteringKey(String strTableName, Hashtable<String,Object> htblColNameValue, Table table) throws DBAppException{
 		
 		Hashtable<Tuple, String> htblTuples = null;
 		for(String col : htblColNameValue.keySet()){
@@ -834,7 +835,7 @@ public class DBApp  {
 	// htblColNameValue enteries are ANDED together
 
 	public void deleteFromTable(String strTableName, 
-								Hashtable<String,Object> htblColNameValue) throws DBAppException, IOException,ClassNotFoundException{
+								Hashtable<String,Object> htblColNameValue) throws DBAppException{
 
 		if (!metadata.checkTableName(strTableName)){
 			throw new DBAppException("Table does not exist");
@@ -891,7 +892,7 @@ public class DBApp  {
 
 			// insert 200 rows
 
-			for( int i = 0; i < 200; i++ ){
+			for( int i = 0; i < 205; i++ ){
 				
 				Hashtable htblColNameValue = new Hashtable( );
 				htblColNameValue.put("id", new Integer( i ) );

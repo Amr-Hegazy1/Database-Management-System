@@ -30,19 +30,27 @@ public class Metadata {
     // 2. It initializes a new `Hashtable` called `htblMetadata` to store the metadata.
     // 3. It calls the `readFile` method to read the metadata from the `metadata.csv` file and populate
     // the `htblMetadata` table with the extracted information.
-    public Metadata() throws FileNotFoundException, IOException{
+    public Metadata() throws DBAppException{
 
 
         // Create metadata file if it does not exist
 
         File fileMetadataFile = new File("metadata.csv");
         if(!fileMetadataFile.exists())
-            fileMetadataFile.createNewFile(); 
+            try {
+                fileMetadataFile.createNewFile();
+            } catch (IOException e) {
+                throw new DBAppException("Error creating metadata file");
+            }
+            
 
 
         htblMetadata  = new Hashtable<>();
-
-        readFile();
+        try {
+            readFile();
+        } catch (FileNotFoundException e) {
+            throw new DBAppException("Error reading metadata file");
+        }
     }
 
     /**
@@ -343,13 +351,13 @@ public class Metadata {
      * the metadata table
      * @param strIndexName The strIndexName parameter represents the name of the index which we will add
      */
-    public void addIndex(String strTableName, String strColName, String strIndexType,String strIndexName) throws IOException{
+    public void addIndex(String strTableName, String strColName, String strIndexType,String strIndexName) throws DBAppException{
         if(htblMetadata.containsKey(strTableName)){
             htblMetadata.get(strTableName).get(strColName).put("IndexName", strIndexName);
             htblMetadata.get(strTableName).get(strColName).put("IndexType", strIndexType);
         }
         else{
-            throw new IOException("Table does not exist");//should be index exists
+            throw new DBAppException("Table does not exist");//should be index exists
         }
     }
 
@@ -376,7 +384,7 @@ public class Metadata {
      * The `save` method writes metadata information to a CSV file for each table and its columns in a
      * specific format.
      */
-    public void save() throws IOException{
+    public void save() throws DBAppException{
         try (FileOutputStream fileOutputStream = new FileOutputStream("metadata.csv")) {
             for (String strTableName : htblMetadata.keySet()) {
                 
@@ -389,6 +397,8 @@ public class Metadata {
                     fileOutputStream.write((htblMetadata.get(strTableName).get(strColumnName).get("IndexType") + "\n").getBytes());
                 }
             }
+        }catch (IOException e) {
+            throw new DBAppException("Error saving metadata");
         }
     }
 
