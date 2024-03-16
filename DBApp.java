@@ -169,202 +169,151 @@ public class DBApp {
 	// following method inserts one row only.
 	// htblColNameValue must include a value for the primary key
 	public void insertIntoTable(String strTableName,
-			Hashtable<String, Object> htblColNameValue) throws DBAppException {
+			Hashtable<String, Object> htblColNameValue) throws DBAppException{
+		try{
+			HashSet<String> hsIndexedColumns = new HashSet<String>();// hashset to store indexed column names
+			Tuple tupleNewTuple = new Tuple(); // New Tuple to be filled with input data and added to Table.
+			String strClustKeyName = ""; // Name of Clustering Key Column
+			int intColCounter = 0;
+			// TODO
 
-		HashSet<String> hsIndexedColumns = new HashSet<String>();// hashset to store indexed column names
-		Tuple tupleNewTuple = new Tuple(); // New Tuple to be filled with input data and added to Table.
-		String strClustKeyName = ""; // Name of Clustering Key Column
-		int intColCounter = 0;
-		// TODO
+			// Checking Table Existence, Correct Col Names, Correct Col Data Types
+			if (!metadata.checkTableName(strTableName)) { // table existence check
+				throw new DBAppException("Table Doesnt Exist");
+			} else {
+				for (Map.Entry<String, Object> entry : htblColNameValue.entrySet()) {
+					if (!metadata.checkColumnName(strTableName, entry.getKey())) { // column name existence check
+						throw new DBAppException("Column Doesnt Exist");
 
-		// Checking Table Existence, Correct Col Names, Correct Col Data Types
-		if (!metadata.checkTableName(strTableName)) { // table existence check
-			throw new DBAppException("Table Doesnt Exist");
-		} else {
-			for (Map.Entry<String, Object> entry : htblColNameValue.entrySet()) {
-				if (!metadata.checkColumnName(strTableName, entry.getKey())) { // column name existence check
-					throw new DBAppException("Column Doesnt Exist");
-
-				} else {
-					String strCorrectDataType = metadata.getColumnType(strTableName, entry.getKey());
-					String strActualDataType = entry.getValue().getClass().getName();
-
-					intColCounter++;
-					if (!strCorrectDataType.equals(strActualDataType)) { // data type check
-						throw new DBAppException("Data Type Mismatch");
-					}
-					if (metadata.isClusteringKey(strTableName, entry.getKey())) {
-						if (entry.getValue() == null) { // clustering key cannot be null check
-							throw new DBAppException("Clustering Key Cannot Be Null");
-						}
-						strClustKeyName = entry.getKey();
-						tupleNewTuple.setColumnValue(entry.getKey(), entry.getValue());
-					} else if (entry.getValue() == null) {// other columns cannot be null check
-						throw new DBAppException("Value Cannot Be Null, Please Enter Appropriate Value");
-					}
-					// checking which columns are indexed
-					// storing indexed column names in a hashset to adjust their indicies later
-					else if (!(metadata.getIndexType(strTableName, entry.getKey())).equals("null")) {
-						hsIndexedColumns.add(entry.getKey());
-						tupleNewTuple.setColumnValue(entry.getKey(), entry.getValue());
 					} else {
-						tupleNewTuple.setColumnValue(entry.getKey(), entry.getValue());
+						String strCorrectDataType = metadata.getColumnType(strTableName, entry.getKey());
+						String strActualDataType = entry.getValue().getClass().getName();
+
+						intColCounter++;
+						if (!strCorrectDataType.equals(strActualDataType)) { // data type check
+							throw new DBAppException("Data Type Mismatch");
+						}
+						if (metadata.isClusteringKey(strTableName, entry.getKey())) {
+							if (entry.getValue() == null) { // clustering key cannot be null check
+								throw new DBAppException("Clustering Key Cannot Be Null");
+							}
+							strClustKeyName = entry.getKey();
+							tupleNewTuple.setColumnValue(entry.getKey(), entry.getValue());
+						} else if (entry.getValue() == null) {// other columns cannot be null check
+							throw new DBAppException("Value Cannot Be Null, Please Enter Appropriate Value");
+						}
+						// checking which columns are indexed
+						// storing indexed column names in a hashset to adjust their indicies later
+						else if (!(metadata.getIndexType(strTableName, entry.getKey())).equals("null")) {
+							hsIndexedColumns.add(entry.getKey());
+							tupleNewTuple.setColumnValue(entry.getKey(), entry.getValue());
+						} else {
+							tupleNewTuple.setColumnValue(entry.getKey(), entry.getValue());
+						}
+
 					}
 
 				}
-
 			}
-		}
-		List<String> listColNames = metadata.getColumnNames(strTableName); // fetching correct column names
-		if (intColCounter != listColNames.size()) { // checking if all columns were included in insert
-			throw new DBAppException("Column(s) Missing, Please Enter All Columns");
-		}
-		try{
+			List<String> listColNames = metadata.getColumnNames(strTableName); // fetching correct column names
+			if (intColCounter != listColNames.size()) { // checking if all columns were included in insert
+				throw new DBAppException("Column(s) Missing, Please Enter All Columns");
+			}
+
 			// Table object that i ill use to add the tuple to it
 			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 			Vector<String> vecPages = tblTable.getPageVector(); // Vector of Page names inside of Table object
 
-			
-				Properties prop = new Properties();
-				String fileName = "DBApp.config";
-				FileInputStream fis = new FileInputStream(fileName);
-				prop.load(fis);
-				fis.close();
-			
+			Properties prop = new Properties();
+			String fileName = "DBApp.config";
+			FileInputStream fis = new FileInputStream(fileName);
+			prop.load(fis);
 
 			// Inserting w/o any Indicies
 
 			int intMaxSize = Integer.parseInt(prop.getProperty("MaximumRowsCountinPage")); // Max allowed Tuples per page.
 			int intpageNum = tblTable.getNumofPages(); // Only used to check if Table has existing pages or not
-			boolean boolMaxValueisPassed = false; // to check if page overflowed
-			boolean boolSkipPage = false; // to check if page is in range of clustering key, if not skip it
-			Tuple tupleLastTuple = new Tuple(); // tuple i remove incase of overflow
-			String strFinalPageName = ""; // the name of the page that the tuple was inserted in
-			
-			if (intpageNum != 0) {// if table already has pages, traverse them while checking ranges of clust key
-				for (String strPageName : vecPages) {
-					boolSkipPage = false;
-					boolMaxValueisPassed = false;
-					Page page = Page.deserialize("tables/" + strTableName + "/" + strPageName + ".class");
+			Page pgInsertPage; // page i will insert in
 
-					// checking if page has correct range for the clustering key
-					Tuple firstTuple = page.getFirstTuple(); // tuple i use to check range(min)
-					Tuple lastTuple = page.getLastTuple(); // tuple i use to check range(max)
+			if (intpageNum != 0) {// if table already has pages, binary search on correct page to insert into
+				pgInsertPage = getPageByClusteringKey(strTableName, strClustKeyName,
+						htblColNameValue.get(strClustKeyName), tblTable); // get the page that the tuple will be inserted
+																			// into
+				if (pgInsertPage == null) {// if tuple is out of range, check first and last page
 
-					// checking range of clustering key(whether its int, double or string)
-					if (firstTuple.getColumnValue(strClustKeyName) instanceof Integer) {
-						int first = (int) firstTuple.getColumnValue(strClustKeyName);
-						int last = (int) lastTuple.getColumnValue(strClustKeyName);
-						int input = (int) htblColNameValue.get(strClustKeyName);
-						if (input < first || input > last) {
-							boolSkipPage = true;
+					String strFirstPage = vecPages.get(0); // get first page name
+					String strLastPage = vecPages.get(vecPages.size() - 1); // get last page name
+
+					// get 1st and last page objects
+					Page pgFirstPage = Page.deserialize("tables/" + strTableName + "/" + strFirstPage + ".class");
+					Page pgLastPage = Page.deserialize("tables/" + strTableName + "/" + strLastPage + ".class");
+
+					Tuple tupleFirstTuple = pgFirstPage.getTupleWithIndex(0); // get first tuple in 1st page(smallest clust
+																				// key)
+
+					Comparable inputClustKey = (Comparable) htblColNameValue.get(strClustKeyName); // clust key in my insert
+																									// tuple
+
+					if (inputClustKey.compareTo((Comparable) tupleFirstTuple // if my insert key is smaller than first page
+																				// key, insert in index 0
+							.getColumnValue(strClustKeyName)) < 0) {
+						pgFirstPage.addTuple(0, tupleNewTuple);
+						tupleNewTuple.setPageName(pgFirstPage.getPageName());
+
+						if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
+							handleInsertOverflow(tblTable, 0, intMaxSize, strClustKeyName);
+						} else {
+							pgFirstPage.serialize("tables/" + strTableName + "/" + pgFirstPage.getPageName() + ".class");
 						}
-					} else if (firstTuple.getColumnValue(strClustKeyName) instanceof Double) {
-						double first = (double) firstTuple.getColumnValue(strClustKeyName);
-						double last = (double) lastTuple.getColumnValue(strClustKeyName);
-						double input = (double) htblColNameValue.get(strClustKeyName);
-						if (input < first || input > last) {
-							boolSkipPage = true;
+
+					} else {// only option left is that its bigger than last key in last page, so insert in
+							// last index in last page
+						pgLastPage.addTuple(pgLastPage.getSize(), tupleNewTuple);
+						tupleNewTuple.setPageName(pgLastPage.getPageName());
+
+						if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
+							handleInsertOverflow(tblTable, vecPages.size() - 1, intMaxSize, strClustKeyName);
+						} else {
+							pgLastPage.serialize("tables/" + strTableName + "/" + pgLastPage.getPageName() + ".class");
 						}
-					} else {
-						String first = (String) firstTuple.getColumnValue(strClustKeyName);
-						String last = (String) lastTuple.getColumnValue(strClustKeyName);
-						String input = (String) htblColNameValue.get(strClustKeyName);
-						if (input.compareTo(first) < 0 || input.compareTo(last) > 0) {
-							boolSkipPage = true;
-						}
-					}
-
-					
-
-					if (!boolSkipPage) { // if page's Tuples are in range of my new tuple's clustering key, then i can
-											// insert
-						int index = page.binarySearchTuples(strClustKeyName,
-								htblColNameValue.get(strClustKeyName));
-						Tuple tuplecheckTuple = page.getTuple(index);
-		int intMaxSize = Integer.parseInt(prop.getProperty("MaximumRowsCountinPage")); // Max allowed Tuples per page.
-		int intpageNum = tblTable.getNumofPages(); // Only used to check if Table has existing pages or not
-		Page pgInsertPage; // page i will insert in
-
-		if (intpageNum != 0) {// if table already has pages, binary search on correct page to insert into
-			pgInsertPage = getPageByClusteringKey(strTableName, strClustKeyName,
-					htblColNameValue.get(strClustKeyName), tblTable); // get the page that the tuple will be inserted
-																		// into
-			if (pgInsertPage == null) {// if tuple is out of range, check first and last page
-
-				String strFirstPage = vecPages.get(0); // get first page name
-				String strLastPage = vecPages.get(vecPages.size() - 1); // get last page name
-
-				// get 1st and last page objects
-				Page pgFirstPage = Page.deserialize("tables/" + strTableName + "/" + strFirstPage + ".class");
-				Page pgLastPage = Page.deserialize("tables/" + strTableName + "/" + strLastPage + ".class");
-
-				Tuple tupleFirstTuple = pgFirstPage.getTupleWithIndex(0); // get first tuple in 1st page(smallest clust
-																			// key)
-
-				Comparable inputClustKey = (Comparable) htblColNameValue.get(strClustKeyName); // clust key in my insert
-																								// tuple
-
-				if (inputClustKey.compareTo((Comparable) tupleFirstTuple // if my insert key is smaller than first page
-																			// key, insert in index 0
-						.getColumnValue(strClustKeyName)) < 0) {
-					pgFirstPage.addTuple(0, tupleNewTuple);
-					tupleNewTuple.setPageName(pgFirstPage.getPageName());
-
-					if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
-						handleInsertOverflow(tblTable, 0, intMaxSize, strClustKeyName);
-					} else {
-						pgFirstPage.serialize("tables/" + strTableName + "/" + pgFirstPage.getPageName() + ".class");
-					}
-
-				} else {// only option left is that its bigger than last key in last page, so insert in
-						// last index in last page
-					pgLastPage.addTuple(pgLastPage.getSize(), tupleNewTuple);
-					tupleNewTuple.setPageName(pgLastPage.getPageName());
-
-					if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
-						handleInsertOverflow(tblTable, vecPages.size() - 1, intMaxSize, strClustKeyName);
-					} else {
-						pgLastPage.serialize("tables/" + strTableName + "/" + pgLastPage.getPageName() + ".class");
 					}
 				}
+
+				else { // if tuple is in range of existing pages, insert and check for overflow
+					int index = pgInsertPage.binarySearchTuples(strClustKeyName,
+							htblColNameValue.get(strClustKeyName)); // binary search to find the correct index to insert in
+																	// page
+					Tuple tuplecheckTuple = pgInsertPage.getTuple(index); // Tuple that i check clust key duplication with
+
+					// make sure new clustering key is not a duplicate
+					if (tuplecheckTuple.getColumnValue(strClustKeyName) == htblColNameValue.get(strClustKeyName)
+							|| tuplecheckTuple.getColumnValue(strClustKeyName)
+									.equals(htblColNameValue.get(strClustKeyName))) {
+						throw new DBAppException("Primary Key Already Exists");
+					}
+
+					tupleNewTuple.setPageName(pgInsertPage.getPageName());
+					pgInsertPage.addTuple(index, tupleNewTuple);
+
+					if (pgInsertPage.getSize() > intMaxSize) { // check for overflow
+						int intStartIndex = vecPages.indexOf(pgInsertPage.getPageName()); // get index of first overflowed
+																							// page in the vecPages Vector
+						handleInsertOverflow(tblTable, intStartIndex, intMaxSize, strClustKeyName); // handle overflow
+					} else { // if no overflow, serialize page
+						pgInsertPage.serialize("tables/" + strTableName + "/" + pgInsertPage.getPageName() + ".class");
+					}
+				}
+
+			} else {// if table has no pages to begin with
+
+				String strPageName = tblTable.addPage(); // addPage() adds page to the table Vector and assigns it an
+															// automated Page Name & returns that name
+				Page newPage = new Page(strPageName);
+				tupleNewTuple.setPageName(strPageName);
+				newPage.addTuple(0, tupleNewTuple);
+				System.out.println("Page Name: " + strPageName);
+				newPage.serialize("tables/" + strTableName + "/" + strPageName + ".class");
 			}
-
-			else { // if tuple is in range of existing pages, insert and check for overflow
-				int index = pgInsertPage.binarySearchTuples(strClustKeyName,
-						htblColNameValue.get(strClustKeyName)); // binary search to find the correct index to insert in
-																// page
-				Tuple tuplecheckTuple = pgInsertPage.getTuple(index); // Tuple that i check clust key duplication with
-
-				// make sure new clustering key is not a duplicate
-				if (tuplecheckTuple.getColumnValue(strClustKeyName) == htblColNameValue.get(strClustKeyName)
-						|| tuplecheckTuple.getColumnValue(strClustKeyName)
-								.equals(htblColNameValue.get(strClustKeyName))) {
-					throw new DBAppException("Primary Key Already Exists");
-				}
-
-				tupleNewTuple.setPageName(pgInsertPage.getPageName());
-				pgInsertPage.addTuple(index, tupleNewTuple);
-
-				if (pgInsertPage.getSize() > intMaxSize) { // check for overflow
-					int intStartIndex = vecPages.indexOf(pgInsertPage.getPageName()); // get index of first overflowed
-																						// page in the vecPages Vector
-					handleInsertOverflow(tblTable, intStartIndex, intMaxSize, strClustKeyName); // handle overflow
-				} else { // if no overflow, serialize page
-					pgInsertPage.serialize("tables/" + strTableName + "/" + pgInsertPage.getPageName() + ".class");
-				}
-			}
-
-		} else {// if table has no pages to begin with
-
-			String strPageName = tblTable.addPage(); // addPage() adds page to the table Vector and assigns it an
-														// automated Page Name & returns that name
-			Page newPage = new Page(strPageName);
-			tupleNewTuple.setPageName(strPageName);
-			newPage.addTuple(0, tupleNewTuple);
-			System.out.println("Page Name: " + strPageName);
-			newPage.serialize("tables/" + strTableName + "/" + strPageName + ".class");
-		}
 
 			// Adjusting Indicies (If any)
 			if (hsIndexedColumns.size() > 0) {
@@ -384,14 +333,15 @@ public class DBApp {
 
 			// Serializing Table
 			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-		}catch (IOException ex) {
-			throw new DBAppException("Error in reading the config file");
+		}catch(IOException e){
+			throw new DBAppException("Cannot Serialize");
 		}
 
 	}
 
 	public void handleInsertOverflow(Table tblTable, int intStartIndex, int intMaxRowsPerPage, String strClustKeyName)
-			throws ClassNotFoundException, IOException, DBAppException {
+			throws DBAppException {
+
 		Vector<String> vecPages = tblTable.getPages(); // Vector of Page names in table
 		Page overflowPage = Page // page that caused first overflow
 				.deserialize("tables/" + tblTable.getTableName() + "/" + vecPages.get(intStartIndex) + ".class");
@@ -978,16 +928,16 @@ public class DBApp {
 
 			dbApp.init();
 
-			// Hashtable<String, String> htblColNameType = new Hashtable();
-			// htblColNameType.put("id", "java.lang.Integer");
-			// htblColNameType.put("name", "java.lang.String");
-			// htblColNameType.put("gpa", "java.lang.Double");
+			Hashtable<String, String> htblColNameType = new Hashtable();
+			htblColNameType.put("id", "java.lang.Integer");
+			htblColNameType.put("name", "java.lang.String");
+			htblColNameType.put("gpa", "java.lang.Double");
 
 			dbApp.createTable("Student", "id", htblColNameType );
 
 			// insert 200 rows
 
-			for( int i = 0; i < 205; i++ ){
+			for( int i = 0; i < 210; i++ ){
 				
 				Hashtable htblColNameValue = new Hashtable( );
 				htblColNameValue.put("id", new Integer( i ) );
