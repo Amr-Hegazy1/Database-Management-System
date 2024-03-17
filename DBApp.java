@@ -8,6 +8,7 @@ import java.util.*;
 public class DBApp {
 
 	private Metadata metadata;
+	final int MAX_ROWS_COUNT_IN_PAGE;
 	/*
 	 * The hashtable htbIndex is used to store the indicies where the key of this
 	 * hashtable is the index name
@@ -16,8 +17,23 @@ public class DBApp {
 	private Hashtable<String, bplustree> htbIndex;
 
 	public DBApp( ) throws DBAppException{
-		metadata = new Metadata();
-		htbIndex = new Hashtable<>();
+
+		try  {
+			metadata = new Metadata();
+			htbIndex = new Hashtable<>();
+			
+			Properties prop = new Properties();
+			String fileName = "DBApp.config";
+		
+			FileInputStream fis = new FileInputStream(fileName);
+			prop.load(fis);
+			MAX_ROWS_COUNT_IN_PAGE = Integer.parseInt(prop.getProperty("MaximumRowsCountinPage"));
+		} catch (FileNotFoundException ex) {
+			throw new DBAppException("Config file not found");
+		} catch (IOException ex) {
+			throw new DBAppException("Error reading config file");
+		}
+		
 
 	}
 
@@ -29,16 +45,7 @@ public class DBApp {
 		// TODO: LOAD INDICES
 		// TODO: LOAD METADATA FILE
 
-		Properties prop = new Properties();
-		String fileName = "DBApp.config";
-		try (FileInputStream fis = new FileInputStream(fileName)) {
-			prop.load(fis);
-		} catch (FileNotFoundException ex) {
-			// TODO
-		} catch (IOException ex) {
-			// TODO
-		}
-		System.out.println(prop.getProperty("MaximumRowsCountinPage"));
+		
 
 	}
 
@@ -170,7 +177,7 @@ public class DBApp {
 	// htblColNameValue must include a value for the primary key
 	public void insertIntoTable(String strTableName,
 			Hashtable<String, Object> htblColNameValue) throws DBAppException{
-		try{
+		
 			HashSet<String> hsIndexedColumns = new HashSet<String>();// hashset to store indexed column names
 			Tuple tupleNewTuple = new Tuple(); // New Tuple to be filled with input data and added to Table.
 			String strClustKeyName = ""; // Name of Clustering Key Column
@@ -224,14 +231,10 @@ public class DBApp {
 			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 			Vector<String> vecPages = tblTable.getPageVector(); // Vector of Page names inside of Table object
 
-			Properties prop = new Properties();
-			String fileName = "DBApp.config";
-			FileInputStream fis = new FileInputStream(fileName);
-			prop.load(fis);
-
+			
 			// Inserting w/o any Indicies
 
-			int intMaxSize = Integer.parseInt(prop.getProperty("MaximumRowsCountinPage")); // Max allowed Tuples per page.
+			int intMaxSize = MAX_ROWS_COUNT_IN_PAGE; // Max allowed Tuples per page.
 			int intpageNum = tblTable.getNumofPages(); // Only used to check if Table has existing pages or not
 			Page pgInsertPage; // page i will insert in
 
@@ -333,9 +336,7 @@ public class DBApp {
 
 			// Serializing Table
 			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-		}catch(IOException e){
-			throw new DBAppException("Cannot Serialize");
-		}
+		
 
 	}
 
@@ -937,7 +938,7 @@ public class DBApp {
 
 			// insert 200 rows
 
-			for( int i = 0; i < 210; i++ ){
+			for( int i = 0; i < 2000; i++ ){
 				
 				Hashtable htblColNameValue = new Hashtable( );
 				htblColNameValue.put("id", new Integer( i ) );
