@@ -21,13 +21,22 @@ public class DBApp {
 		try  {
 			metadata = new Metadata();
 			htbIndex = new Hashtable<>();
+
+
 			
 			Properties prop = new Properties();
-			String fileName = "DBApp.config";
+			String fileName = "/DBApp.config";
+
+			
+			InputStream s = DBApp.class.getResourceAsStream(fileName);
+
+
 		
-			FileInputStream fis = new FileInputStream(fileName);
-			prop.load(fis);
+			
+			prop.load(s);
 			MAX_ROWS_COUNT_IN_PAGE = Integer.parseInt(prop.getProperty("MaximumRowsCountinPage"));
+
+			System.out.println(MAX_ROWS_COUNT_IN_PAGE);
 		} catch (FileNotFoundException ex) {
 			throw new DBAppException("Config file not found");
 		} catch (IOException ex) {
