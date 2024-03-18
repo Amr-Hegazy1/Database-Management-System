@@ -253,21 +253,24 @@ public class Table implements Serializable{
         
                  if((Integer)page1.Min(col)<=temp && ((Integer)page1.Max(col))>=temp){
                     int index = page1.findindByClusteringKey(col, val);
-                    hmtup.addAll(page1.lessearch(col, val, true, index));
+                    hmtup.addAll(page1.eqsearch(col, val, true, index));
+                    break;
                 }
             }
             else if(val instanceof Double){
                 Double temp = (Double)val;
                 if((Double)page1.Min(col)<=temp && ((Double)page1.Max(col))>=temp){
                     int index = page1.findindByClusteringKey(col, val);
-                    hmtup.addAll(page1.lessearch(col, val, true, index));
+                    hmtup.addAll(page1.eqsearch(col, val, true, index));
+                    break;
                 }            
             }
             else{
                 String temp = (String)val;
                 if(((String)page1.Min(col)).compareTo(temp)<=0&& ((String)page1.Max(col)).compareTo(temp)>=0){
                     int index = page1.findindByClusteringKey(col, val);
-                    hmtup.addAll(page1.lessearch(col, val, true, index));
+                    hmtup.addAll(page1.eqsearch(col, val, true, index));
+                    break;
                 }     
             }
         }
@@ -277,7 +280,7 @@ public class Table implements Serializable{
         HashSet<Tuple> hmtup = new HashSet<>();
         for(String e: vecPages){
             Page page= Page.deserialize(e);
-            hmtup.addAll(page.eqsearch(col, val));
+            hmtup.addAll(page.eqsearch(col, val, false, 201));
         }
         return hmtup;
     }
