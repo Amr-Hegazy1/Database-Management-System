@@ -1,3 +1,5 @@
+
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -15,6 +17,12 @@ public class Metadata {
     // name, and index type for each column.
     private Hashtable<String, Hashtable<String, Hashtable<String, String>>> htblMetadata;
     
+    public Hashtable<String, Hashtable<String, String>> getTableMetadata(String tableName) {
+        return htblMetadata.get(tableName);
+    }
+    
+
+    
     // The `public Metadata() throws FileNotFoundException, IOException{}` constructor in the
     // `Metadata` class is responsible for initializing a new instance of the `Metadata` class. Here's
     // a breakdown of what it does:
@@ -22,19 +30,27 @@ public class Metadata {
     // 2. It initializes a new `Hashtable` called `htblMetadata` to store the metadata.
     // 3. It calls the `readFile` method to read the metadata from the `metadata.csv` file and populate
     // the `htblMetadata` table with the extracted information.
-    public Metadata() throws FileNotFoundException, IOException{
+    public Metadata() throws DBAppException{
 
 
         // Create metadata file if it does not exist
 
         File fileMetadataFile = new File("metadata.csv");
         if(!fileMetadataFile.exists())
-            fileMetadataFile.createNewFile(); 
+            try {
+                fileMetadataFile.createNewFile();
+            } catch (IOException e) {
+                throw new DBAppException("Error creating metadata file");
+            }
+            
 
 
         htblMetadata  = new Hashtable<>();
-
-        readFile();
+        try {
+            readFile();
+        } catch (FileNotFoundException e) {
+            throw new DBAppException("Error reading metadata file");
+        }
     }
 
     /**
@@ -97,6 +113,15 @@ public class Metadata {
         
         
     }
+    public String getClusteringkey(String tableName){
+        List<String> x=getColumnNames(tableName);
+        for (String strColumnName : x) {
+           if(isClusteringKey(tableName,strColumnName)){
+            return strColumnName;
+           }
+        }
+            return "";
+    }
 
     /**
      * The function `getColumnType` retrieves the column type of a specified column in a given table
@@ -112,6 +137,57 @@ public class Metadata {
      */
     public String getColumnType(String strTableName, String strColumnName){
         return htblMetadata.get(strTableName).get(strColumnName).get("Column Type");
+    }
+
+
+    /**
+     * The function `isColumnIndexed` checks if a specified column in a table has an index associated
+     * with it.
+     * 
+     * @param strTableName The `strTableName` parameter represents the name of the table for which you
+     * want to check if a specific column is indexed.
+     * @param strColumnName The `strColumnName` parameter in the `isColumnIndexed` method refers to the
+     * name of the column for which you want to check if an index is present in the metadata of a
+     * specified table.
+     * @return The method `isColumnIndexed` is returning a boolean value indicating whether the
+     * specified column in the given table is indexed or not. It checks if the "IndexName" attribute in
+     * the metadata for the specified table and column is not empty, and returns true if it is indexed,
+     * and false if it is not indexed.
+     */
+    public boolean isColumnIndexed(String strTableName, String strColumnName) throws DBAppException{
+        if(!htblMetadata.containsKey(strTableName))
+            throw new DBAppException("Table does not exist");
+        if(!htblMetadata.get(strTableName).containsKey(strColumnName))
+            throw new DBAppException("Column does not exist");
+        
+        return !htblMetadata.get(strTableName).get(strColumnName).get("IndexName").equals("null");
+    }
+
+    /**
+     * This Java function retrieves the clustering key for a given table from metadata stored in a
+     * Hashtable.
+     * 
+     * @param strTableName The `strTableName` parameter is a `String` representing the name of the
+     * table for which you want to retrieve the clustering key.
+     * @return The `getClusteringKey` method is returning the name of the column that is designated as
+     * the clustering key for the specified table `strTableName`. If the table exists in the metadata
+     * and has a clustering key defined, the method will return the name of that column. If the table
+     * does not have a clustering key defined, it will throw a `DBAppException` with the message "Table
+     * doesn't have a clustering key"
+     */
+    public String getClusteringKey(String strTableName) throws DBAppException{
+        
+        if(!htblMetadata.containsKey(strTableName))
+            throw new DBAppException("Table does not exist");
+        
+
+        Hashtable<String, Hashtable<String, String>> htblColNames = htblMetadata.get(strTableName);
+
+        for(String col : htblColNames.keySet()){
+            if(isClusteringKey(strTableName, col)) return col;
+        }
+
+        throw new DBAppException("Table doesn't have a clustering key");
     }
 
     /**
@@ -159,6 +235,8 @@ public class Metadata {
         return htblMetadata.get(strTableName).get(strColumnName).get("IndexType");
     }
 
+   
+
     /**
      * The function `getTableNames` returns a list of table names from a metadata hash table.
      * 
@@ -168,9 +246,21 @@ public class Metadata {
         return new ArrayList<>(htblMetadata.keySet());
     }
 
+    /**
+     * The function `checkTableName` checks if a given table name exists in a metadata hash table.
+     * 
+     * @param str The `checkTableName` method takes a String parameter `str`, which represents the
+     * table name to be checked. The method checks if the `htblMetadata` map contains the provided
+     * table name `str` as a key and returns a boolean value indicating whether the table name exists
+     * in the metadata map or
+     * @return The method `checkTableName` returns a boolean value indicating whether the
+     * `htblMetadata` map contains the key specified by the input string `str`.
+     */
     public boolean checkTableName(String str){
         return htblMetadata.containsKey(str);
     }
+
+
     /**
      * The function getColumnNames returns a list of column names for a given table name.
      * 
@@ -181,9 +271,24 @@ public class Metadata {
     public List<String> getColumnNames(String strTableName){
         return new ArrayList<>(htblMetadata.get(strTableName).keySet());
     }
+
+
+    /**
+     * The function `checkColumnName` checks if a specified column exists in the metadata for a given
+     * table.
+     * 
+     * @param strTableName The `strTableName` parameter represents the name of the table for which you
+     * want to check the existence of a column.
+     * @param strColumnName The `strColumnName` parameter is a `String` representing the name of a
+     * column in a table.
+     * @return The method `checkColumnName` returns a boolean value indicating whether the specified
+     * column name exists in the metadata for the given table name.
+     */
     public boolean checkColumnName(String strTableName, String strColumnName){
         return htblMetadata.get(strTableName).containsKey(strColumnName);
     } 
+
+
     /**
      * The `addTable` function adds a new table to the metadata with specified columns and clustering
      * key.
@@ -198,18 +303,19 @@ public class Metadata {
      * names as keys and their corresponding data types as values. It is used to define the columns and
      * their data types for a new table being added to the metadata.
      */
-    public void addTable(String strTableName, String strClusteringKey, Hashtable<String, String> htblColNameType) throws IOException{
+    public void addTable(String strTableName, String strClusteringKey, Hashtable<String, String> htblColNameType) throws DBAppException{
         if(htblMetadata.containsKey(strTableName)){
-            throw new IOException("Table already exists");
+            throw new DBAppException("Table already exists");
         }
         else{
             htblMetadata.put(strTableName, new Hashtable<>());
+        
             for (String strColumnName : htblColNameType.keySet()) {
                 htblMetadata.get(strTableName).put(strColumnName, new Hashtable<>());
                 htblMetadata.get(strTableName).get(strColumnName).put("Column Type", htblColNameType.get(strColumnName));
                 htblMetadata.get(strTableName).get(strColumnName).put("ClusteringKey", strColumnName.equals(strClusteringKey) ? "true" : "false");
-                htblMetadata.get(strTableName).get(strColumnName).put("IndexName", "N/A");
-                htblMetadata.get(strTableName).get(strColumnName).put("IndexType", "N/A");
+                htblMetadata.get(strTableName).get(strColumnName).put("IndexName", "null");
+                htblMetadata.get(strTableName).get(strColumnName).put("IndexType", "null");
             }
         }
         
@@ -242,15 +348,16 @@ public class Metadata {
      * @param strIndexType The `strIndexType` parameter in the `addIndex` method represents the type of
      * index that will be created for the specified column in the given table. This could be a B-tree
      * index, hash index, bitmap index, etc. The method uses this parameter to store the index type in
-     * the
+     * the metadata table
+     * @param strIndexName The strIndexName parameter represents the name of the index which we will add
      */
-    public void addIndex(String strTableName, String strColName, String strIndexType) throws IOException{
+    public void addIndex(String strTableName, String strColName, String strIndexType,String strIndexName) throws DBAppException{
         if(htblMetadata.containsKey(strTableName)){
-            htblMetadata.get(strTableName).get(strColName).put("IndexName", strColName + "Index");
+            htblMetadata.get(strTableName).get(strColName).put("IndexName", strIndexName);
             htblMetadata.get(strTableName).get(strColName).put("IndexType", strIndexType);
         }
         else{
-            throw new IOException("Table does not exist");
+            throw new DBAppException("Table does not exist");//should be index exists
         }
     }
 
@@ -265,8 +372,8 @@ public class Metadata {
      */
     public void deleteIndex(String strTableName, String strColName) throws IOException{
         if(htblMetadata.containsKey(strTableName)){
-            htblMetadata.get(strTableName).get(strColName).put("IndexName", "N/A");
-            htblMetadata.get(strTableName).get(strColName).put("IndexType", "N/A");
+            htblMetadata.get(strTableName).get(strColName).put("IndexName", "null");
+            htblMetadata.get(strTableName).get(strColName).put("IndexType", "null");
         }
         else{
             throw new IOException("Table does not exist");
@@ -277,11 +384,12 @@ public class Metadata {
      * The `save` method writes metadata information to a CSV file for each table and its columns in a
      * specific format.
      */
-    public void save() throws IOException{
+    public void save() throws DBAppException{
         try (FileOutputStream fileOutputStream = new FileOutputStream("metadata.csv")) {
             for (String strTableName : htblMetadata.keySet()) {
-                fileOutputStream.write((strTableName + ", ").getBytes());
+                
                 for (String strColumnName : htblMetadata.get(strTableName).keySet()) {
+                    fileOutputStream.write((strTableName + ", ").getBytes());
                     fileOutputStream.write((strColumnName + ", ").getBytes());
                     fileOutputStream.write((htblMetadata.get(strTableName).get(strColumnName).get("Column Type") + ", ").getBytes());
                     fileOutputStream.write((htblMetadata.get(strTableName).get(strColumnName).get("ClusteringKey") + ", ").getBytes());
@@ -289,6 +397,8 @@ public class Metadata {
                     fileOutputStream.write((htblMetadata.get(strTableName).get(strColumnName).get("IndexType") + "\n").getBytes());
                 }
             }
+        }catch (IOException e) {
+            throw new DBAppException("Error saving metadata");
         }
     }
 
@@ -314,6 +424,8 @@ public class Metadata {
 
     }
 
-    
 
-}
+    
+    }
+
+    

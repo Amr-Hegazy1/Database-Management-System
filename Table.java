@@ -6,37 +6,47 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 
-public class Table implements Serializable{
+public class Table implements Serializable {
     private String strTableName;
 
     private Vector<String> vecPages;
 
-    public Table(String strTableName){
+    public Table(String strTableName) {
         this.strTableName = strTableName;
         this.vecPages = new Vector<String>();
     }
 
     /**
-     * The `serialize` method writes the current object to a file using Java serialization.
+     * This Java function returns the number of pages in a vector.
      * 
-     * @param strFileName The `strFileName` parameter in the `serialize` method is a `String` that
-     * represents the name of the file to which the object will be serialized. This parameter specifies
-     * the file path where the object will be written in serialized form.
+     * @return The method `getNumberOfPages` returns the number of elements in the `vecPages` vector.
      */
-    public void serialize(String strFileName) throws IOException{
-        
-        // TODO: Exception Handling
+    public int getNumberOfPages(){
+        return vecPages.size();
+    }
 
+    /**
+     * The addPage function adds an auto-generated page name to the Table
+     * (vecPages).
+     * 
+     * @return The method `addPage` is returning the name of the new page that was
+     *         added to the 'vecpages' Vector of the Table.
+     */
+    public String addPage() {
+        int newPageNum = vecPages.size();
+        String newPage = strTableName + "_" + newPageNum;
+        System.out.println("New Page: " + strTableName);
+        vecPages.add(newPage);
+        return newPage;
+    }
 
-        FileOutputStream fos= new FileOutputStream(strFileName);
-        ObjectOutputStream oos=new ObjectOutputStream(fos);
-        oos.writeObject(this);
-
-
-        oos.close();
-        fos.close();
-        
-        
+    /**
+     * The getPageVector returns vector of page names 'vecPages'.
+     * 
+     * @return The method `getPageVector` is returning the vector of page names.
+     */
+    public Vector<String> getPageVector() {
+        return vecPages;
     }
     // greater than
     public HashSet<Tuple> greaterthan(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
@@ -294,28 +304,134 @@ public class Table implements Serializable{
         return hmtup;
     }
     /**
-     * The function `deserialize` reads a serialized `Table` object from a file and returns it.
+     * The getNumofPages returns Number of Pages in the Table.
      * 
-     * @param strFileName The `strFileName` parameter in the `deserialize` method is a `String` that
-     * represents the file name of the file from which the `Table` object will be deserialized.
-     * @return The `deserialize` method is returning an object of type `Table`.
+     * @return The method `getNumofPages` is returning the number of pages in the
+     *         Table.
      */
-    public static Table deserialize(String strFileName) throws IOException, ClassNotFoundException{
-        
-        // TODO: Exception Handling
-        
-        FileInputStream fis=new FileInputStream(strFileName);
-        ObjectInputStream ois= new ObjectInputStream(fis);
-        Table table = (Table) ois.readObject();
+    public int getNumofPages() {
+        return vecPages.size();
+    }
 
-        ois.close();
-        fis.close();
+    /**
+     * The `serialize` method writes the current object to a file using Java
+     * serialization.
+     * 
+     * @param strFileName The `strFileName` parameter in the `serialize` method is a
+     *                    `String` that
+     *                    represents the name of the file to which the object will
+     *                    be serialized. This parameter specifies
+     *                    the file path where the object will be written in
+     *                    serialized form.
+     */
+    public void serialize(String strFileName) throws DBAppException {
         
-        return table;
+        
+        
+        try{
+      
+            
+            FileOutputStream fos= new FileOutputStream(strFileName);
+            ObjectOutputStream oos=new ObjectOutputStream(fos);
+            oos.writeObject(this);
+
+            oos.close();
+            fos.close();
+
+        }catch(IOException ioe){
+            throw new DBAppException("Error in Serialization");
+        }
 
     }
     
 
+    /**
+     * The function `deserialize` reads a serialized `Table` object from a file and
+     * returns it.
+     * 
+     * @param strFileName The `strFileName` parameter in the `deserialize` method is
+     *                    a `String` that
+     *                    represents the file name of the file from which the
+     *                    `Table` object will be deserialized.
+     * @return The `deserialize` method is returning an object of type `Table`.
+     */
+    public static Table deserialize(String strFileName) throws DBAppException {
+
+        try{
+
+            FileInputStream fis = new FileInputStream(strFileName);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            Table table = (Table) ois.readObject();
+
+            ois.close();
+            fis.close();
+            return table;
+        }catch(IOException ioe){
+            throw new DBAppException("Error in Deserialization");
+        }catch(ClassNotFoundException c){
+            throw new DBAppException("Class not found");
+        }
+
+        
+
+    }
+    //get all the pages used to store the table's data
+    public Vector<String> getPages (){
+        return this.vecPages;
+    }
+
+
+
+    
+    /**
+     * The function `getPageAtIndex` returns the page at the specified index from a vector of pages.
+     * 
+     * @param i The parameter `i` in the `getPageAtIndex` method represents the index of the page you
+     * want to retrieve from the `vecPages` vector.
+     * @return The method `getPageAtIndex` is returning the page at the specified index `i` from the
+     * `vecPages` vector.
+     */
+    public String getPageAtIndex(int i){
+        return vecPages.get(i);
+    }
+
+    /**
+     * The `removePage` function removes a page with the specified name from a vector of pages.
+     * 
+     * @param strPageName The parameter `strPageName` is a String representing the name of the page
+     * that you want to remove from the `vecPages` vector.
+     */
+    public void removePage(String strPageName){
+        
+        vecPages.remove(strPageName);
+        
+    }
+
+    /**
+     * The function `printAllPages` iterates through all pages in a table, deserializes each page, and
+     * prints it to the console.
+     * 
+     */
+    public void printAllPages() throws DBAppException{
+        for(int i = 0; i < this.getNumberOfPages(); i++){
+
+            
+            String strPage = this.getPageAtIndex(i);
+            Page page = Page.deserialize(strPage + ".class");
+            System.out.println("#################################### PAGE " + i + " ########################################");
+            System.out.println(page);
+        }
+    }
+
+    /**
+     * The function getTableName() returns the name of the table as a String.
+     * 
+     * @return The method getTableName() returns the value of the variable strTableName, which is the
+     * name of the table.
+     */
+    public String getTableName(){
+        return strTableName;
+    }
     
 
 }
