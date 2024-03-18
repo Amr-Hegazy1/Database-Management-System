@@ -61,7 +61,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if((Integer)page1.Min(col)<= temp && ((Integer)page1.Max(col))>temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtrsearch(col, val, true, index));
                     noneed=true;
                 }
@@ -72,7 +72,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if((Double)page1.Min(col)<=temp && ((Double)page1.Max(col))>temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtrsearch(col, val, true, index));
                     noneed=true;
                 }            
@@ -83,7 +83,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if(((String)page1.Min(col)).compareTo(temp)<=0&& ((String)page1.Max(col)).compareTo(temp)>0){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtrsearch(col, val, true, index));
                     noneed=true;
                 }     
@@ -91,7 +91,7 @@ public class Table implements Serializable {
         }  
         return hmtup;
     }
-    public HashSet<Tuple> greaterthannc(String col, Object val) throws ClassNotFoundException, IOException{
+    public HashSet<Tuple> greaterthannc(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
         for(int i=0;i<vecPages.size();i++){
             Page page1= Page.deserialize(vecPages.elementAt(i));
@@ -113,7 +113,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if((Integer)page1.Min(col)<= temp && ((Integer)page1.Max(col))>=temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtreqsearch(col, val, true, index));
                     noneed=true;
                 }
@@ -124,7 +124,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if((Double)page1.Min(col)<=temp && ((Double)page1.Max(col))>=temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtreqsearch(col, val, true, index));
                     noneed=true;
                 }            
@@ -135,7 +135,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if(((String)page1.Min(col)).compareTo(temp)<=0&& ((String)page1.Max(col)).compareTo(temp)>=0){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtreqsearch(col, val, true, index));
                     noneed=true;
                 }     
@@ -143,7 +143,7 @@ public class Table implements Serializable {
         }  
         return hmtup;
     }
-    public HashSet<Tuple> greaterthaneqnc(String col, Object val) throws ClassNotFoundException, IOException{
+    public HashSet<Tuple> greaterthaneqnc(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
         for(int i=0;i<vecPages.size();i++){
             Page page1= Page.deserialize(vecPages.elementAt(i));
@@ -164,7 +164,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if((Integer)page1.Min(col)<temp && ((Integer)page1.Max(col))>=temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
                     noneed=true;
                 }
@@ -175,7 +175,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if((Double)page1.Min(col)<temp && ((Double)page1.Max(col))>=temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
                     noneed=true;
                 }            
@@ -186,7 +186,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if(((String)page1.Min(col)).compareTo(temp)<0&& ((String)page1.Max(col)).compareTo(temp)>=0){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
                     noneed=true;
                 }     
@@ -195,7 +195,7 @@ public class Table implements Serializable {
         return hmtup;
     }
     
-    public HashSet<Tuple> lesserthannc(String col, Object val) throws ClassNotFoundException, IOException{
+    public HashSet<Tuple> lesserthannc(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
         for(int i=0;i<vecPages.size();i++){  
             Page page1= Page.deserialize(vecPages.elementAt(i));
@@ -215,7 +215,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if((Integer)page1.Min(col)<=temp && ((Integer)page1.Max(col))>=temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.leseqsearch(col, val, true, index));
                     noneed=true;
                 }
@@ -226,7 +226,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if((Double)page1.Min(col)<=temp && ((Double)page1.Max(col))>=temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.leseqsearch(col, val, true, index));
                     noneed=true;
                 }            
@@ -237,7 +237,7 @@ public class Table implements Serializable {
                     hmtup.addAll(page1.allTup());
                 }
                 else if(((String)page1.Min(col)).compareTo(temp)<=0&& ((String)page1.Max(col)).compareTo(temp)>=0){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
                     noneed=true;
                 }     
@@ -246,7 +246,7 @@ public class Table implements Serializable {
         return hmtup;
     }
     
-    public HashSet<Tuple> lesserthannceq(String col, Object val) throws ClassNotFoundException, IOException{
+    public HashSet<Tuple> lesserthannceq(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
         for(int i=0;i<vecPages.size();i++){
             Page page1= Page.deserialize(vecPages.elementAt(i));
@@ -262,7 +262,7 @@ public class Table implements Serializable {
                 Integer temp = (Integer)val;
         
                  if((Integer)page1.Min(col)<=temp && ((Integer)page1.Max(col))>=temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.eqsearch(col, val, true, index));
                     break;
                 }
@@ -270,7 +270,7 @@ public class Table implements Serializable {
             else if(val instanceof Double){
                 Double temp = (Double)val;
                 if((Double)page1.Min(col)<=temp && ((Double)page1.Max(col))>=temp){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.eqsearch(col, val, true, index));
                     break;
                 }            
@@ -278,7 +278,7 @@ public class Table implements Serializable {
             else{
                 String temp = (String)val;
                 if(((String)page1.Min(col)).compareTo(temp)<=0&& ((String)page1.Max(col)).compareTo(temp)>=0){
-                    int index = page1.findindByClusteringKey(col, val);
+                    int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.eqsearch(col, val, true, index));
                     break;
                 }     
@@ -286,7 +286,7 @@ public class Table implements Serializable {
         }
         return hmtup;
     }
-    public HashSet<Tuple> eqsearch(String col, Object val) throws ClassNotFoundException, IOException{
+    public HashSet<Tuple> eqsearch(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
         for(String e: vecPages){
             Page page= Page.deserialize(e);
@@ -295,7 +295,7 @@ public class Table implements Serializable {
         return hmtup;
     }
 
-    public HashSet<Tuple> noteqsearch(String col, Object val) throws ClassNotFoundException, IOException{
+    public HashSet<Tuple> noteqsearch(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
         for(String e: vecPages){
             Page page= Page.deserialize(e);

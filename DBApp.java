@@ -883,6 +883,7 @@ public class DBApp {
 				throw new DBAppException("Column does not exist");
 			}
 		}
+	}
 
 
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, 
