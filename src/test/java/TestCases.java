@@ -32,6 +32,13 @@ public class TestCases {
                 }
             });
 
+        // delete metadata.csv
+
+        File metadata = new File("metadata.csv");
+        metadata.delete();
+
+        
+
     }
 
 }
