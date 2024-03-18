@@ -1,25 +1,22 @@
 
 /** * @author Wael Abouelsaadat */
 
-import java.io.*;
-
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 public class DBApp {
+	
+	private static Metadata metadata;
 
-	private Metadata metadata;
-	/*
-	 * The hashtable htbIndex is used to store the indicies where the key of this
-	 * hashtable is the index name
-	 * and the value is the index itself
-	 */
-	private Hashtable<String, bplustree> htbIndex;
-
-	public DBApp( ) throws DBAppException{
+	public DBApp( ) throws FileNotFoundException, IOException, DBAppException{
 		metadata = new Metadata();
-		htbIndex = new Hashtable<>();
-
 	}
+
+	 
 
 	// this does whatever initialization you would like
 	// or leave it empty if there is no code you want to
@@ -29,16 +26,7 @@ public class DBApp {
 		// TODO: LOAD INDICES
 		// TODO: LOAD METADATA FILE
 
-		Properties prop = new Properties();
-		String fileName = "DBApp.config";
-		try (FileInputStream fis = new FileInputStream(fileName)) {
-			prop.load(fis);
-		} catch (FileNotFoundException ex) {
-			// TODO
-		} catch (IOException ex) {
-			// TODO
-		}
-		System.out.println(prop.getProperty("MaximumRowsCountinPage"));
+		
 
 	}
 
@@ -170,7 +158,7 @@ public class DBApp {
 	// htblColNameValue must include a value for the primary key
 	public void insertIntoTable(String strTableName,
 			Hashtable<String, Object> htblColNameValue) throws DBAppException{
-		try{
+		
 			HashSet<String> hsIndexedColumns = new HashSet<String>();// hashset to store indexed column names
 			Tuple tupleNewTuple = new Tuple(); // New Tuple to be filled with input data and added to Table.
 			String strClustKeyName = ""; // Name of Clustering Key Column
@@ -224,14 +212,10 @@ public class DBApp {
 			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 			Vector<String> vecPages = tblTable.getPageVector(); // Vector of Page names inside of Table object
 
-			Properties prop = new Properties();
-			String fileName = "DBApp.config";
-			FileInputStream fis = new FileInputStream(fileName);
-			prop.load(fis);
-
+			
 			// Inserting w/o any Indicies
 
-			int intMaxSize = Integer.parseInt(prop.getProperty("MaximumRowsCountinPage")); // Max allowed Tuples per page.
+			int intMaxSize = MAX_ROWS_COUNT_IN_PAGE; // Max allowed Tuples per page.
 			int intpageNum = tblTable.getNumofPages(); // Only used to check if Table has existing pages or not
 			Page pgInsertPage; // page i will insert in
 
@@ -333,9 +317,7 @@ public class DBApp {
 
 			// Serializing Table
 			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-		}catch(IOException e){
-			throw new DBAppException("Cannot Serialize");
-		}
+		
 
 	}
 
@@ -901,28 +883,533 @@ public class DBApp {
 				throw new DBAppException("Column does not exist");
 			}
 		}
+	}
 
-		Table table = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
-		String strClusteringKey = metadata.getClusteringKey(strTableName);
 
-		if (htblColNameValue.containsKey(strClusteringKey)) {
-			deleteWithClusteringKey(strTableName, strClusteringKey, htblColNameValue, table);
-		} else {
-
-			deleteWithoutClusteringKey(strTableName, htblColNameValue, table);
+	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, 
+									String[]  strarrOperators) throws DBAppException, ClassNotFoundException, IOException{
+		if(arrSQLTerms.length!= strarrOperators.length+1){
+			throw new DBAppException("something wrong in the input");
 		}
+		HashSet<String> hmkilobatata = new HashSet<>();
+		hmkilobatata.add("=");hmkilobatata.add("!=");hmkilobatata.add(">=");hmkilobatata.add("<=");hmkilobatata.add(">");;hmkilobatata.add("<");
+		for(int i=0;i<arrSQLTerms.length;i++){
+		if(metadata.checkTableName(arrSQLTerms[i]._strTableName)){
+			if(metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)){
+				String strType= metadata.getColumnType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName);
+				if( hmkilobatata.contains(arrSQLTerms[i]._strOperator)){	
+					if(!strType.equals(arrSQLTerms[i]._objValue)){
+						throw new DBAppException("Datatype doesn't match");
+					}
+				}
+				else 
+				throw new DBAppException("This Operator isn't supported");
+			}
+			else
+			throw new DBAppException("Column doesn't exist");
+		}
+		else
+		throw new DBAppException("Table doesn't exist");
+	}
+	    // el hashes at end of if statements are stand by
+		if(strarrOperators.length==0){
+			if(arrSQLTerms[0]._strOperator.equals("=")){
+				if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+					
+					// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+					// Page deserializedpage = Page.deserialize(strpage);
+					// HashSet<Tuple> hstup=deserializedpage.eqsearch(strpage, arrSQLTerms[0]._objValue);
+					
+				}
+				else{
+					
+					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+					if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+						HashSet<Tuple> hstup= table.eqsearch(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+					}
+					else{
+						HashSet<Tuple> hstup= table.cleqsearch(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+					}
+				}
+				
+			}
+			else if(arrSQLTerms[0]._strOperator.equals(">")){
+				if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+					
+					// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+					// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+					// HashSet<Tuple> hstup=table.greaterthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+					
+					
+				}
+				else{
+			
+					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+					if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+						HashSet<Tuple> hstup= table.greaterthannc(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+					}
+					else{
+						HashSet<Tuple> hstup= table.greaterthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+					}
+				}	
+			}else if(arrSQLTerms[0]._strOperator.equals(">=")){
+			if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+				
+				// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+				
+				// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				// HashSet<Tuple> hstup=table.greaterthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				
+			}
+			else{
+				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+					HashSet<Tuple> hstup= table.greaterthaneqnc(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+				}
+				else{
+					HashSet<Tuple> hstup= table.greaterthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			}	
+		}else if(arrSQLTerms[0]._strOperator.equals("<")){
+			if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+				
+				// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+				
+				// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				// HashSet<Tuple> hstup=table.lesserthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			else{
+				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+					HashSet<Tuple> hstup= table.lesserthannc(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+				}
+				else{
+					HashSet<Tuple> hstup= table.lesserthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			}	
+		}else if(arrSQLTerms[0]._strOperator.equals("<=")){
+			if(metadata.getIndexType(arrSQLTerms[0]._strTableName,arrSQLTerms[0]._strColumnName)!=null){
+				
+				// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+				
+				// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				// HashSet<Tuple> hstup=table.lesserthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			else{
+				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+				if( ! metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)){
+					HashSet<Tuple> hstup= table.lesserthannceq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue); 
+				}
+				else{
+					HashSet<Tuple> hstup= table.lesserthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+				}
+			}	
+		} else{   
+			Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+			HashSet<Tuple> hstup= table.noteqsearch(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+		}
+	}
+	
+	
+	Stack<Object> stack = new Stack<>();
+	Stack<String> stack2 = new Stack<>();
+	
+	// lazem a know meen b+tree
+	// while(left!=strarrOperators.length-1){
+	// 	if(strarrOperators[right].equals("and")){
+	// 		if(metadata.getIndexType(arrSQLTerms[left]._strTableName, arrSQLTerms[left]._strColumnName)!= null){
+	// 			bpq.add(arrSQLTerms[left]);
+	// 		}
+	// 		else
+	// 		nq.add(arrSQLTerms[left]);
+	Vector <Object> vec = new Vector<>();
+	vec.add(arrSQLTerms[0]);
+	for (int i=0;i<strarrOperators.length;i++) {
+		if (stack2.isEmpty()) {
+			stack2.push(strarrOperators[i]);
+			vec.add(arrSQLTerms[i+1]);
+		} else if (precedence(strarrOperators[i]) >= precedence(stack2.peek())) {
+			stack2.push(strarrOperators[i]);
+			vec.add(arrSQLTerms[i+1]);
+			}
+		else{	
+			while (!stack2.isEmpty() && precedence(strarrOperators[i]) < precedence(stack2.peek())) {
+				vec.add(stack2.pop());
+			}
+			stack2.push(strarrOperators[i]);
+			vec.add(arrSQLTerms[i+1]);
+		}
+	}
+    while(!stack2.isEmpty()){
+		 vec.add(stack2.pop());
+	}
+	
+	for(int i=0;i<vec.size();i++){
+		if(vec.get(i) instanceof SQLTerm){
+			stack.push((SQLTerm) vec.get(i));
+		}
+		else{
+			HashSet <Tuple> tm= null;
+			HashSet <Tuple> tm2= null;
+			if(stack.peek() instanceof SQLTerm){
+				 tm=getTuple((SQLTerm) stack.pop());
+				if(stack.peek() instanceof SQLTerm){
+					tm2=getTuple((SQLTerm) stack.pop());
+				}
+				else{
+					tm2= (HashSet<Tuple>) stack.pop();
+				}
+			}
+			else{
+				tm= (HashSet<Tuple>) stack.pop();
+				if(stack.peek() instanceof SQLTerm){
+					tm2=getTuple((SQLTerm) stack.pop());
+				}
+				else{
+					tm2= (HashSet<Tuple>) stack.pop();
+				}
+			}
+			if(vec.get(i).equals("and")){
+				stack.add(and2bp(tm, tm2));
+			}
+			else if(vec.get(i).equals("or")){
+				stack.add(or2hs(tm, tm2));
+			}
+			else{
+				stack.add(xor2hs(tm, tm2));
+			}
 
+		}
+	}
+	HashSet<Tuple>tm= (HashSet<Tuple>) stack.pop();
+	return tm.iterator();
 	}
 
-	public Iterator selectFromTable(SQLTerm[] arrSQLTerms,
-			String[] strarrOperators) throws DBAppException {
-
-		return null;
+	public static int findIndex(SQLTerm arr[], SQLTerm t) 
+    { 
+  
+        // if array is Null 
+        if (arr == null) { 
+            return -1; 
+        } 
+  
+        // find length of array 
+        int len = arr.length; 
+        int i = 0; 
+  
+        // traverse in the array 
+        while (i < len) { 
+  
+            // if the i-th element is t 
+            // then return the index 
+            if (arr[i]._strTableName.equals(t._strTableName) && arr[i]._strColumnName.equals(t._strColumnName)&& arr[i]._strOperator.equals(t._strOperator)) { 
+               if(t._objValue instanceof Integer){
+			   Integer te = (Integer) t._objValue;
+				if(te==((Integer)arr[i]._objValue))
+				return i; 
+				else
+				i++;
+			   }
+			   else if(t._objValue instanceof Double){
+				Double te = (Double) t._objValue;
+				if(te==((Double)arr[i]._objValue))
+				return i; 
+				else
+				i++;
+			   }
+			   else{
+				String te = (String) t._objValue;
+				if(te.compareTo(((String)arr[i]._objValue))==0)
+				return i;
+				else
+				i++;
+			   }
+			   }
+            else { 
+                i = i + 1; 
+            } 
+        } 
+        return -1; 
+    } 
+private static HashSet<Tuple> and2bp(HashSet<Tuple> hs1,HashSet<Tuple> hs2){
+	for(Tuple tm: hs1){
+		if(! hs2.contains(tm)){
+			hs1.remove(tm);
+		}
 	}
+	return hs1;
+}
+private static HashSet<Tuple> or2hs(HashSet<Tuple> hs1,HashSet<Tuple> hs2){
+	hs1.addAll(hs2);
+	return hs1;
+}
+private static HashSet<Tuple> xor2hs(HashSet<Tuple> hs1,HashSet<Tuple> hs2){
+	for(Tuple tm: hs1){
+		if(hs2.contains(tm)){
+			hs2.remove(tm);
+		}else{
+			hs2.add(tm);
+		}
+	}
+	return hs2;
+}
+private static HashSet<Tuple> and1bp(HashSet<Tuple> hs1, SQLTerm sql) throws DBAppException{
+	for(Tuple tm:hs1){
+		if(sql._strOperator.equals("=")){
+			if(sql._objValue instanceof Integer){
+				Integer te = (Integer) sql._objValue;
+				if(((Integer)tm.getColumnValue(sql._strColumnName))!=(te)){
+					hs1.remove(tm);
+				}
+			}
+			else if(sql._objValue instanceof Double){
+				Double te = (Double)sql._objValue;
+				if(((Double)tm.getColumnValue(sql._strColumnName))!=(te)){
+					hs1.remove(tm);
+				}
+			}
+			else{
+				String te = (String) sql._objValue;
+				if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)!=0){
+					hs1.remove(tm);
+				}
+			}
+		}
+		else if(sql._strOperator.equals(">")){
+			if(sql._objValue instanceof Integer){
+				Integer te = (Integer) sql._objValue;
+				if(((Integer)tm.getColumnValue(sql._strColumnName))<=(te)){
+					hs1.remove(tm);
+				}
+			}
+			else if(sql._objValue instanceof Double){
+				Double te = (Double)sql._objValue;
+				if(((Double)tm.getColumnValue(sql._strColumnName))<=(te)){
+					hs1.remove(tm);
+				}
+			}
+			else{
+				String te = (String) sql._objValue;
+				if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)<=0){
+					hs1.remove(tm);
+				}
+			}
+		} 
+		else if(sql._strOperator.equals(">=")){
+			if(sql._objValue instanceof Integer){
+				Integer te = (Integer) sql._objValue;
+				if(((Integer)tm.getColumnValue(sql._strColumnName))<(te)){
+					hs1.remove(tm);
+				}
+			}
+			else if(sql._objValue instanceof Double){
+				Double te = (Double)sql._objValue;
+				if(((Double)tm.getColumnValue(sql._strColumnName))<(te)){
+					hs1.remove(tm);
+				}
+			}
+			else{
+				String te = (String) sql._objValue;
+				if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)<0){
+					hs1.remove(tm);
+				}
+			}
+		}
+		else if (sql._strOperator.equals("<")){
+			if(sql._objValue instanceof Integer){
+				Integer te = (Integer) sql._objValue;
+				if(((Integer)tm.getColumnValue(sql._strColumnName))>=(te)){
+					hs1.remove(tm);
+				}
+			}
+			else if(sql._objValue instanceof Double){
+				Double te = (Double)sql._objValue;
+				if(((Double)tm.getColumnValue(sql._strColumnName))>=(te)){
+					hs1.remove(tm);
+				}
+			}
+			else{
+				String te = (String) sql._objValue;
+				if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)>=0){
+					hs1.remove(tm);
+				}
+			}
+		}
+		else if (sql._strOperator.equals("<=")){
+			if(sql._objValue instanceof Integer){
+				Integer te = (Integer) sql._objValue;
+				if(((Integer)tm.getColumnValue(sql._strColumnName))>(te)){
+					hs1.remove(tm);
+				}
+			}
+			else if(sql._objValue instanceof Double){
+				Double te = (Double)sql._objValue;
+				if(((Double)tm.getColumnValue(sql._strColumnName))>(te)){
+					hs1.remove(tm);
+				}
+			}
+			else{
+				String te = (String) sql._objValue;
+				if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)>0){
+					hs1.remove(tm);
+				}
+			}
+		}
+		else{
+			if(sql._objValue instanceof Integer){
+				Integer te = (Integer) sql._objValue;
+				if(((Integer)tm.getColumnValue(sql._strColumnName))==(te)){
+					hs1.remove(tm);
+				}
+			}
+			else if(sql._objValue instanceof Double){
+				Double te = (Double)sql._objValue;
+				if(((Double)tm.getColumnValue(sql._strColumnName))==(te)){
+					hs1.remove(tm);
+				}
+			}
+			else{
+				String te = (String) sql._objValue;
+				if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)==0){
+					hs1.remove(tm);
+				}
+			}
+		} 
+	}
+	return hs1;
+}
+private static HashSet<Tuple> getTuple(SQLTerm sql) throws ClassNotFoundException, IOException, DBAppException{
+	HashSet<Tuple> hstup = new HashSet<>();
+	if(sql._strOperator.equals("=")){
+		if(metadata.getIndexType(sql._strTableName,sql._strColumnName)!=null){
+			
+			// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+			// Page deserializedpage = Page.deserialize(strpage);
+			// HashSet<Tuple> hstup=deserializedpage.eqsearch(strpage, arrSQLTerms[0]._objValue);
+			return hstup;
+		}
+		else{
+			
+			Table table = Table.deserialize(sql._strTableName);
+			if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
+				 hstup= table.eqsearch(sql._strColumnName, sql._objValue); 
+				return hstup;
+			}
+			else{
+				hstup= table.cleqsearch(sql._strColumnName, sql._objValue);
+				return hstup;
+			}
+		}
+		
+	}
+	else if(sql._strOperator.equals(">")){
+		if(metadata.getIndexType(sql._strTableName,sql._strColumnName)!=null){
+			
+			// String strpage= bpt.search((int)sql._objValue); //for now
+			// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+			// HashSet<Tuple> hstup=table.greaterthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+			return hstup;
+			
+		}
+		else{
+	
+			Table table = Table.deserialize(sql._strTableName);
+			if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
+				hstup= table.greaterthannc(sql._strColumnName, sql._objValue);
+				return hstup; 
+			}
+			else{
+				hstup= table.greaterthan(sql._strColumnName, sql._objValue);
+				return hstup;
+			}
+		}	
+	}else if(sql._strOperator.equals(">=")){
+	if(metadata.getIndexType(sql._strTableName,sql._strColumnName)!=null){
+		
+		// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+		
+		// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+		// HashSet<Tuple> hstup=table.greaterthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+		return hstup;
+	}
+	else{
+		Table table = Table.deserialize(sql._strTableName);
+		if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
+			hstup= table.greaterthaneqnc(sql._strColumnName, sql._objValue); 
+			return hstup;
+		}
+		else{
+			hstup= table.greaterthaneq(sql._strColumnName, sql._objValue);
+			return hstup;
+		}
+	}	
+}else if(sql._strOperator.equals("<")){
+	if(metadata.getIndexType(sql._strTableName, sql._strColumnName)!=null){
+		
+		// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+		
+		// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+		// HashSet<Tuple> hstup=table.lesserthan(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+		return hstup;
+	}
+	else{
+		Table table = Table.deserialize(sql._strTableName);
+		if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
+			hstup= table.lesserthannc(sql._strColumnName, sql._objValue); 
+			return hstup;
+		}
+		else{
+			hstup= table.lesserthan(sql._strColumnName, sql._objValue);
+			return hstup;
+		}
+	}	
+}else if(sql._strOperator.equals("<=")){
+	if(metadata.getIndexType(sql._strTableName, sql._strColumnName)!=null){
+		
+		// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
+		
+		// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
+		// HashSet<Tuple> hstup=table.lesserthaneq(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+		return hstup;
+	}
+	else{
+		Table table = Table.deserialize(sql._strTableName);
+		if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
+			hstup= table.lesserthannceq(sql._strColumnName, sql._objValue); 
+			return hstup;
+		}
+		else{
+			hstup= table.lesserthaneq(sql._strColumnName, sql._objValue);
+			return hstup;
+		}
+	}	
+} else{   
+	Table table = Table.deserialize(sql._strTableName);
+	hstup= table.noteqsearch(sql._strColumnName, sql._objValue);
+	return hstup;
+}
 
-	public static void main(String[] args) {
+}
 
-		try {
+private static int precedence(String operator) {
+	switch (operator) {
+		
+		case "and":
+			return 3;
+		case "or":
+			return 2;
+		case "xor":
+			return 1;
+		default:
+			return -1;
+	}
+}
+
+
+
+	public static void main( String[] args ){
+	
+	try{
 
 			DBApp dbApp = new DBApp();
 
@@ -935,22 +1422,13 @@ public class DBApp {
 
 			dbApp.createTable("Student", "id", htblColNameType );
 
-			// insert 200 rows
+			// tree.printTree(tree.root);
 
-			for( int i = 0; i < 210; i++ ){
-				
-				Hashtable htblColNameValue = new Hashtable( );
-				htblColNameValue.put("id", new Integer( i ) );
-				htblColNameValue.put("name", new String("Name " + i ) );
-				htblColNameValue.put("gpa", new Double( 1.0 * i ) );
-				dbApp.insertIntoTable( "Student", htblColNameValue );
+			tree.displayTree();
 
-			}
+			
 
-			// delete 1000 rows
-
-			// for( int i = 0; i < 1000; i++ ){
-
+			// String strTableName = "Student";
 			// Hashtable htblColNameValue = new Hashtable( );
 			// htblColNameValue.put("id", new Integer( i ) );
 			// htblColNameValue.put("name", new String("Name " + i ) );
