@@ -13,7 +13,7 @@ import java.util.Vector;
 
 public class Page implements Serializable{
 
-    private static Vector<Tuple> vecTuples;
+    private Vector<Tuple> vecTuples;
     public static int intPageSize;
     
 
@@ -43,7 +43,6 @@ public class Page implements Serializable{
         vecTuples.add(tupleTuple);
         
     }
-
     /**
      * This Java function searches for tuples by a given clustering key name and value using binary
      * search.

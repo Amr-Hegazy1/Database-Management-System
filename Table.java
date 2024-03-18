@@ -9,7 +9,7 @@ import java.util.*;
 public class Table implements Serializable{
     private String strTableName;
 
-    private static Vector<String> vecPages;
+    private Vector<String> vecPages;
 
     public Table(String strTableName){
         this.strTableName = strTableName;
