@@ -945,20 +945,26 @@ public class DBApp {
 
 			// dbApp.createTable("Student", "id", htblColNameType);
 
-			// // // insert 200 rows
+			// insert 200 rows
 
-			// for (int i = 0; i < 201; i++) {
-			Hashtable htblColNameValue = new Hashtable();
-			htblColNameValue.put("id", new Integer(199));
-			htblColNameValue.put("name", new String("Name " + 2));
-			htblColNameValue.put("gpa", new Double(1.0 * 2));
-			dbApp.insertIntoTable("Student", htblColNameValue);
+			// for (int i = 60; i < 80; i++) {
+			// Hashtable htblColNameValue = new Hashtable();
+			// htblColNameValue.put("id", new Integer(i));
+			// htblColNameValue.put("name", new String("Name " + i));
+			// htblColNameValue.put("gpa", new Double(1.0 * i));
+			// dbApp.insertIntoTable("Student", htblColNameValue);
+			// Page p = Page.deserialize("tables/Student/Student_3.class");
+			// System.out.println(p);
 			// }
 
-			Page p = Page.deserialize("tables/Student/Student_1.class");
-			Vector<Tuple> tuples = p.getVecTuples();
+			Page p2 = Page.deserialize("tables/Student/Student_2.class");
+			Page p3 = Page.deserialize("tables/Student/Student_3.class");
+			Page p1 = Page.deserialize("tables/Student/Student_1.class");
+			Page p0 = Page.deserialize("tables/Student/Student_0.class");
+			System.out.println(p0);
+			System.out.print(p3);
 
-			System.out.print(tuples);
+			// System.out.print(p.getSize());
 
 			// Page p2 = getPageByClusteringKey("Student", "id", 5,
 			// Table.deserialize("tables/Student/Student.class"));
