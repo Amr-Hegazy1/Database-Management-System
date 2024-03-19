@@ -1,3 +1,5 @@
+package com.db_engine;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -6,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.*;
 import java.util.*;
+
 
 
 
@@ -1191,18 +1194,21 @@ public class bplustree<T extends Comparable<T> , K> implements Serializable {
      * represents the name of the file to which the object will be serialized. This parameter specifies
      * the file path where the serialized object will be saved.
      */
-    public void serialize(String strFileName) throws IOException{
+    public void serialize(String strFileName) throws DBAppException{
         
-        // TODO: Exception Handling
+        
+
+		try{
+			FileOutputStream fos= new FileOutputStream(strFileName);
+			ObjectOutputStream oos=new ObjectOutputStream(fos);
+			oos.writeObject(this);
 
 
-        FileOutputStream fos= new FileOutputStream(strFileName);
-        ObjectOutputStream oos=new ObjectOutputStream(fos);
-        oos.writeObject(this);
-
-
-        oos.close();
-        fos.close();
+			oos.close();
+			fos.close();
+		}catch(IOException ioe){
+			throw new DBAppException("Error in serialization");
+		}
         
         
     }
@@ -1217,18 +1223,23 @@ public class bplustree<T extends Comparable<T> , K> implements Serializable {
      * @return The `deserialize` method is returning an object of type `Page` that has been
      * deserialized from the file specified by the `strFileName` parameter.
      */
-    public static bplustree deserialize(String strFileName) throws IOException, ClassNotFoundException{
+    public static bplustree deserialize(String strFileName) throws DBAppException{
         
-        // TODO: Exception Handling
+        try{
         
-        FileInputStream fis=new FileInputStream(strFileName);
-        ObjectInputStream ois= new ObjectInputStream(fis);
-        bplustree bplusBtree = (bplustree) ois.readObject();
+			FileInputStream fis=new FileInputStream(strFileName);
+			ObjectInputStream ois= new ObjectInputStream(fis);
+			bplustree bplusBtree = (bplustree) ois.readObject();
 
-        ois.close();
-        fis.close();
-       
-        return bplusBtree;
+			ois.close();
+			fis.close();
+		
+			return bplusBtree;
+		}catch(IOException ioe){
+			throw new DBAppException("Error in deserialization");
+		}catch(ClassNotFoundException c){
+			throw new DBAppException("Class not found");
+		}
 
     }
 
