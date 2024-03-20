@@ -178,7 +178,7 @@ public class Tuple implements Serializable, Comparable<Tuple>{
      * @return The `hashCode()` method is returning the hash code of the `hmTuple` object.
      */
     public int hashCode(){
-        System.out.println(hmTuple.hashCode());
+       
         return hmTuple.hashCode();
     }
 

@@ -41,7 +41,7 @@ public class DBApp {
 			prop.load(s);
 			MAX_ROWS_COUNT_IN_PAGE = Integer.parseInt(prop.getProperty("MaximumRowsCountinPage"));
 
-			System.out.println(MAX_ROWS_COUNT_IN_PAGE);
+			
 		} catch (FileNotFoundException ex) {
 			throw new DBAppException("Config file not found");
 		} catch (IOException ex) {
@@ -151,7 +151,7 @@ public class DBApp {
 
 			metadata.addIndex(strTableName, strColName, "B+Tree", strIndexName);
 
-			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".ser");
+			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 			Vector<String> vecPages = tblTable.getPages();
 			BPlusTree bplsBplustree;
 
@@ -165,7 +165,7 @@ public class DBApp {
 
 			// Loop through the column values
 			for (String pgPage_name : vecPages) {
-				Page pgPage = Page.deserialize("tables/" + strTableName + "/" + pgPage_name + ".ser");
+				Page pgPage = Page.deserialize("tables/" + strTableName + "/" + pgPage_name + ".class");
 				Vector<Tuple> vecTuples = pgPage.getTuples();
 				for (Tuple tplTuple : vecTuples) {
 					if (tplTuple.getColumnValue(strColName) instanceof Integer) {
@@ -181,7 +181,10 @@ public class DBApp {
 
 				}
 			}
-			bplsBplustree.serialize("Indicies/" + strIndexName + ".class");
+			
+			// TODO: Consider creating an indices folder inside each table folder
+
+			bplsBplustree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 			
 
 		}
@@ -203,10 +206,12 @@ public class DBApp {
 				throw new DBAppException("Table Doesnt Exist");
 			} else {
 				for (Map.Entry<String, Object> entry : htblColNameValue.entrySet()) {
+					
 					if (!metadata.checkColumnName(strTableName, entry.getKey())) { // column name existence check
 						throw new DBAppException("Column Doesnt Exist");
 
 					} else {
+						System.out.println("Index: " + metadata.getIndexType(strTableName, entry.getKey()) + " " + metadata.getIndexType(strTableName, entry.getKey()).equals("null"));
 						String strCorrectDataType = metadata.getColumnType(strTableName, entry.getKey());
 						String strActualDataType = entry.getValue().getClass().getName();
 
@@ -214,7 +219,7 @@ public class DBApp {
 						if (!strCorrectDataType.equals(strActualDataType)) { // data type check
 							throw new DBAppException("Data Type Mismatch");
 						}
-						if (metadata.isClusteringKey(strTableName, entry.getKey())) {
+						else if (metadata.isClusteringKey(strTableName, entry.getKey())) {
 							if (entry.getValue() == null) { // clustering key cannot be null check
 								throw new DBAppException("Clustering Key Cannot Be Null");
 							}
@@ -225,8 +230,9 @@ public class DBApp {
 						}
 						// checking which columns are indexed
 						// storing indexed column names in a hashset to adjust their indicies later
-						else if (!(metadata.getIndexType(strTableName, entry.getKey())).equals("null")) {
+						else if (!metadata.getIndexType(strTableName, entry.getKey()).equals("null")) {
 							hsIndexedColumns.add(entry.getKey());
+							System.out.println("Indexed Column: " + entry.getKey());
 							tupleNewTuple.setColumnValue(entry.getKey(), entry.getValue());
 						} else {
 							tupleNewTuple.setColumnValue(entry.getKey(), entry.getValue());
@@ -328,7 +334,7 @@ public class DBApp {
 				Page newPage = new Page(strPageName);
 				tupleNewTuple.setPageName(strPageName);
 				newPage.addTuple(0, tupleNewTuple);
-				System.out.println("Page Name: " + strPageName);
+				
 				newPage.serialize("tables/" + strTableName + "/" + strPageName + ".class");
 			}
 
@@ -1446,48 +1452,105 @@ public class DBApp {
 
 		try {
 
-			DBApp dbApp = new DBApp();
-
-			dbApp.init();
-
-			Hashtable<String, String> htblColNameType = new Hashtable();
-			htblColNameType.put("id", "java.lang.Integer");
-			htblColNameType.put("name", "java.lang.String");
-			htblColNameType.put("gpa", "java.lang.Double");
-
-			dbApp.createTable("Student", "id", htblColNameType );
-
-			// insert 200 rows
-
-			for( int i = 0; i < 20; i++ ){
+			try{
+				DBApp dbApp = new DBApp();
+	
+				dbApp.init();
+	
+				String strTableName = "Student";
+	
+				Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+	
+				htblColNameType.put("id", "java.lang.Integer");
+	
+				htblColNameType.put("name", "java.lang.String");
+	
+				htblColNameType.put("gpa", "java.lang.Double");
+	
+				dbApp.createTable(strTableName, "id", htblColNameType);
+	
+				// insert 20 rows
+	
+				for(int i = 0; i < 20; i++){
+					Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+					htblColNameValue.put("id", i);
+					htblColNameValue.put("name", "Student" + i);
+					htblColNameValue.put("gpa", 3.0 + i);
+					dbApp.insertIntoTable(strTableName, htblColNameValue);
+				}
+	
+				dbApp.createIndex(strTableName, "id", "idIndex");
+	
+				// check that index contains correct values
+	
+				BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
+	
+				for(int i = 0; i < 20; i++){
+					assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+				}
+	
+				// insert a new row
+	
+				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+				htblColNameValue.put("id", 21);
+				htblColNameValue.put("name", "Student" + 21);
+				htblColNameValue.put("gpa", 3.0 + 21);
+				dbApp.insertIntoTable(strTableName, htblColNameValue);
+	
+				// check that index contains correct values
+	
+				tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
 				
-				Hashtable htblColNameValue = new Hashtable( );
-				htblColNameValue.put("id", new Integer( i ) );
-				htblColNameValue.put("name", new String("Name " + i ) );
-				htblColNameValue.put("gpa", new Double( 1.0 * i ) );
-				dbApp.insertIntoTable( "Student", htblColNameValue );
-
+				for(int i = 0; i < 21; i++){
+					assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+				}
+	
+			}catch(Exception e){
+				e.printStackTrace();
 			}
 
-			SQLTerm[] arrSQLTerms;
-			arrSQLTerms = new SQLTerm[2];
-			arrSQLTerms[0] = new SQLTerm( );
-			arrSQLTerms[0]._strTableName = "Student";
-			arrSQLTerms[0]._strColumnName= "id";
-			arrSQLTerms[0]._strOperator = "=";
-			arrSQLTerms[0]._objValue = new Integer( 0 );
+			// DBApp dbApp = new DBApp();
 
-			arrSQLTerms[1] = new SQLTerm( );
-			arrSQLTerms[1]._strTableName = "Student";
-			arrSQLTerms[1]._strColumnName= "gpa";
-			arrSQLTerms[1]._strOperator = "=";
-			arrSQLTerms[1]._objValue = new Double(0.0);
+			// dbApp.init();
 
-			String[] strarrOperators = new String[1];
+			// Hashtable<String, String> htblColNameType = new Hashtable();
+			// htblColNameType.put("id", "java.lang.Integer");
+			// htblColNameType.put("name", "java.lang.String");
+			// htblColNameType.put("gpa", "java.lang.Double");
 
-			strarrOperators[0] = "and";
+			// dbApp.createTable("Student", "id", htblColNameType );
 
-			Iterator<Tuple> iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+			// // insert 200 rows
+
+			// for( int i = 0; i < 20; i++ ){
+				
+			// 	Hashtable htblColNameValue = new Hashtable( );
+			// 	htblColNameValue.put("id", new Integer( i ) );
+			// 	htblColNameValue.put("name", new String("Name " + i ) );
+			// 	htblColNameValue.put("gpa", new Double( 1.0 * i ) );
+			// 	dbApp.insertIntoTable( "Student", htblColNameValue );
+
+			// }
+
+			// SQLTerm[] arrSQLTerms;
+			// arrSQLTerms = new SQLTerm[2];
+			// arrSQLTerms[0] = new SQLTerm( );
+			// arrSQLTerms[0]._strTableName = "Student";
+			// arrSQLTerms[0]._strColumnName= "id";
+			// arrSQLTerms[0]._strOperator = "=";
+			// arrSQLTerms[0]._objValue = new Integer( 0 );
+
+			// arrSQLTerms[1] = new SQLTerm( );
+			// arrSQLTerms[1]._strTableName = "Student";
+			// arrSQLTerms[1]._strColumnName= "gpa";
+			// arrSQLTerms[1]._strOperator = "=";
+			// arrSQLTerms[1]._objValue = new Double(0.0);
+
+			// String[] strarrOperators = new String[1];
+
+			// strarrOperators[0] = "and";
+
+			// Iterator<Tuple> iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
 			// delete 1000 rows
 

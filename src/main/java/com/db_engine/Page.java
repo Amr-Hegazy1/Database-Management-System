@@ -283,7 +283,7 @@ public class Page implements Serializable {
 
             String strMidClusteringKeyValue = vecTuples.get(mid).getColumnValue(strClusteringKeyName).toString();
 
-            System.out.println(mid + " " + strMidClusteringKeyValue + " " + objClusteringKeyValue);
+            
 
             Comparable midClusteringKeyValue = (Comparable) vecTuples.get(mid).getColumnValue(strClusteringKeyName);
 
