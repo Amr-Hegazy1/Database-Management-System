@@ -85,8 +85,7 @@ public class Page implements Serializable {
      * @return Last tuple in the page after removing it.
      */
     public Tuple removeLastTuple() {
-        Tuple tupleRemovedTuple = vecTuples.remove(vecTuples.size() - 1);
-        return tupleRemovedTuple;
+        return vecTuples.remove(vecTuples.size() - 1);
     }
 
     /**
@@ -232,11 +231,10 @@ public class Page implements Serializable {
      * the specified
      * parameter `strPageName`.
      * 
-     * @param strPageName The `strPageName` parameter is a `String` that represents the name of a page.
-     */    
+     * @param strPageName The `strPageName` parameter is a `String` that represents
+     *                    the name of a page.
+     */
     public static void deletePage(String strPageName) throws DBAppException {
-        
-        
 
         File filePage = new File(strPageName);
 
@@ -315,9 +313,7 @@ public class Page implements Serializable {
      */
     public void serialize(String strFileName) throws DBAppException {
 
-        
-
-        try{
+        try {
 
             FileOutputStream fos = new FileOutputStream(strFileName);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -325,10 +321,9 @@ public class Page implements Serializable {
 
             oos.close();
             fos.close();
-        }catch(IOException ioe){
+        } catch (IOException ioe) {
             throw new DBAppException("Error in Serialization");
         }
-
 
     }
 
@@ -346,7 +341,7 @@ public class Page implements Serializable {
      */
     public static Page deserialize(String strFileName) throws DBAppException {
 
-        try{
+        try {
 
             FileInputStream fis = new FileInputStream(strFileName);
             ObjectInputStream ois = new ObjectInputStream(fis);
@@ -356,17 +351,16 @@ public class Page implements Serializable {
             fis.close();
 
             return page;
-        }catch(IOException ioe){
+        } catch (IOException ioe) {
             throw new DBAppException("Error in Deserialization");
-        }catch(ClassNotFoundException c){
+        } catch (ClassNotFoundException c) {
             throw new DBAppException("Class not found");
         }
 
     }
 
-
-    //get all tuples in the page
-    public Vector<Tuple> getTuples(){
+    // get all tuples in the page
+    public Vector<Tuple> getTuples() {
         return this.vecTuples;
     }
 
@@ -408,7 +402,7 @@ public class Page implements Serializable {
                 page.addTuple(tuple);
             }
             try {
-                page.serialize("tables/" + strTableName + "/" + strTableName + "_" +  i + ".class");
+                page.serialize("tables/" + strTableName + "/" + strTableName + "_" + i + ".class");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -425,295 +419,271 @@ public class Page implements Serializable {
         return vecTuples;
     }
 
-
-    public HashSet<Tuple> allTup(){
-        HashSet<Tuple> hstups= new HashSet<>();
-        for(Tuple tu: vecTuples){
-                hstups.add(tu);
+    public HashSet<Tuple> allTup() {
+        HashSet<Tuple> hstups = new HashSet<>();
+        for (Tuple tu : vecTuples) {
+            hstups.add(tu);
         }
         return hstups;
     }
-    public Object Min(String col) throws DBAppException{
+
+    public Object Min(String col) throws DBAppException {
         return vecTuples.get(0).getColumnValue(col);
     }
 
-
-    public Object Max(String col) throws DBAppException{
-        return vecTuples.get(vecTuples.size()-1).getColumnValue(col);
+    public Object Max(String col) throws DBAppException {
+        return vecTuples.get(vecTuples.size() - 1).getColumnValue(col);
     }
-    public  HashSet<Tuple> eqsearch(String col, Object val, boolean isclu, int index) throws DBAppException{
-        HashSet<Tuple> hstups= new HashSet<>();
-        if(isclu){
-            
-                if(val instanceof Integer){
-                    Integer te = (Integer) val;
-                    if(((Integer)vecTuples.get(index).getColumnValue(col))==(te)){
-                        hstups.add(vecTuples.get(index));
-                    }
-                }
-                else if(val instanceof Double){
-                    Double te = (Double) val;
-                    if(((Double)vecTuples.get(index).getColumnValue(col))==(te)){
-                        hstups.add(vecTuples.get(index));
-                    }
-                }
-                else{
-                    String te = (String) val;
-                    if(((String)vecTuples.get(index).getColumnValue(col)).compareTo(te)==0){
-                        hstups.add(vecTuples.get(index));
-                    }
-                }
-            
-            
-        }
-        else{
-            for(Tuple tu: vecTuples){
-                if(val instanceof Integer){
-                    Integer te = (Integer) val;
-                    if(((Integer)tu.getColumnValue(col))==(te)){
-                        hstups.add(tu);
-                    }
-                }
-                else if(val instanceof Double){
-                    Double te = (Double) val;
-                    if(((Double)tu.getColumnValue(col))==(te)){
-                        hstups.add(tu);
-                    }
-                }
-                else{
-                    String te = (String) val;
-                    if(((String)tu.getColumnValue(col)).compareTo(te)==0){
-                        hstups.add(tu);
-                    }
-                }
-            
-            }
-        }
-        return hstups;
-    }  
 
-    public HashSet<Tuple> gtrsearch(String col, Object val, boolean isclu, int index) throws DBAppException{
-        HashSet<Tuple> hstups= new HashSet<>();
-        if(isclu){
-            for(int i=index; i<vecTuples.size();i++){
-                if(val instanceof Integer){
-                    Integer te = (Integer) val;
-                    if(((Integer)vecTuples.get(i).getColumnValue(col))>(te)){
-                        hstups.add(vecTuples.get(i));
-                    }
-                }
-                else if(val instanceof Double){
-                    Double te = (Double) val;
-                    if(((Double)vecTuples.get(i).getColumnValue(col))>(te)){
-                        hstups.add(vecTuples.get(i));
-                    }
-                }
-                else{
-                    String te = (String) val;
-                    if(((String)vecTuples.get(i).getColumnValue(col)).compareTo(te)>0){
-                        hstups.add(vecTuples.get(i));
-                    }
-                }
-            
-            }
-        }
-        else{
-            for(Tuple tu: vecTuples){
-                if(val instanceof Integer){
-                    Integer te = (Integer) val;
-                    if(((Integer)tu.getColumnValue(col))>(te)){
-                        hstups.add(tu);
-                    }
-                }
-                else if(val instanceof Double){
-                    Double te = (Double) val;
-                    if(((Double)tu.getColumnValue(col))>(te)){
-                        hstups.add(tu);
-                    }
-                }
-                else{
-                    String te = (String) val;
-                    if(((String)tu.getColumnValue(col)).compareTo(te)>0){
-                        hstups.add(tu);
-                    }
-                }
-            
-            }
-        }
-        return hstups;
-    }
-    public HashSet<Tuple> gtreqsearch(String col, Object val, boolean isclu, int index) throws DBAppException{
-        HashSet<Tuple> hstups= new HashSet<>();
-        if(isclu){
-            for(int i=index; i<vecTuples.size();i++){
-                if(val instanceof Integer){
-                    Integer te = (Integer) val;
-                    if(((Integer)vecTuples.get(i).getColumnValue(col))>=(te)){
-                        hstups.add(vecTuples.get(i));
-                    }
-                }
-                else if(val instanceof Double){
-                    Double te = (Double) val;
-                    if(((Double)vecTuples.get(i).getColumnValue(col))>=(te)){
-                        hstups.add(vecTuples.get(i));
-                    }
-                }
-                else{
-                    String te = (String) val;
-                    if(((String)vecTuples.get(i).getColumnValue(col)).compareTo(te)>=0){
-                        hstups.add(vecTuples.get(i));
-                    }
-                }
-            
-            }
-        }
-        else {for(Tuple tu: vecTuples){
-            if(val instanceof Integer){
+    public HashSet<Tuple> eqsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
+        HashSet<Tuple> hstups = new HashSet<>();
+        if (isclu) {
+
+            if (val instanceof Integer) {
                 Integer te = (Integer) val;
-                if(((Integer)tu.getColumnValue(col))>=(te)){
-                    hstups.add(tu);
+                if (((Integer) vecTuples.get(index).getColumnValue(col)) == (te)) {
+                    hstups.add(vecTuples.get(index));
                 }
-            }
-            else if(val instanceof Double){
+            } else if (val instanceof Double) {
                 Double te = (Double) val;
-                if(((Double)tu.getColumnValue(col))>=(te)){
-                    hstups.add(tu);
+                if (((Double) vecTuples.get(index).getColumnValue(col)) == (te)) {
+                    hstups.add(vecTuples.get(index));
                 }
-            }
-            else{
+            } else {
                 String te = (String) val;
-                if(((String)tu.getColumnValue(col)).compareTo(te)>=0){
-                    hstups.add(tu);
+                if (((String) vecTuples.get(index).getColumnValue(col)).compareTo(te) == 0) {
+                    hstups.add(vecTuples.get(index));
                 }
             }
-            
+
+        } else {
+            for (Tuple tu : vecTuples) {
+                if (val instanceof Integer) {
+                    Integer te = (Integer) val;
+                    if (((Integer) tu.getColumnValue(col)) == (te)) {
+                        hstups.add(tu);
+                    }
+                } else if (val instanceof Double) {
+                    Double te = (Double) val;
+                    if (((Double) tu.getColumnValue(col)) == (te)) {
+                        hstups.add(tu);
+                    }
+                } else {
+                    String te = (String) val;
+                    if (((String) tu.getColumnValue(col)).compareTo(te) == 0) {
+                        hstups.add(tu);
+                    }
+                }
+
+            }
         }
-    }
         return hstups;
     }
 
-    public HashSet<Tuple> lessearch(String col, Object val, boolean isclu, int index) throws DBAppException{
-        HashSet<Tuple> hstups= new HashSet<>();
-        if(isclu){
-            for(int i=0; i<=index;i++){
-                if(val instanceof Integer){
+    public HashSet<Tuple> gtrsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
+        HashSet<Tuple> hstups = new HashSet<>();
+        if (isclu) {
+            for (int i = index; i < vecTuples.size(); i++) {
+                if (val instanceof Integer) {
                     Integer te = (Integer) val;
-                    if(((Integer)vecTuples.get(i).getColumnValue(col))<(te)){
+                    if (((Integer) vecTuples.get(i).getColumnValue(col)) > (te)) {
                         hstups.add(vecTuples.get(i));
                     }
-                }
-                else if(val instanceof Double){
+                } else if (val instanceof Double) {
                     Double te = (Double) val;
-                    if(((Double)vecTuples.get(i).getColumnValue(col))<(te)){
+                    if (((Double) vecTuples.get(i).getColumnValue(col)) > (te)) {
                         hstups.add(vecTuples.get(i));
                     }
-                }
-                else{
+                } else {
                     String te = (String) val;
-                    if(((String)vecTuples.get(i).getColumnValue(col)).compareTo(te)<0){
+                    if (((String) vecTuples.get(i).getColumnValue(col)).compareTo(te) > 0) {
                         hstups.add(vecTuples.get(i));
                     }
                 }
-            
+
+            }
+        } else {
+            for (Tuple tu : vecTuples) {
+                if (val instanceof Integer) {
+                    Integer te = (Integer) val;
+                    if (((Integer) tu.getColumnValue(col)) > (te)) {
+                        hstups.add(tu);
+                    }
+                } else if (val instanceof Double) {
+                    Double te = (Double) val;
+                    if (((Double) tu.getColumnValue(col)) > (te)) {
+                        hstups.add(tu);
+                    }
+                } else {
+                    String te = (String) val;
+                    if (((String) tu.getColumnValue(col)).compareTo(te) > 0) {
+                        hstups.add(tu);
+                    }
+                }
+
             }
         }
-        else {for(Tuple tu: vecTuples){
-            if(val instanceof Integer){
-                Integer te = (Integer) val;
-                if(((Integer)tu.getColumnValue(col))<(te)){
-                    hstups.add(tu);
-                }
-            }
-            else if(val instanceof Double){
-                Double te = (Double) val;
-                if(((Double)tu.getColumnValue(col))<(te)){
-                    hstups.add(tu);
-                }
-            }
-            else{
-                String te = (String) val;
-                if(((String)tu.getColumnValue(col)).compareTo(te)<0){
-                    hstups.add(tu);
-                }
-            }
-            
-        }
-    }
         return hstups;
     }
 
-    public HashSet<Tuple> leseqsearch(String col, Object val, boolean isclu, int index) throws DBAppException{
-        HashSet<Tuple> hstups= new HashSet<>();
-        if(isclu){
-            for(int i=0; i<=index;i++){
-                if(val instanceof Integer){
+    public HashSet<Tuple> gtreqsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
+        HashSet<Tuple> hstups = new HashSet<>();
+        if (isclu) {
+            for (int i = index; i < vecTuples.size(); i++) {
+                if (val instanceof Integer) {
                     Integer te = (Integer) val;
-                    if(((Integer)vecTuples.get(i).getColumnValue(col))<=(te)){
+                    if (((Integer) vecTuples.get(i).getColumnValue(col)) >= (te)) {
                         hstups.add(vecTuples.get(i));
                     }
-                }
-                else if(val instanceof Double){
+                } else if (val instanceof Double) {
                     Double te = (Double) val;
-                    if(((Double)vecTuples.get(i).getColumnValue(col))<(te)){
+                    if (((Double) vecTuples.get(i).getColumnValue(col)) >= (te)) {
                         hstups.add(vecTuples.get(i));
                     }
-                }
-                else{
+                } else {
                     String te = (String) val;
-                    if(((String)vecTuples.get(i).getColumnValue(col)).compareTo(te)<0){
+                    if (((String) vecTuples.get(i).getColumnValue(col)).compareTo(te) >= 0) {
                         hstups.add(vecTuples.get(i));
                     }
                 }
-            
+
+            }
+        } else {
+            for (Tuple tu : vecTuples) {
+                if (val instanceof Integer) {
+                    Integer te = (Integer) val;
+                    if (((Integer) tu.getColumnValue(col)) >= (te)) {
+                        hstups.add(tu);
+                    }
+                } else if (val instanceof Double) {
+                    Double te = (Double) val;
+                    if (((Double) tu.getColumnValue(col)) >= (te)) {
+                        hstups.add(tu);
+                    }
+                } else {
+                    String te = (String) val;
+                    if (((String) tu.getColumnValue(col)).compareTo(te) >= 0) {
+                        hstups.add(tu);
+                    }
+                }
+
             }
         }
-        else{
-        for(Tuple tu: vecTuples){
-            if(val instanceof Integer){
-                Integer te = (Integer) val;
-                if(((Integer)tu.getColumnValue(col))<=(te)){
-                    hstups.add(tu);
-                }
-            }
-            else if(val instanceof Double){
-                Double te = (Double) val;
-                if(((Double)tu.getColumnValue(col))<=(te)){
-                    hstups.add(tu);
-                }
-            }
-            else{
-                String te = (String) val;
-                if(((String)tu.getColumnValue(col)).compareTo(te)<=0){
-                    hstups.add(tu);
-                }
-            }
-            
-        }
-    }
         return hstups;
     }
-    public  HashSet<Tuple> noteqsearch(String col, Object val) throws DBAppException{
-        HashSet<Tuple> hstups= new HashSet<>();
-        for(Tuple tu: vecTuples){
-            if(val instanceof Integer){
+
+    public HashSet<Tuple> lessearch(String col, Object val, boolean isclu, int index) throws DBAppException {
+        HashSet<Tuple> hstups = new HashSet<>();
+        if (isclu) {
+            for (int i = 0; i <= index; i++) {
+                if (val instanceof Integer) {
+                    Integer te = (Integer) val;
+                    if (((Integer) vecTuples.get(i).getColumnValue(col)) < (te)) {
+                        hstups.add(vecTuples.get(i));
+                    }
+                } else if (val instanceof Double) {
+                    Double te = (Double) val;
+                    if (((Double) vecTuples.get(i).getColumnValue(col)) < (te)) {
+                        hstups.add(vecTuples.get(i));
+                    }
+                } else {
+                    String te = (String) val;
+                    if (((String) vecTuples.get(i).getColumnValue(col)).compareTo(te) < 0) {
+                        hstups.add(vecTuples.get(i));
+                    }
+                }
+
+            }
+        } else {
+            for (Tuple tu : vecTuples) {
+                if (val instanceof Integer) {
+                    Integer te = (Integer) val;
+                    if (((Integer) tu.getColumnValue(col)) < (te)) {
+                        hstups.add(tu);
+                    }
+                } else if (val instanceof Double) {
+                    Double te = (Double) val;
+                    if (((Double) tu.getColumnValue(col)) < (te)) {
+                        hstups.add(tu);
+                    }
+                } else {
+                    String te = (String) val;
+                    if (((String) tu.getColumnValue(col)).compareTo(te) < 0) {
+                        hstups.add(tu);
+                    }
+                }
+
+            }
+        }
+        return hstups;
+    }
+
+    public HashSet<Tuple> leseqsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
+        HashSet<Tuple> hstups = new HashSet<>();
+        if (isclu) {
+            for (int i = 0; i <= index; i++) {
+                if (val instanceof Integer) {
+                    Integer te = (Integer) val;
+                    if (((Integer) vecTuples.get(i).getColumnValue(col)) <= (te)) {
+                        hstups.add(vecTuples.get(i));
+                    }
+                } else if (val instanceof Double) {
+                    Double te = (Double) val;
+                    if (((Double) vecTuples.get(i).getColumnValue(col)) < (te)) {
+                        hstups.add(vecTuples.get(i));
+                    }
+                } else {
+                    String te = (String) val;
+                    if (((String) vecTuples.get(i).getColumnValue(col)).compareTo(te) < 0) {
+                        hstups.add(vecTuples.get(i));
+                    }
+                }
+
+            }
+        } else {
+            for (Tuple tu : vecTuples) {
+                if (val instanceof Integer) {
+                    Integer te = (Integer) val;
+                    if (((Integer) tu.getColumnValue(col)) <= (te)) {
+                        hstups.add(tu);
+                    }
+                } else if (val instanceof Double) {
+                    Double te = (Double) val;
+                    if (((Double) tu.getColumnValue(col)) <= (te)) {
+                        hstups.add(tu);
+                    }
+                } else {
+                    String te = (String) val;
+                    if (((String) tu.getColumnValue(col)).compareTo(te) <= 0) {
+                        hstups.add(tu);
+                    }
+                }
+
+            }
+        }
+        return hstups;
+    }
+
+    public HashSet<Tuple> noteqsearch(String col, Object val) throws DBAppException {
+        HashSet<Tuple> hstups = new HashSet<>();
+        for (Tuple tu : vecTuples) {
+            if (val instanceof Integer) {
                 Integer te = (Integer) val;
-                if(((Integer)tu.getColumnValue(col))!=(te)){
+                if (((Integer) tu.getColumnValue(col)) != (te)) {
                     hstups.add(tu);
                 }
-            }
-            else if(val instanceof Double){
+            } else if (val instanceof Double) {
                 Double te = (Double) val;
-                if(((Double)tu.getColumnValue(col))!=(te)){
+                if (((Double) tu.getColumnValue(col)) != (te)) {
                     hstups.add(tu);
                 }
-            }
-            else{
+            } else {
                 String te = (String) val;
-                if(((String)tu.getColumnValue(col)).compareTo(te)!=0){
+                if (((String) tu.getColumnValue(col)).compareTo(te) != 0) {
                     hstups.add(tu);
                 }
             }
-            
+
         }
         return hstups;
     }

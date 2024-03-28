@@ -222,6 +222,8 @@ public class DBApp {
 				}
 
 			}
+
+			// System.out.print("indexed cols:" + hsIndexedColumns);
 		}
 		List<String> listColNames = metadata.getColumnNames(strTableName); // fetching correct column names
 		if (intColCounter != listColNames.size()) { // checking if all columns were included in insert
@@ -264,7 +266,7 @@ public class DBApp {
 					tupleNewTuple.setPageName(pgFirstPage.getPageName());
 
 					if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
-						handleInsertOverflow(tblTable, 0, intMaxSize, strClustKeyName);
+						handleInsertOverflow(tblTable, pgFirstPage, intMaxSize, strClustKeyName);
 					} else {
 						pgFirstPage.serialize("tables/" + strTableName + "/" + pgFirstPage.getPageName() + ".class");
 					}
@@ -275,7 +277,7 @@ public class DBApp {
 					tupleNewTuple.setPageName(pgLastPage.getPageName());
 
 					if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
-						handleInsertOverflow(tblTable, vecPages.size() - 1, intMaxSize, strClustKeyName);
+						handleInsertOverflow(tblTable, pgLastPage, intMaxSize, strClustKeyName);
 					} else {
 						pgLastPage.serialize("tables/" + strTableName + "/" + pgLastPage.getPageName() + ".class");
 					}
@@ -299,9 +301,7 @@ public class DBApp {
 				pgInsertPage.addTuple(index, tupleNewTuple);
 
 				if (pgInsertPage.getSize() > intMaxSize) { // check for overflow
-					int intStartIndex = vecPages.indexOf(pgInsertPage.getPageName()); // get index of first overflowed
-																						// page in the vecPages Vector
-					handleInsertOverflow(tblTable, intStartIndex, intMaxSize, strClustKeyName); // handle overflow
+					handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName); // handle overflow
 				} else { // if no overflow, serialize page
 					pgInsertPage.serialize("tables/" + strTableName + "/" + pgInsertPage.getPageName() + ".class");
 				}
@@ -339,12 +339,14 @@ public class DBApp {
 
 	}
 
-	public void handleInsertOverflow(Table tblTable, int intStartIndex, int intMaxRowsPerPage, String strClustKeyName)
+	public void handleInsertOverflow(Table tblTable, Page pgFirstOverflowPage, int intMaxRowsPerPage,
+			String strClustKeyName)
 			throws DBAppException {
 
 		Vector<String> vecPages = tblTable.getPages(); // Vector of Page names in table
-		Page overflowPage = Page // page that caused first overflow
-				.deserialize("tables/" + tblTable.getTableName() + "/" + vecPages.get(intStartIndex) + ".class");
+		Page overflowPage = pgFirstOverflowPage; // page that caused first overflow
+		int intStartIndex = vecPages.indexOf(overflowPage.getPageName()); // get index of first overflowed page in the
+																			// vecPages Vector
 		Tuple tupleLastTuple = overflowPage.removeLastTuple(); // last tuple in overflow page
 		overflowPage.serialize("tables/" + tblTable.getTableName() + "/" + overflowPage.getPageName() + ".class"); // serialize
 																													// the
@@ -1423,24 +1425,27 @@ public class DBApp {
 
 			dbApp.init();
 
-			Hashtable<String, String> htblColNameType = new Hashtable();
-			htblColNameType.put("id", "java.lang.Integer");
-			htblColNameType.put("name", "java.lang.String");
-			htblColNameType.put("gpa", "java.lang.Double");
+			// Hashtable<String, String> htblColNameType = new Hashtable();
+			// htblColNameType.put("id", "java.lang.Integer");
+			// htblColNameType.put("name", "java.lang.String");
+			// htblColNameType.put("gpa", "java.lang.Double");
 
-			dbApp.createTable("Student", "id", htblColNameType);
+			// dbApp.createTable("Student", "id", htblColNameType);
 
-			// insert 200 rows
+			// // // insert 200 rows
 
-			for (int i = 0; i < 2000; i++) {
+			// for (int i = 31; i < 40; i++) {
+			// int i = 30;
+			// Hashtable htblColNameValue = new Hashtable();
+			// htblColNameValue.put("id", new Integer(i));
+			// htblColNameValue.put("name", new String("Name " + i));
+			// htblColNameValue.put("gpa", new Double(1.0 * i));
+			// dbApp.insertIntoTable("Student", htblColNameValue);
 
-				Hashtable htblColNameValue = new Hashtable();
-				htblColNameValue.put("id", new Integer(i));
-				htblColNameValue.put("name", new String("Name " + i));
-				htblColNameValue.put("gpa", new Double(1.0 * i));
-				dbApp.insertIntoTable("Student", htblColNameValue);
+			// }
 
-			}
+			Page p = Page.deserialize("tables/Student/Student_1.class");
+			System.out.print(p);
 
 			// delete 1000 rows
 
