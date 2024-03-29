@@ -255,6 +255,199 @@ public class TestCases {
     }
 
     @Test
+    public void updateWithoutIndex() throws DBAppException, IOException{
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("name", "Student" + 21);
+
+            dbApp.updateTable(strTableName, "0", htblColNameValue);
+
+            // check that the row is updated and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for(File page : pages){
+                // check if the file name is in the format page_i.class
+                if(!page.getName().matches("page_\\d+\\.class")){
+                    continue;
+                }
+                
+                Page p = Page.deserialize(page.getPath());
+                for(Tuple tuple : p.getTuples()){
+                    if(tuple.getColumnValue("id").equals(0)){
+                        assert tuple.getColumnValue("name").equals("Student" + 21);
+                    }else{
+                        assert tuple.getColumnValue("name").equals("Student" + tuple.getColumnValue("id"));
+                    }
+                }
+            }
+        }finally{
+            cleanUp();
+        }
+            
+    }
+
+    @Test
+    public void updateWithoutIndexMultiplePages() throws DBAppException, IOException{
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for(int i = 0; i < 2000; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("name", "Student" + 21);
+
+            dbApp.updateTable(strTableName, "0", htblColNameValue);
+
+            // check that the row is updated and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for(File page : pages){
+                // check if the file name is in the format page_i.class
+                if(!page.getName().matches("page_\\d+\\.class")){
+                    continue;
+                }
+                
+                Page p = Page.deserialize(page.getPath());
+                for(Tuple tuple : p.getTuples()){
+                    if(tuple.getColumnValue("id").equals(0)){
+                        assert tuple.getColumnValue("name").equals("Student" + 21);
+                    }else{
+                        assert tuple.getColumnValue("name").equals("Student" + tuple.getColumnValue("id"));
+                    }
+                }
+            }
+        }finally{
+            cleanUp();
+        }
+            
+    }
+
+    @Test
+    public void updateWithIndex() throws DBAppException, IOException{
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("name", "Student" + 21);
+
+            dbApp.updateTable(strTableName, "0", htblColNameValue);
+
+            // check that the index is updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for(int i = 0; i < 20; i++){
+                if(i == 0){
+                    assert tree.query("Student" + i) == null;
+                }else{
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1 && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("id").equals(i);
+                }
+            }
+            
+        }finally{
+            cleanUp();
+        }
+            
+    }
+
+
+
+
+
+    @Test
     public void selectWithoutIndexWithId() throws DBAppException, IOException, ClassNotFoundException{
         try{
             DBApp dbApp = new DBApp();
@@ -373,6 +566,23 @@ public class TestCases {
 
 
 
+    }
+
+    public static void main(String[] args) {
+        TestCases testCases = new TestCases();
+        try {
+            
+            testCases.updateWithoutIndex();
+           
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally{
+            try {
+                testCases.cleanUp();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }
