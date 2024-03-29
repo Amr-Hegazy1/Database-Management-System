@@ -2,7 +2,9 @@ package com.db_engine;
 /** * @author Wael Abouelsaadat */
 
 import java.io.*;
-
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import com.bplustree.*;
@@ -941,7 +943,7 @@ public class DBApp {
 					if(metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)){
 						String strType= metadata.getColumnType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName);
 						if( hmkilobatata.contains(arrSQLTerms[i]._strOperator)){	
-							if(!strType.equals(arrSQLTerms[i]._objValue)){
+							if(!strType.equals(arrSQLTerms[i]._objValue.getClass().getName())){
 								throw new DBAppException("Datatype doesn't match");
 							}
 						}
@@ -1124,7 +1126,7 @@ public class DBApp {
 		
 				}
 			}
-			HashSet<Tuple>tm= (HashSet<Tuple>) stack.pop();
+			HashSet<Tuple> tm= (HashSet<Tuple>) stack.pop();
 			return tm.iterator();
 			}
 		
@@ -1448,168 +1450,122 @@ public class DBApp {
 			}
 		}
 
-	public static void main(String[] args) {
+	private static void cleanUp() throws IOException{
+        try{
+            // delete tables directory
 
-		try {
+            String tablesPath = "tables/";
 
-			try{
-				DBApp dbApp = new DBApp();
-	
-				dbApp.init();
-	
-				String strTableName = "Student";
-	
-				Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
-	
-				htblColNameType.put("id", "java.lang.Integer");
-	
-				htblColNameType.put("name", "java.lang.String");
-	
-				htblColNameType.put("gpa", "java.lang.Double");
-	
-				dbApp.createTable(strTableName, "id", htblColNameType);
-	
-				// insert 20 rows
-	
-				for(int i = 0; i < 20; i++){
-					Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-					htblColNameValue.put("id", i);
-					htblColNameValue.put("name", "Student" + i);
-					htblColNameValue.put("gpa", 3.0 + i);
-					dbApp.insertIntoTable(strTableName, htblColNameValue);
-				}
-	
-				dbApp.createIndex(strTableName, "id", "idIndex");
-	
-				// check that index contains correct values
-	
-				BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
-	
-				for(int i = 0; i < 20; i++){
-					assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
-				}
-	
-				// insert a new row
-	
-				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-				htblColNameValue.put("id", 21);
-				htblColNameValue.put("name", "Student" + 21);
-				htblColNameValue.put("gpa", 3.0 + 21);
-				dbApp.insertIntoTable(strTableName, htblColNameValue);
-	
-				// check that index contains correct values
-	
-				tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
-				
-				for(int i = 0; i < 21; i++){
-					assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
-				}
-	
-			}catch(Exception e){
-				e.printStackTrace();
-			}
+            
 
-			// DBApp dbApp = new DBApp();
+            Path dir = Paths.get(tablesPath); //path to the directory  
+            Files
+                .walk(dir) // Traverse the file tree in depth-first order
+                .sorted(Comparator.reverseOrder())
+                .forEach(path -> {
+                    try {
+                        
+                        Files.delete(path);  //delete each file or directory
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+        }catch(Exception e){
+        
+        }
 
-			// dbApp.init();
+        try{
+            
+            // delete Indicies directory
 
-			// Hashtable<String, String> htblColNameType = new Hashtable();
-			// htblColNameType.put("id", "java.lang.Integer");
-			// htblColNameType.put("name", "java.lang.String");
-			// htblColNameType.put("gpa", "java.lang.Double");
+            String indiciesPath = "Indicies/";
 
-			// dbApp.createTable("Student", "id", htblColNameType );
+            Path dir2 = Paths.get(indiciesPath); //path to the directory
+            Files
+                .walk(dir2) // Traverse the file tree in depth-first order
+                .sorted(Comparator.reverseOrder())
+                .forEach(path -> {
+                    try {
+                       
+                        Files.delete(path);  //delete each file or directory
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+        }catch(Exception e){
+        
+        }
+        try{
+            // delete metadata.csv
 
-			// // insert 200 rows
+            File metadata = new File("metadata.csv");
+            metadata.delete();
+        }catch(Exception e){
+            
+        }
 
-			// for( int i = 0; i < 20; i++ ){
-				
-			// 	Hashtable htblColNameValue = new Hashtable( );
-			// 	htblColNameValue.put("id", new Integer( i ) );
-			// 	htblColNameValue.put("name", new String("Name " + i ) );
-			// 	htblColNameValue.put("gpa", new Double( 1.0 * i ) );
-			// 	dbApp.insertIntoTable( "Student", htblColNameValue );
 
-			// }
 
-			// SQLTerm[] arrSQLTerms;
-			// arrSQLTerms = new SQLTerm[2];
-			// arrSQLTerms[0] = new SQLTerm( );
-			// arrSQLTerms[0]._strTableName = "Student";
-			// arrSQLTerms[0]._strColumnName= "id";
-			// arrSQLTerms[0]._strOperator = "=";
-			// arrSQLTerms[0]._objValue = new Integer( 0 );
+    }
 
-			// arrSQLTerms[1] = new SQLTerm( );
-			// arrSQLTerms[1]._strTableName = "Student";
-			// arrSQLTerms[1]._strColumnName= "gpa";
-			// arrSQLTerms[1]._strOperator = "=";
-			// arrSQLTerms[1]._objValue = new Double(0.0);
+	public static void main(String[] args) throws IOException {
 
-			// String[] strarrOperators = new String[1];
+		try{
+            DBApp dbApp = new DBApp();
 
-			// strarrOperators[0] = "and";
+            dbApp.init();
 
-			// Iterator<Tuple> iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            String strTableName = "Student";
 
-			// delete 1000 rows
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
-			// for( int i = 0; i < 1000; i++ ){
+            htblColNameType.put("id", "java.lang.Integer");
 
-			// Hashtable htblColNameValue = new Hashtable( );
-			// htblColNameValue.put("id", new Integer( i ) );
-			// htblColNameValue.put("name", new String("Name " + i ) );
-			// htblColNameValue.put("gpa", new Double( 1.0 * i ) );
-			// dbApp.deleteFromTable( "Student", htblColNameValue );
+            htblColNameType.put("name", "java.lang.String");
 
-			// }
+            htblColNameType.put("gpa", "java.lang.Double");
 
-			// Hashtable htblColNameValue = new Hashtable( );
-			// htblColNameValue.put("id", new Integer( 2343432 ));
-			// htblColNameValue.put("name", new String("Ahmed Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.95 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
+            dbApp.createTable(strTableName, "id", htblColNameType);
 
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 453455 ));
-			// htblColNameValue.put("name", new String("Ahmed Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.95 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
+            // insert 20 rows
 
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 5674567 ));
-			// htblColNameValue.put("name", new String("Dalia Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 1.25 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
 
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 23498 ));
-			// htblColNameValue.put("name", new String("John Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 1.5 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
+            // select all rows
 
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 78452 ));
-			// htblColNameValue.put("name", new String("Zaky Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.88 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
 
-			// SQLTerm[] arrSQLTerms;
-			// arrSQLTerms = new SQLTerm[2];
-			// arrSQLTerms[0]._strTableName = "Student";
-			// arrSQLTerms[0]._strColumnName= "name";
-			// arrSQLTerms[0]._strOperator = "=";
-			// arrSQLTerms[0]._objValue = "John Noor";
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = strTableName;
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
 
-			// arrSQLTerms[1]._strTableName = "Student";
-			// arrSQLTerms[1]._strColumnName= "gpa";
-			// arrSQLTerms[1]._strOperator = "=";
-			// arrSQLTerms[1]._objValue = new Double( 1.5 );
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
-		} catch (Exception exp) {
-
-			exp.printStackTrace();
-
-		}
+            for(int i = 0; i < 20; i++){
+                if(i == 5){
+                    assert iterator.hasNext();
+                    Tuple tuple = (Tuple) iterator.next();
+                    assert tuple.getColumnValue("id").equals(5);
+                    assert tuple.getColumnValue("name").equals("Student5");
+                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                }else{
+                    assert !iterator.hasNext();
+                }
+            }
+		}catch(Exception e){
+			e.printStackTrace();
+            
+        }finally{
+            cleanUp();
+        }
 	}
 }
