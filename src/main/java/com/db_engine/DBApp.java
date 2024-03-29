@@ -187,6 +187,8 @@ public class DBApp {
 			// TODO: Consider creating an indices folder inside each table folder
 
 			bplsBplustree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
+
+			metadata.save();
 			
 
 		}

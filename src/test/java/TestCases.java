@@ -572,7 +572,7 @@ public class TestCases {
         TestCases testCases = new TestCases();
         try {
             
-            testCases.updateWithoutIndex();
+            testCases.insertInIndex();
            
         } catch (Exception e) {
             e.printStackTrace();
