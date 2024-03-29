@@ -755,16 +755,18 @@ public class DBApp {
 		// Linear search
 
 		int intNumberOfPages = table.getNumberOfPages();
+		int intPageIndex = 0;
 
-		for (int intPageIndex = 0; intPageIndex < intNumberOfPages; intPageIndex++) {
+		while(intPageIndex < intNumberOfPages) {
 			String pageCurrentPageName = table.getPageAtIndex(intPageIndex);
 			Page pageCurrentPage = Page.deserialize("tables/" + strTableName + "/" + pageCurrentPageName + ".class");
 
 			// Linearly search every page
 
 			int intCurrentPageSize = pageCurrentPage.getSize();
+			int intCurrentPageIndex = 0;
 
-			for (int intCurrentPageIndex = 0; intCurrentPageIndex < intCurrentPageSize; intCurrentPageIndex++) {
+			while(intCurrentPageIndex < intCurrentPageSize) {
 				Tuple tupleCurrentTuple = pageCurrentPage.getTupleWithIndex(intCurrentPageIndex);
 				boolean boolToBeDeletedTuple = false;
 				// AND all columns
@@ -778,7 +780,10 @@ public class DBApp {
 
 				if (boolToBeDeletedTuple) {
 					pageCurrentPage.deleteTupleWithIndex(intCurrentPageIndex);
+				}else{
+					intCurrentPageIndex++;
 				}
+				intCurrentPageSize = pageCurrentPage.getSize();
 
 			}
 
@@ -789,7 +794,9 @@ public class DBApp {
 			} else {
 				// TODO: Don't do this step if no tuples were deleted
 				pageCurrentPage.serialize("tables/" + strTableName + "/" + pageCurrentPageName + ".class");
+				intPageIndex++;
 			}
+			intNumberOfPages = table.getNumberOfPages();
 
 		}
 
