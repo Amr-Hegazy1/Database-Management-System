@@ -9,6 +9,7 @@ import java.util.*;
 
 import org.junit.Test;
 
+import com.bplustree.BPlusTree;
 import com.db_engine.*;
 
 public class TestCases {
@@ -147,33 +148,167 @@ public class TestCases {
         
     }
 
-    
+    @Test
+    public void createIndexInserts() throws DBAppException, IOException {
+        try{
+            DBApp dbApp = new DBApp();
 
-    public void cleanUp() throws IOException{
+            dbApp.init();
 
-        // delete tables directory
+            String strTableName = "Student";
 
-        String tablesPath = "tables/";
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            dbApp.createIndex(strTableName, "id", "idIndex");
+
+            // check that index contains correct values
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
+
+            for(int i = 0; i < 20; i++){
+                assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+            }
+
+        }finally{
+            cleanUp();
+        }
 
         
+    }
 
-        Path dir = Paths.get(tablesPath); //path to the directory  
-        Files
-            .walk(dir) // Traverse the file tree in depth-first order
-            .sorted(Comparator.reverseOrder())
-            .forEach(path -> {
-                try {
-                    System.out.println("Deleting: " + path);
-                    Files.delete(path);  //delete each file or directory
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+    @Test
+    public void insertInIndex() throws DBAppException, IOException {
+        try{
+            DBApp dbApp = new DBApp();
 
-        // delete metadata.csv
+            dbApp.init();
 
-        File metadata = new File("metadata.csv");
-        metadata.delete();
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            dbApp.createIndex(strTableName, "id", "idIndex");
+
+            // check that index contains correct values
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
+
+            for(int i = 0; i < 20; i++){
+                assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+            }
+
+            // insert a new row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            htblColNameValue.put("id", 21);
+            htblColNameValue.put("name", "Student" + 21);
+            htblColNameValue.put("gpa", 3.0 + 21);
+            dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+            // check that index contains correct values
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
+            
+            for(int i = 0; i < 21; i++){
+                assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+            }
+
+        }finally{
+            cleanUp();
+        }
+    }
+
+    
+
+    private void cleanUp() throws IOException{
+        try{
+            // delete tables directory
+
+            String tablesPath = "tables/";
+
+            
+
+            Path dir = Paths.get(tablesPath); //path to the directory  
+            Files
+                .walk(dir) // Traverse the file tree in depth-first order
+                .sorted(Comparator.reverseOrder())
+                .forEach(path -> {
+                    try {
+                        System.out.println("Deleting: " + path);
+                        Files.delete(path);  //delete each file or directory
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+        }catch(Exception e){
+        
+        }
+
+        try{
+            
+            // delete Indicies directory
+
+            String indiciesPath = "Indicies/";
+
+            Path dir2 = Paths.get(indiciesPath); //path to the directory
+            Files
+                .walk(dir2) // Traverse the file tree in depth-first order
+                .sorted(Comparator.reverseOrder())
+                .forEach(path -> {
+                    try {
+                        System.out.println("Deleting: " + path);
+                        Files.delete(path);  //delete each file or directory
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+        }catch(Exception e){
+        
+        }
+        try{
+            // delete metadata.csv
+
+            File metadata = new File("metadata.csv");
+            metadata.delete();
+        }catch(Exception e){
+            
+        }
 
 
 
