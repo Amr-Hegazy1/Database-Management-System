@@ -417,8 +417,6 @@ public class DBApp {
 	// strClusteringKeyValue is the value to look for to find the row to update.
 	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
 		
-			
-			
 			if (!metadata.checkTableName(strTableName)) 
 				throw new DBAppException("Table does not exist");
 
@@ -462,6 +460,7 @@ public class DBApp {
 
 				Vector<Tuple> tuples = page.getVecTuples();
 				Tuple tuple = tuples.get(tupleIndex);
+				Object temp = tuple.getColumnValue(columnName);
 				Hashtable<String, Hashtable<String, String>> htblMetadata = metadata.getTableMetadata(strTableName);
 
 				for (String columnName : htblColNameValue.keySet()) {
@@ -491,7 +490,7 @@ public class DBApp {
 
 						// Comparable ComVar=(Comparable) value;
 						//Comparable compClusteringKeyValue = (Comparable) cmpClusteringKeyValue;
-						bptTree.remove((Comparable) tuple.getColumnValue(columnName) ,(Comparable) tuple);
+						bptTree.remove((Comparable) temp ,(Comparable) tuple);
 						bptTree.insert((Comparable) htblColNameValue.get(columnName), (Comparable) htblColNameValue);
 
 						//bptTree.insert(compClusteringKeyValue, (Comparable) htblColNameValue.get(cmpClusteringKeyValue));
