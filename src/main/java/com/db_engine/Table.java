@@ -37,7 +37,7 @@ public class Table implements Serializable {
     public String addPage() {
         int newPageNum = vecPages.size();
         String newPage = strTableName + "_" + newPageNum;
-        System.out.println("New Page: " + strTableName);
+        
         vecPages.add(newPage);
         return newPage;
     }

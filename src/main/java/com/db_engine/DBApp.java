@@ -3,7 +3,9 @@ package com.db_engine;
 /** * @author Wael Abouelsaadat */
 
 import java.io.*;
-
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import com.bplustree.*;
@@ -15,12 +17,7 @@ public class DBApp {
 
 	
 
-	/*
-	 * The hashtable htbIndex is used to store the indicies where the key of this
-	 * hashtable is the index name
-	 * and the value is the index itself
-	 */
-	private Hashtable<String, bplustree> htbIndex;
+	
 
 	public DBApp( ) throws DBAppException{
 
@@ -324,17 +321,18 @@ public class DBApp {
 			Page newPage = new Page(strPageName);
 			tupleNewTuple.setPageName(strPageName);
 			newPage.addTuple(0, tupleNewTuple);
-			System.out.println("Page Name: " + strPageName);
+			
 			newPage.serialize("tables/" + strTableName + "/" + strPageName + ".class");
 		}
 
 		// Adjusting Indicies (If any)
+		System.out.println("Indexed Columns: " + hsIndexedColumns);
 		if (hsIndexedColumns.size() > 0) {
 			for (String strColName : hsIndexedColumns) {
 				String strIndexName = metadata.getIndexName(strTableName, strColName); // getting index name
-				bplustree bptTree = bplustree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class"); // getting
+				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class"); // getting
 																														// the
-																														// tree
+				System.out.println(strColName);																									// tree
 																														// object
 				Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
 																								// Comparable
@@ -1432,85 +1430,108 @@ public class DBApp {
 
 			DBApp dbApp = new DBApp();
 
-			dbApp.init();
+            dbApp.init();
 
-			// Hashtable<String, String> htblColNameType = new Hashtable();
-			// htblColNameType.put("id", "java.lang.Integer");
-			// htblColNameType.put("name", "java.lang.String");
-			// htblColNameType.put("gpa", "java.lang.Double");
+            String strTableName = "Student";
 
-			// dbApp.createTable("Student", "id", htblColNameType);
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
-			// // // insert 200 rows
+            htblColNameType.put("id", "java.lang.Integer");
 
-			// for (int i = 31; i < 40; i++) {
-			// int i = 30;
-			// Hashtable htblColNameValue = new Hashtable();
-			// htblColNameValue.put("id", new Integer(i));
-			// htblColNameValue.put("name", new String("Name " + i));
-			// htblColNameValue.put("gpa", new Double(1.0 * i));
-			// dbApp.insertIntoTable("Student", htblColNameValue);
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            dbApp.createIndex(strTableName, "id", "idIndex");
+
+            
+
+            
+
+            // insert a new row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            htblColNameValue.put("id", 21);
+            htblColNameValue.put("name", "Student" + 21);
+            htblColNameValue.put("gpa", 3.0 + 21);
+            dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+           
+            
+            
 
 			
-
-			// delete 1000 rows
-
-			// for( int i = 0; i < 1000; i++ ){
-
-			// Hashtable htblColNameValue = new Hashtable( );
-			// htblColNameValue.put("id", new Integer( i ) );
-			// htblColNameValue.put("name", new String("Name " + i ) );
-			// htblColNameValue.put("gpa", new Double( 1.0 * i ) );
-			// dbApp.deleteFromTable( "Student", htblColNameValue );
-
-			// }
-
-			// Hashtable htblColNameValue = new Hashtable( );
-			// htblColNameValue.put("id", new Integer( 2343432 ));
-			// htblColNameValue.put("name", new String("Ahmed Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.95 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 453455 ));
-			// htblColNameValue.put("name", new String("Ahmed Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.95 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 5674567 ));
-			// htblColNameValue.put("name", new String("Dalia Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 1.25 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 23498 ));
-			// htblColNameValue.put("name", new String("John Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 1.5 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-			// htblColNameValue.clear( );
-			// htblColNameValue.put("id", new Integer( 78452 ));
-			// htblColNameValue.put("name", new String("Zaky Noor" ) );
-			// htblColNameValue.put("gpa", new Double( 0.88 ) );
-			// dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-			// SQLTerm[] arrSQLTerms;
-			// arrSQLTerms = new SQLTerm[2];
-			// arrSQLTerms[0]._strTableName = "Student";
-			// arrSQLTerms[0]._strColumnName= "name";
-			// arrSQLTerms[0]._strOperator = "=";
-			// arrSQLTerms[0]._objValue = "John Noor";
-
-			// arrSQLTerms[1]._strTableName = "Student";
-			// arrSQLTerms[1]._strColumnName= "gpa";
-			// arrSQLTerms[1]._strOperator = "=";
-			// arrSQLTerms[1]._objValue = new Double( 1.5 );
 
 		} catch (Exception exp) {
 
 			exp.printStackTrace();
 
+		}
+		finally{
+			try{
+            // delete tables directory
+
+            String tablesPath = "tables/";
+
+            
+
+            Path dir = Paths.get(tablesPath); //path to the directory  
+            Files
+                .walk(dir) // Traverse the file tree in depth-first order
+                .sorted(Comparator.reverseOrder())
+                .forEach(path -> {
+                    try {
+                        
+                        Files.delete(path);  //delete each file or directory
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+        }catch(Exception e){
+        
+        }
+
+        try{
+            
+            // delete Indicies directory
+
+            String indiciesPath = "Indicies/";
+
+            Path dir2 = Paths.get(indiciesPath); //path to the directory
+            Files
+                .walk(dir2) // Traverse the file tree in depth-first order
+                .sorted(Comparator.reverseOrder())
+                .forEach(path -> {
+                    try {
+                        
+                        Files.delete(path);  //delete each file or directory
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+        }catch(Exception e){
+        
+        }
+        try{
+            // delete metadata.csv
+
+            File metadata = new File("metadata.csv");
+            metadata.delete();
+        }catch(Exception e){
+            
+        }
 		}
 	}
 }
