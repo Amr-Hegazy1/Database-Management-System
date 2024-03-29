@@ -491,8 +491,8 @@ public class DBApp {
 
 						// Comparable ComVar=(Comparable) value;
 						//Comparable compClusteringKeyValue = (Comparable) cmpClusteringKeyValue;
-						bptTree.remove((Comparable) columnName,(Comparable) tuple.getColumnValue(columnName));
-						bptTree.insert((Comparable) columnName, cmpClusteringKeyValue);
+						bptTree.remove((Comparable) tuple.getColumnValue(columnName) ,(Comparable) tuple);
+						bptTree.insert((Comparable) htblColNameValue.get(columnName), (Comparable) htblColNameValue);
 
 						//bptTree.insert(compClusteringKeyValue, (Comparable) htblColNameValue.get(cmpClusteringKeyValue));
 
@@ -501,7 +501,7 @@ public class DBApp {
 					}
 				}
 			} else {
-				throw new DBAppException("Page not found for the given clustering key."); 
+				throw new DBAppException("Page not found for the given clustering key.");
 			}
 			
 		
