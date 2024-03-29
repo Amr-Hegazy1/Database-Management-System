@@ -460,11 +460,11 @@ public class DBApp {
 
 				Vector<Tuple> tuples = page.getVecTuples();
 				Tuple tuple = tuples.get(tupleIndex);
-				Object temp = tuple.getColumnValue(columnName);
+				
 				Hashtable<String, Hashtable<String, String>> htblMetadata = metadata.getTableMetadata(strTableName);
 
 				for (String columnName : htblColNameValue.keySet()) {
-
+					Object temp = tuple.getColumnValue(columnName);	
 					Object columnValue = htblColNameValue.get(columnName);
 					tuple.setColumnValue(columnName, columnValue);
 
