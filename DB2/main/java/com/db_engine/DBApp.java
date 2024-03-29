@@ -469,7 +469,7 @@ public class DBApp {
 					Object columnValue = htblColNameValue.get(columnName);
 					tuple.setColumnValue(columnName, columnValue);
 
-					page.serialize("tables/" + strTableName + "/" + page.getPageName() + ".class"); // notsure
+					page.serialize("tables/" + strTableName + "/" + page.getPageName() + ".class"); 
 
 					boolean boolindexorno = false;
 					if (htblMetadata.containsKey(columnName)
@@ -487,20 +487,21 @@ public class DBApp {
 					if (boolindexorno) {
 
 						String strindexName = metadata.getIndexName(strTableName, columnName);
-						BPlusTree bptTree = BPlusTree
-								.deserialize("tables/" + strTableName + "/" + strindexName + ".class");
+						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strindexName + ".class");
 
 						// Comparable ComVar=(Comparable) value;
-						Comparable compClusteringKeyValue = (Comparable) cmpClusteringKeyValue;
-						bptTree.remove(compClusteringKeyValue, tuple);
-						bptTree.insert(compClusteringKeyValue, (Comparable) htblColNameValue.get(cmpClusteringKeyValue));
+						//Comparable compClusteringKeyValue = (Comparable) cmpClusteringKeyValue;
+						bptTree.remove((Comparable) columnName,(Comparable) tuple.getColumnValue(columnName));
+						bptTree.insert((Comparable) columnName, cmpClusteringKeyValue);
+
+						//bptTree.insert(compClusteringKeyValue, (Comparable) htblColNameValue.get(cmpClusteringKeyValue));
 
 						// tree.insert(key, ComVar); //typecast el value comparable
 
 					}
 				}
 			} else {
-				throw new DBAppException("Page not found for the given clustering key.");
+				throw new DBAppException("Page not found for the given clustering key."); 
 			}
 			
 		
