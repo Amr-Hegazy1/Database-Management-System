@@ -444,6 +444,135 @@ public class TestCases {
     }
 
 
+    @Test
+    public void deleteWithoutIndex() throws DBAppException, IOException{
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for(File page : pages){
+                // check if the file name is in the format page_i.class
+                if(!page.getName().matches("page_\\d+\\.class")){
+                    continue;
+                }
+                
+                Page p = Page.deserialize(page.getPath());
+                for(Tuple tuple : p.getTuples()){
+                    if(tuple.getColumnValue("id").equals(0)){
+                        assert false;
+                    }
+                }
+            }
+        }finally{
+            cleanUp();
+        }
+            
+    }
+
+
+    @Test
+    public void deleteWithoutIndexMultiplePages() throws DBAppException, IOException{
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for(int i = 0; i < 2000; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student");
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            
+            htblColNameValue.put("name", "Student");
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for(File page : pages){
+                // check if the file name is in the format page_i.class
+                if(!page.getName().matches("page_\\d+\\.class")){
+                    continue;
+                }
+                
+                Page p = Page.deserialize(page.getPath());
+                for(Tuple tuple : p.getTuples()){
+                    if(tuple.getColumnValue("id").equals(0)){
+                        assert false;
+                    }
+                }
+            }
+        }finally{
+            cleanUp();
+        }
+            
+    }
+
 
 
 
@@ -572,7 +701,7 @@ public class TestCases {
         TestCases testCases = new TestCases();
         try {
             
-            testCases.updateWithoutIndex();
+            testCases.insertInIndex();
            
         } catch (Exception e) {
             e.printStackTrace();
