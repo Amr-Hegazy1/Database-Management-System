@@ -1488,62 +1488,70 @@ public class DBApp {
 
     }
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws DBAppException, IOException {
 
 		try{
-            
-			DBApp dbApp = new DBApp();
+            DBApp dbApp = new DBApp();
 
-			dbApp.init();
+            dbApp.init();
 
-			String strTableName = "Student";
+            String strTableName = "Student";
 
-			Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
-			htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("id", "java.lang.Integer");
 
-			htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("name", "java.lang.String");
 
-			htblColNameType.put("gpa", "java.lang.Double");
+            htblColNameType.put("gpa", "java.lang.Double");
 
-			dbApp.createTable(strTableName, "id", htblColNameType);
+            dbApp.createTable(strTableName, "id", htblColNameType);
 
-			// insert 20 rows
+            // insert 20 rows
 
-			for(int i = 0; i < 20; i++){
-				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-				htblColNameValue.put("id", i);
-				htblColNameValue.put("name", "Student" + i);
-				htblColNameValue.put("gpa", 3.0 + i);
-				dbApp.insertIntoTable(strTableName, htblColNameValue);
-			}
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
 
-			dbApp.createIndex(strTableName, "name", "nameIndex");
+            dbApp.createIndex(strTableName, "name", "nameIndex");
 
-			// update a row
+            dbApp.createIndex(strTableName, "gpa", "gpaIndex");
 
-			Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            // update a row
 
-			htblColNameValue.put("name", "Student" + 21);
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
 
-			dbApp.updateTable(strTableName, "0", htblColNameValue);
+            htblColNameValue.put("name", "Student20");
 
-			// check that the index is updated
+            dbApp.updateTable(strTableName, "0", htblColNameValue);
 
-			BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+            // check that the indexes are updated
 
-			for(int i = 0; i < 20; i++){
-				if(i == 0){
-					assert tree.query("Student" + i) == null;
-				}else{
-					assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1 && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("id").equals(i);
-				}
-			}
-			
-			
-		}catch(Exception e){
-			e.printStackTrace();
-            
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for(int i = 0; i < 21; i++){
+                if(i == 0){
+                    assert tree.query("Student" + i).size() == 0;
+                }else{
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1 && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
+                }
+            }
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
+
+            for(int i = 0; i < 21; i++){
+                if(i == 0){
+                    System.out.println(tree.query(3.0 + i));
+                    assert tree.query(3.0 + i).size() == 0;
+                }else{
+                    assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1 && ((Tuple) tree.query(3.0 + i).get(0)).getColumnValue("gpa").equals(3.0 + i);
+                }
+            }
+
         }finally{
             cleanUp();
         }
