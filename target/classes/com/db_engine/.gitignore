@@ -1,0 +1,14 @@
+playground/
+*.class
+tempCodeRunnerFile.java
+metadata.csv
+clone
+tables
+Indicies
+
+/.metadata/
+
+out
+tables/
+
+Indicies/
