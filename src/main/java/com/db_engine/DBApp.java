@@ -231,7 +231,7 @@ public class DBApp {
 
 			}
 
-			System.out.print("indexed cols:" + hsIndexedColumns);
+			
 		}
 		List<String> listColNames = metadata.getColumnNames(strTableName); // fetching correct column names
 		if (intColCounter != listColNames.size()) { // checking if all columns were included in insert
@@ -327,16 +327,18 @@ public class DBApp {
 		}
 
 		// Adjusting Indicies (If any)
-		System.out.println("Indexed Columns: " + hsIndexedColumns);
+		
 		if (hsIndexedColumns.size() > 0) {
 			for (String strColName : hsIndexedColumns) {
 				String strIndexName = metadata.getIndexName(strTableName, strColName); // getting index name
 				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class"); // getting
 																														// the
-				System.out.println(strColName); // tree
+																														// tree
+				
 				// object
 				Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
 																								// Comparable
+				
 				bptTree.insert(colValue, tupleNewTuple); // inserting col value(key) and tuple object(value) into bTree
 
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
@@ -448,6 +450,7 @@ public class DBApp {
 
 			Vector<Tuple> tuples = page.getVecTuples();
 			Tuple tuple = tuples.get(tupleIndex);
+			Tuple tupleOriginalTuple = tuple.clone();
 			
 			Hashtable<String, Hashtable<String, String>> htblMetadata = metadata.getTableMetadata(strTableName);
 
@@ -478,12 +481,14 @@ public class DBApp {
 
 					// Comparable ComVar=(Comparable) value;
 					//Comparable compClusteringKeyValue = (Comparable) cmpClusteringKeyValue;
-					bptTree.remove((Comparable) temp ,(Comparable) tuple);
-					bptTree.insert((Comparable) htblColNameValue.get(columnName), (Comparable) htblColNameValue);
+					bptTree.remove((Comparable) temp ,(Comparable) tupleOriginalTuple);
+					bptTree.insert((Comparable) htblColNameValue.get(columnName), (Comparable) tuple);
 
 					//bptTree.insert(compClusteringKeyValue, (Comparable) htblColNameValue.get(cmpClusteringKeyValue));
 
 					// tree.insert(key, ComVar); //typecast el value comparable
+
+					bptTree.serialize("tables/" + strTableName + "/" + strindexName + ".class");
 
 				}
 			}

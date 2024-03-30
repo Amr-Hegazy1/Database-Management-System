@@ -236,7 +236,7 @@ public class TestCases {
             // insert a new row
 
             Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-            htblColNameValue.put("id", 21);
+            htblColNameValue.put("id", 20);
             htblColNameValue.put("name", "Student" + 21);
             htblColNameValue.put("gpa", 3.0 + 21);
             dbApp.insertIntoTable(strTableName, htblColNameValue);
@@ -246,6 +246,7 @@ public class TestCases {
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
             
             for(int i = 0; i < 21; i++){
+                
                 assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
             }
 
@@ -421,7 +422,7 @@ public class TestCases {
 
             Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
 
-            htblColNameValue.put("name", "Student" + 21);
+            htblColNameValue.put("name", "Student20");
 
             dbApp.updateTable(strTableName, "0", htblColNameValue);
 
@@ -429,11 +430,11 @@ public class TestCases {
 
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
 
-            for(int i = 0; i < 20; i++){
+            for(int i = 0; i < 21; i++){
                 if(i == 0){
-                    assert tree.query("Student" + i) == null;
+                    assert tree.query("Student" + i).size() == 0;
                 }else{
-                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1 && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("id").equals(i);
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1 && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
                 }
             }
             
