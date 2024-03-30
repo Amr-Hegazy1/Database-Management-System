@@ -475,7 +475,7 @@ public class DBApp {
 				}
 
 				if (boolindexorno) {
-
+					
 					String strindexName = metadata.getIndexName(strTableName, columnName);
 					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strindexName + ".class");
 
@@ -663,7 +663,7 @@ public class DBApp {
 
 		String strIndexName = metadata.getIndexName(strTableName, strIndexedColumn);
 
-		BPlusTree bplustreeIndex = BPlusTree.deserialize("Indicies/" + strIndexName + ".class");
+		BPlusTree bplustreeIndex = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
 
 		String strIndexedColumnType = metadata.getColumnType(strTableName, strIndexedColumn);
 
