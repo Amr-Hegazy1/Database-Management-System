@@ -14,12 +14,17 @@ import com.db_engine.*;
 
 public class TestCases {
 
+    /**
+     * The `createTable` function in Java tests the creation of a table in a database, including
+     * checking metadata updates and column properties.
+     */
     @Test
     public void createTable() throws DBAppException, IOException {
 
         try{
             DBApp dbApp = new DBApp();
             dbApp.init();
+            
             String strTableName = "Student";
             Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
             htblColNameType.put("id", "java.lang.Integer");
@@ -81,6 +86,10 @@ public class TestCases {
         
     }
 
+    /**
+     * The function tests creating a table with invalid data types and expects a DBAppException to be
+     * thrown.
+     */
     @Test
     public void createTableWithInvalidTypes() throws DBAppException, IOException {
 
@@ -119,6 +128,10 @@ public class TestCases {
         
     }
 
+    /**
+     * The function tests creating a duplicate table in a database application and expects it to throw
+     * a DBAppException.
+     */
     @Test
     public void createDuplicateTable() throws DBAppException, IOException {
 
@@ -148,6 +161,10 @@ public class TestCases {
         
     }
 
+    /**
+     * The `createIndexInserts` function in Java creates a table, inserts 20 rows of data, creates an
+     * index on the "id" column, and then checks the correctness of the index values.
+     */
     @Test
     public void createIndexInserts() throws DBAppException, IOException {
         try{
@@ -194,6 +211,10 @@ public class TestCases {
         
     }
 
+    /**
+     * The `insertWithClusteringKeyIndex` function tests inserting records into a table with a
+     * clustering key index in a database application.
+     */
     @Test
     public void insertWithClusteringKeyIndex() throws DBAppException, IOException {
         try{
@@ -255,6 +276,10 @@ public class TestCases {
         }
     }
 
+    /**
+     * The function tests inserting data into a table with a non-clustering key index in a database
+     * application.
+     */
     @Test
     public void insertWithNonClusteringKeyIndex() throws DBAppException, IOException {
         try{
@@ -316,6 +341,10 @@ public class TestCases {
         }
     }
 
+    /**
+     * The function `insertWithMultipleIndexes` tests inserting rows into a table with multiple indexes
+     * and verifies the correctness of the indexes.
+     */
     @Test
     public void insertWithMultipleIndexes() throws DBAppException, IOException {
         try{
@@ -392,6 +421,56 @@ public class TestCases {
 
     }
 
+    /**
+     * The function tests the efficiency of inserting records into a table in logarithmic time
+     * complexity.
+     */
+    @Test
+    public void insertOccursInLogN() throws DBAppException, IOException {
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            long startTime = System.currentTimeMillis();
+
+            for(int i = 0; i < 100000; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            long endTime = System.currentTimeMillis();
+
+            long duration = endTime - startTime;
+
+            System.out.println("Duration: " + duration);
+
+            assert duration < 1000;
+
+        }finally{
+            cleanUp();
+        }
+    }
+
+    /**
+     * The function `updateWithoutIndex` in Java updates a row in a table and verifies that the updated
+     * row is correct while other rows remain unchanged.
+     */
     @Test
     public void updateWithoutIndex() throws DBAppException, IOException{
         try{
@@ -458,6 +537,10 @@ public class TestCases {
             
     }
 
+    /**
+     * The function `updateWithoutIndexMultiplePages` in Java updates a row in a table and checks that
+     * the updated row is correct while ensuring other rows remain unchanged.
+     */
     @Test
     public void updateWithoutIndexMultiplePages() throws DBAppException, IOException{
         try{
@@ -524,6 +607,10 @@ public class TestCases {
             
     }
 
+    /**
+     * The `updateWithIndex` function in Java tests updating a row in a table and checking the
+     * corresponding index update.
+     */
     @Test
     public void updateWithIndex() throws DBAppException, IOException{
         try{
@@ -581,6 +668,10 @@ public class TestCases {
             
     }
 
+    /**
+     * The function `updateWithMultipleIndexes` tests updating a row in a table with multiple indexes
+     * in a Java application.
+     */
     @Test
     public void updateWithMultipleIndexes() throws DBAppException, IOException{
         try{
@@ -651,6 +742,10 @@ public class TestCases {
     }
 
 
+    /**
+     * The `deleteWithoutIndex` function in Java tests deleting a specific row from a table and
+     * verifies that the row is deleted while other rows remain intact.
+     */
     @Test
     public void deleteWithoutIndex() throws DBAppException, IOException{
         try{
@@ -1021,6 +1116,7 @@ public class TestCases {
         }
     }
 
+    
 
 
     @Test
@@ -1144,21 +1240,6 @@ public class TestCases {
 
     }
 
-    public static void main(String[] args) {
-        TestCases testCases = new TestCases();
-        try {
-            
-            testCases.insertWithClusteringKeyIndex();
-           
-        } catch (Exception e) {
-            e.printStackTrace();
-        }finally{
-            try {
-                testCases.cleanUp();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+    
 
 }
