@@ -447,13 +447,15 @@ public class Page implements Serializable {
             
                 if(val instanceof Integer){
                     Integer te = (Integer) val;
-                    if(((Integer)vecTuples.get(index).getColumnValue(col))==(te)){
+                    System.out.println(te);
+                    System.out.println((Integer)vecTuples.get(index).getColumnValue(col));
+                    if(((Integer)vecTuples.get(index).getColumnValue(col)).equals(te)){
                         hstups.add(vecTuples.get(index));
                     }
                 }
                 else if(val instanceof Double){
                     Double te = (Double) val;
-                    if(((Double)vecTuples.get(index).getColumnValue(col))==(te)){
+                    if(((Double)vecTuples.get(index).getColumnValue(col)).equals(te)){
                         hstups.add(vecTuples.get(index));
                     }
                 }
@@ -470,13 +472,13 @@ public class Page implements Serializable {
             for(Tuple tu: vecTuples){
                 if(val instanceof Integer){
                     Integer te = (Integer) val;
-                    if(((Integer)tu.getColumnValue(col))==(te)){
+                    if(((Integer)tu.getColumnValue(col)).equals(te)){
                         hstups.add(tu);
                     }
                 }
                 else if(val instanceof Double){
                     Double te = (Double) val;
-                    if(((Double)tu.getColumnValue(col))==(te)){
+                    if(((Double)tu.getColumnValue(col)).equals(te)){
                         hstups.add(tu);
                     }
                 }
@@ -697,13 +699,13 @@ public class Page implements Serializable {
         for(Tuple tu: vecTuples){
             if(val instanceof Integer){
                 Integer te = (Integer) val;
-                if(((Integer)tu.getColumnValue(col))!=(te)){
+                if(!((Integer)tu.getColumnValue(col)).equals(te)){
                     hstups.add(tu);
                 }
             }
             else if(val instanceof Double){
                 Double te = (Double) val;
-                if(((Double)tu.getColumnValue(col))!=(te)){
+                if(!((Double)tu.getColumnValue(col)).equals(te)){
                     hstups.add(tu);
                 }
             }
