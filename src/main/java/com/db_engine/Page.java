@@ -434,20 +434,23 @@ public class Page implements Serializable {
     public Object Max(String col) throws DBAppException {
         return vecTuples.get(vecTuples.size() - 1).getColumnValue(col);
     }
-
-    public HashSet<Tuple> eqsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
-        HashSet<Tuple> hstups = new HashSet<>();
-        if (isclu) {
-
-            if (val instanceof Integer) {
-                Integer te = (Integer) val;
-                if (((Integer) vecTuples.get(index).getColumnValue(col)) == (te)) {
-                    hstups.add(vecTuples.get(index));
+    public  HashSet<Tuple> eqsearch(String col, Object val, boolean isclu, int index) throws DBAppException{
+        HashSet<Tuple> hstups= new HashSet<>();
+        if(isclu){
+            
+                if(val instanceof Integer){
+                    Integer te = (Integer) val;
+                    System.out.println(te);
+                    System.out.println((Integer)vecTuples.get(index).getColumnValue(col));
+                    if(((Integer)vecTuples.get(index).getColumnValue(col)).equals(te)){
+                        hstups.add(vecTuples.get(index));
+                    }
                 }
-            } else if (val instanceof Double) {
-                Double te = (Double) val;
-                if (((Double) vecTuples.get(index).getColumnValue(col)) == (te)) {
-                    hstups.add(vecTuples.get(index));
+                else if(val instanceof Double){
+                    Double te = (Double) val;
+                    if(((Double)vecTuples.get(index).getColumnValue(col)).equals(te)){
+                        hstups.add(vecTuples.get(index));
+                    }
                 }
             } else {
                 String te = (String) val;
@@ -460,12 +463,12 @@ public class Page implements Serializable {
             for (Tuple tu : vecTuples) {
                 if (val instanceof Integer) {
                     Integer te = (Integer) val;
-                    if (((Integer) tu.getColumnValue(col)) == (te)) {
+                    if(((Integer)tu.getColumnValue(col)).equals(te)){
                         hstups.add(tu);
                     }
                 } else if (val instanceof Double) {
                     Double te = (Double) val;
-                    if (((Double) tu.getColumnValue(col)) == (te)) {
+                    if(((Double)tu.getColumnValue(col)).equals(te)){
                         hstups.add(tu);
                     }
                 } else {
@@ -669,12 +672,12 @@ public class Page implements Serializable {
         for (Tuple tu : vecTuples) {
             if (val instanceof Integer) {
                 Integer te = (Integer) val;
-                if (((Integer) tu.getColumnValue(col)) != (te)) {
+                if(!((Integer)tu.getColumnValue(col)).equals(te)){
                     hstups.add(tu);
                 }
             } else if (val instanceof Double) {
                 Double te = (Double) val;
-                if (((Double) tu.getColumnValue(col)) != (te)) {
+                if(!((Double)tu.getColumnValue(col)).equals(te)){
                     hstups.add(tu);
                 }
             } else {
