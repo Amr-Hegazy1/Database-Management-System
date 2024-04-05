@@ -28,6 +28,10 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Compara
         this.UNDERFLOW_BOUND = OVERFLOW_BOUND / 2;
     }
 
+    public BPlusTreeNode getRoot() {
+        return root;
+    }
+
     public void insert(K entry, E value) {
 
         if (root == null) {
