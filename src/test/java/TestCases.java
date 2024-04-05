@@ -211,6 +211,119 @@ public class TestCases {
         
     }
 
+    @Test
+    public void createIndexOnEmptyTable() throws DBAppException, IOException {
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "id", "idIndex");
+
+            // check that index contains correct values
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
+
+            assert tree.getRoot() == null;
+
+        }finally{
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void createIndexOnMultiplePages() throws DBAppException, IOException {
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            for(int i = 0; i < 1000; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            dbApp.createIndex(strTableName, "id", "idIndex");
+
+            // check that index contains correct values
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
+
+            for(int i = 0; i < 1000; i++){
+                assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+            }
+
+        }finally{
+            cleanUp();
+        }
+    }
+
+
+    @Test
+    public void createIndexWithDuplicates() throws DBAppException, IOException {
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            for(int i = 0; i < 1000; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student");
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // check that index contains correct values
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            assert tree.query("Student") != null && tree.query("Student").size() == 1000;
+
+            
+
+
+
+        }finally{
+            cleanUp();
+        }
+    }
+
     /**
      * The `insertWithClusteringKeyIndex` function tests inserting records into a table with a
      * clustering key index in a database application.
