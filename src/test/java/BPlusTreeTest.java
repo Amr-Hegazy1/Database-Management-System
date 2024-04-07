@@ -57,7 +57,8 @@ public class BPlusTreeTest {
         for (int i = 0; i < 1000; ++i) {
             int startInclude = ThreadLocalRandom.current().nextInt(ENTRY_BOUND - 1);
             int endExclude = ThreadLocalRandom.current().nextInt(startInclude + 1, ENTRY_BOUND);
-            Assert.assertEquals(t.rangeQuery(startInclude, endExclude).toString(), VITRangeQuery(startInclude, endExclude).toString());
+            Assert.assertEquals(t.rangeQuery(startInclude, endExclude).toString(),
+                    VITRangeQuery(startInclude, endExclude).toString());
         }
     }
 
@@ -109,9 +110,9 @@ public class BPlusTreeTest {
 
     @Test
     public void doesSerializeDeserializeWork() throws DBAppException {
-        try{
+        try {
             BPlusTree<Integer, Integer> t = new BPlusTree<>(5);
-            
+
             t.serialize("tree.class");
             BPlusTree<Integer, Integer> t2 = BPlusTree.deserialize("tree.class");
             Assert.assertEquals(t.toString(), t2.toString());
@@ -131,9 +132,9 @@ public class BPlusTreeTest {
     @Test
     public void chaoticTestWithDeserializationString() throws DBAppException {
 
-        try{
+        try {
             BPlusTree<Integer, Integer> t = new BPlusTree<>();
-            
+
             t.serialize("tree.class");
             BPlusTree<String, Integer> bPlusTree = BPlusTree.deserialize("tree.class");
             TreeMap<String, Integer> treeMap = new TreeMap<>();
@@ -162,7 +163,8 @@ public class BPlusTreeTest {
                 String getKey = (int) (Math.random() * maxKey) + "";
                 Integer exceptedValue = treeMap.get(getKey);
                 List<Integer> actualValues = bPlusTree.query(getKey);
-                Assert.assertTrue((exceptedValue == null && actualValues.isEmpty()) || (exceptedValue != null && actualValues.contains(exceptedValue)));
+                Assert.assertTrue((exceptedValue == null && actualValues.isEmpty())
+                        || (exceptedValue != null && actualValues.contains(exceptedValue)));
             }
         } finally {
             // delete the file
@@ -177,13 +179,12 @@ public class BPlusTreeTest {
         }
     }
 
-
     @Test
     public void chaoticTestWithDeserialization() throws DBAppException {
 
-        try{
+        try {
             BPlusTree<Integer, Integer> t = new BPlusTree<>();
-            
+
             t.serialize("tree.class");
             BPlusTree<Integer, Integer> bPlusTree = BPlusTree.deserialize("tree.class");
             TreeMap<Integer, Integer> treeMap = new TreeMap<>();
@@ -212,7 +213,8 @@ public class BPlusTreeTest {
                 int getKey = (int) (Math.random() * maxKey);
                 Integer exceptedValue = treeMap.get(getKey);
                 List<Integer> actualValues = bPlusTree.query(getKey);
-                Assert.assertTrue((exceptedValue == null && actualValues.isEmpty()) || (exceptedValue != null && actualValues.contains(exceptedValue)));
+                Assert.assertTrue((exceptedValue == null && actualValues.isEmpty())
+                        || (exceptedValue != null && actualValues.contains(exceptedValue)));
             }
         } finally {
             // delete the file
@@ -255,7 +257,8 @@ public class BPlusTreeTest {
             int getKey = (int) (Math.random() * maxKey);
             Integer exceptedValue = treeMap.get(getKey);
             List<Integer> actualValues = bPlusTree.query(getKey);
-            Assert.assertTrue((exceptedValue == null && actualValues.isEmpty()) || (exceptedValue != null && actualValues.contains(exceptedValue)));
+            Assert.assertTrue((exceptedValue == null && actualValues.isEmpty())
+                    || (exceptedValue != null && actualValues.contains(exceptedValue)));
         }
     }
 
@@ -297,5 +300,4 @@ public class BPlusTreeTest {
         }
     }
 
-    
 }
