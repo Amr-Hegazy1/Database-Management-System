@@ -962,119 +962,44 @@ public class DBApp {
 			} else
 				throw new DBAppException("Table doesn't exist");
 		}
+		boolean indexhelp = true;
+		for (int i = 0; i < strarrOperators.length; i++) {
+			if ((!strarrOperators[i].equals("and")) && (!strarrOperators[i].equals("or"))
+					&& (!strarrOperators[i].equals("xor")))
+				throw new DBAppException("Undefined operator is being used");
+			if (!strarrOperators[i].equals("and"))
+				indexhelp = false;
+		}
 		// el hashes at end of if statements are stand by
 		if (strarrOperators.length == 0) {
-			if (arrSQLTerms[0]._strOperator.equals("=")) {
-				if (metadata.getIndexType(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName) != null) {
-
-					// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
-					// Page deserializedpage = Page.deserialize(strpage);
-					// HashSet<Tuple> hstup=deserializedpage.eqsearch(strpage,
-					// arrSQLTerms[0]._objValue);
-
-				} else {
-
-					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-					if (!metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)) {
-						HashSet<Tuple> hstup = table.eqsearch(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
+			HashSet<Tuple> tut = getTuple(arrSQLTerms[0]);
+			System.out.println(tut.size());
+			return tut.iterator();
+		}
+		if (indexhelp) {
+			boolean firstornot = true;
+			HashSet<Tuple> hmtup = new HashSet<>();
+			for (int i = 0; i < arrSQLTerms.length; i++) {
+				if (!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)
+						.equals("null")) {
+					if (firstornot) {
+						hmtup = getTuple(arrSQLTerms[i]);
+						firstornot = false;
 					} else {
-						HashSet<Tuple> hstup = table.cleqsearch(arrSQLTerms[0]._strColumnName,
-								arrSQLTerms[0]._objValue);
+						hmtup = and2bp(hmtup, getTuple(arrSQLTerms[i]));
 					}
 				}
-
-			} else if (arrSQLTerms[0]._strOperator.equals(">")) {
-				if (metadata.getIndexType(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName) != null) {
-
-					// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
-					// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-					// HashSet<Tuple> hstup=table.greaterthan(arrSQLTerms[0]._strColumnName,
-					// arrSQLTerms[0]._objValue);
-
-				} else {
-
-					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-					if (!metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)) {
-						HashSet<Tuple> hstup = table.greaterthannc(arrSQLTerms[0]._strColumnName,
-								arrSQLTerms[0]._objValue);
-					} else {
-						HashSet<Tuple> hstup = table.greaterthan(arrSQLTerms[0]._strColumnName,
-								arrSQLTerms[0]._objValue);
-					}
-				}
-			} else if (arrSQLTerms[0]._strOperator.equals(">=")) {
-				if (metadata.getIndexType(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName) != null) {
-
-					// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
-
-					// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-					// HashSet<Tuple> hstup=table.greaterthaneq(arrSQLTerms[0]._strColumnName,
-					// arrSQLTerms[0]._objValue);
-
-				} else {
-					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-					if (!metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)) {
-						HashSet<Tuple> hstup = table.greaterthaneqnc(arrSQLTerms[0]._strColumnName,
-								arrSQLTerms[0]._objValue);
-					} else {
-						HashSet<Tuple> hstup = table.greaterthaneq(arrSQLTerms[0]._strColumnName,
-								arrSQLTerms[0]._objValue);
-					}
-				}
-			} else if (arrSQLTerms[0]._strOperator.equals("<")) {
-				if (metadata.getIndexType(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName) != null) {
-
-					// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
-
-					// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-					// HashSet<Tuple> hstup=table.lesserthan(arrSQLTerms[0]._strColumnName,
-					// arrSQLTerms[0]._objValue);
-				} else {
-					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-					if (!metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)) {
-						HashSet<Tuple> hstup = table.lesserthannc(arrSQLTerms[0]._strColumnName,
-								arrSQLTerms[0]._objValue);
-					} else {
-						HashSet<Tuple> hstup = table.lesserthan(arrSQLTerms[0]._strColumnName,
-								arrSQLTerms[0]._objValue);
-					}
-				}
-			} else if (arrSQLTerms[0]._strOperator.equals("<=")) {
-				if (metadata.getIndexType(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName) != null) {
-
-					// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
-
-					// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-					// HashSet<Tuple> hstup=table.lesserthaneq(arrSQLTerms[0]._strColumnName,
-					// arrSQLTerms[0]._objValue);
-				} else {
-					Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-					if (!metadata.isClusteringKey(arrSQLTerms[0]._strTableName, arrSQLTerms[0]._strColumnName)) {
-						HashSet<Tuple> hstup = table.lesserthannceq(arrSQLTerms[0]._strColumnName,
-								arrSQLTerms[0]._objValue);
-					} else {
-						HashSet<Tuple> hstup = table.lesserthaneq(arrSQLTerms[0]._strColumnName,
-								arrSQLTerms[0]._objValue);
-					}
-				}
-			} else {
-				Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-				HashSet<Tuple> hstup = table.noteqsearch(arrSQLTerms[0]._strColumnName, arrSQLTerms[0]._objValue);
 			}
+			for (int i = 0; i < arrSQLTerms.length; i++) {
+				if (metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")) {
+					hmtup = and1bp(hmtup, arrSQLTerms[i]);
+				}
+			}
+			return hmtup.iterator();
 		}
 
 		Stack<Object> stack = new Stack<>();
 		Stack<String> stack2 = new Stack<>();
-
-		// lazem a know meen b+tree
-		// while(left!=strarrOperators.length-1){
-		// if(strarrOperators[right].equals("and")){
-		// if(metadata.getIndexType(arrSQLTerms[left]._strTableName,
-		// arrSQLTerms[left]._strColumnName)!= null){
-		// bpq.add(arrSQLTerms[left]);
-		// }
-		// else
-		// nq.add(arrSQLTerms[left]);
 		Vector<Object> vec = new Vector<>();
 		vec.add(arrSQLTerms[0]);
 		for (int i = 0; i < strarrOperators.length; i++) {
@@ -1128,6 +1053,7 @@ public class DBApp {
 			}
 		}
 		HashSet<Tuple> tm = (HashSet<Tuple>) stack.pop();
+
 		return tm.iterator();
 	}
 
@@ -1205,12 +1131,12 @@ public class DBApp {
 			if (sql._strOperator.equals("=")) {
 				if (sql._objValue instanceof Integer) {
 					Integer te = (Integer) sql._objValue;
-					if (((Integer) tm.getColumnValue(sql._strColumnName)) != (te)) {
+					if (!((Integer) tm.getColumnValue(sql._strColumnName)).equals(te)) {
 						hs1.remove(tm);
 					}
 				} else if (sql._objValue instanceof Double) {
 					Double te = (Double) sql._objValue;
-					if (((Double) tm.getColumnValue(sql._strColumnName)) != (te)) {
+					if (!((Double) tm.getColumnValue(sql._strColumnName)).equals(te)) {
 						hs1.remove(tm);
 					}
 				} else {
@@ -1290,12 +1216,12 @@ public class DBApp {
 			} else {
 				if (sql._objValue instanceof Integer) {
 					Integer te = (Integer) sql._objValue;
-					if (((Integer) tm.getColumnValue(sql._strColumnName)) == (te)) {
+					if (((Integer) tm.getColumnValue(sql._strColumnName)).equals(te)) {
 						hs1.remove(tm);
 					}
 				} else if (sql._objValue instanceof Double) {
 					Double te = (Double) sql._objValue;
-					if (((Double) tm.getColumnValue(sql._strColumnName)) == (te)) {
+					if (((Double) tm.getColumnValue(sql._strColumnName)).equals(te)) {
 						hs1.remove(tm);
 					}
 				} else {
@@ -1312,16 +1238,16 @@ public class DBApp {
 	private HashSet<Tuple> getTuple(SQLTerm sql) throws ClassNotFoundException, IOException, DBAppException {
 		HashSet<Tuple> hstup = new HashSet<>();
 		if (sql._strOperator.equals("=")) {
-			if (metadata.getIndexType(sql._strTableName, sql._strColumnName) != null) {
-
-				// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
-				// Page deserializedpage = Page.deserialize(strpage);
-				// HashSet<Tuple> hstup=deserializedpage.eqsearch(strpage,
-				// arrSQLTerms[0]._objValue);
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
+				BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName, sql._strColumnName));
+				List<Tuple> listtmp = bptmp.rangeQuery((Comparable) sql._objValue, (Comparable) sql._objValue);
+				for (Tuple tup : listtmp) {
+					hstup.add(tup);
+				}
 				return hstup;
 			} else {
 
-				Table table = Table.deserialize(sql._strTableName);
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
 				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
 					hstup = table.eqsearch(sql._strColumnName, sql._objValue);
 					return hstup;
@@ -1332,17 +1258,35 @@ public class DBApp {
 			}
 
 		} else if (sql._strOperator.equals(">")) {
-			if (metadata.getIndexType(sql._strTableName, sql._strColumnName) != null) {
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
 
-				// String strpage= bpt.search((int)sql._objValue); //for now
-				// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-				// HashSet<Tuple> hstup=table.greaterthan(arrSQLTerms[0]._strColumnName,
-				// arrSQLTerms[0]._objValue);
+				BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName, sql._strColumnName));
+				List<Tuple> listtmp;
+				if (sql._objValue instanceof Integer) {
+					listtmp = bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE);
+					for (Tuple tup : listtmp) {
+						if (!((Integer) (tup.getColumnValue(sql._strColumnName))).equals((Integer) sql._objValue))
+							hstup.add(tup);
+					}
+				} else if (sql._objValue instanceof Double) {
+					listtmp = bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE);
+					for (Tuple tup : listtmp) {
+						if (!((Double) (tup.getColumnValue(sql._strColumnName))).equals((Double) sql._objValue))
+							hstup.add(tup);
+					}
+				} else {
+					listtmp = bptmp.rangeQuery((Comparable) sql._objValue, "{");
+					for (Tuple tup : listtmp) {
+						if (!((String) (tup.getColumnValue(sql._strColumnName))).equals((String) sql._objValue))
+							hstup.add(tup);
+					}
+				}
+
 				return hstup;
 
 			} else {
 
-				Table table = Table.deserialize(sql._strTableName);
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
 				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
 					hstup = table.greaterthannc(sql._strColumnName, sql._objValue);
 					return hstup;
@@ -1352,16 +1296,29 @@ public class DBApp {
 				}
 			}
 		} else if (sql._strOperator.equals(">=")) {
-			if (metadata.getIndexType(sql._strTableName, sql._strColumnName) != null) {
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
 
-				// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
-
-				// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-				// HashSet<Tuple> hstup=table.greaterthaneq(arrSQLTerms[0]._strColumnName,
-				// arrSQLTerms[0]._objValue);
+				BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName, sql._strColumnName));
+				List<Tuple> listtmp;
+				if (sql._objValue instanceof Integer) {
+					listtmp = bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE);
+					for (Tuple tup : listtmp) {
+						hstup.add(tup);
+					}
+				} else if (sql._objValue instanceof Double) {
+					listtmp = bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE);
+					for (Tuple tup : listtmp) {
+						hstup.add(tup);
+					}
+				} else {
+					listtmp = bptmp.rangeQuery((Comparable) sql._objValue, "{");
+					for (Tuple tup : listtmp) {
+						hstup.add(tup);
+					}
+				}
 				return hstup;
 			} else {
-				Table table = Table.deserialize(sql._strTableName);
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
 				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
 					hstup = table.greaterthaneqnc(sql._strColumnName, sql._objValue);
 					return hstup;
@@ -1371,16 +1328,32 @@ public class DBApp {
 				}
 			}
 		} else if (sql._strOperator.equals("<")) {
-			if (metadata.getIndexType(sql._strTableName, sql._strColumnName) != null) {
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
 
-				// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
-
-				// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-				// HashSet<Tuple> hstup=table.lesserthan(arrSQLTerms[0]._strColumnName,
-				// arrSQLTerms[0]._objValue);
+				BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName, sql._strColumnName));
+				List<Tuple> listtmp;
+				if (sql._objValue instanceof Integer) {
+					listtmp = bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue);
+					for (Tuple tup : listtmp) {
+						if (!((Integer) (tup.getColumnValue(sql._strColumnName))).equals((Integer) sql._objValue))
+							hstup.add(tup);
+					}
+				} else if (sql._objValue instanceof Double) {
+					listtmp = bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue);
+					for (Tuple tup : listtmp) {
+						if (!((Double) (tup.getColumnValue(sql._strColumnName))).equals((Double) sql._objValue))
+							hstup.add(tup);
+					}
+				} else {
+					listtmp = bptmp.rangeQuery("", (Comparable) sql._objValue);
+					for (Tuple tup : listtmp) {
+						if (!((String) (tup.getColumnValue(sql._strColumnName))).equals((String) sql._objValue))
+							hstup.add(tup);
+					}
+				}
 				return hstup;
 			} else {
-				Table table = Table.deserialize(sql._strTableName);
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
 				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
 					hstup = table.lesserthannc(sql._strColumnName, sql._objValue);
 					return hstup;
@@ -1390,16 +1363,29 @@ public class DBApp {
 				}
 			}
 		} else if (sql._strOperator.equals("<=")) {
-			if (metadata.getIndexType(sql._strTableName, sql._strColumnName) != null) {
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
 
-				// String strpage= bpt.search((int)arrSQLTerms[0]._objValue); //for now
-
-				// Table table = Table.deserialize(arrSQLTerms[0]._strTableName);
-				// HashSet<Tuple> hstup=table.lesserthaneq(arrSQLTerms[0]._strColumnName,
-				// arrSQLTerms[0]._objValue);
+				BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName, sql._strColumnName));
+				List<Tuple> listtmp;
+				if (sql._objValue instanceof Integer) {
+					listtmp = bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue);
+					for (Tuple tup : listtmp) {
+						hstup.add(tup);
+					}
+				} else if (sql._objValue instanceof Double) {
+					listtmp = bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue);
+					for (Tuple tup : listtmp) {
+						hstup.add(tup);
+					}
+				} else {
+					listtmp = bptmp.rangeQuery("", (Comparable) sql._objValue);
+					for (Tuple tup : listtmp) {
+						hstup.add(tup);
+					}
+				}
 				return hstup;
 			} else {
-				Table table = Table.deserialize(sql._strTableName);
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
 				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
 					hstup = table.lesserthannceq(sql._strColumnName, sql._objValue);
 					return hstup;
@@ -1513,68 +1499,37 @@ public class DBApp {
 				dbApp.insertIntoTable(strTableName, htblColNameValue);
 			}
 
+			// select all rows
+
 			SQLTerm[] arrSQLTerms = new SQLTerm[1];
 			String[] strarrOperators = new String[0];
 
 			arrSQLTerms[0] = new SQLTerm();
-			arrSQLTerms[0]._strTableName = "Student";
+			arrSQLTerms[0]._strTableName = strTableName;
 			arrSQLTerms[0]._strColumnName = "id";
-			arrSQLTerms[0]._strOperator = "=";
+			arrSQLTerms[0]._strOperator = "<";
 			arrSQLTerms[0]._objValue = 5;
 
-			Iterator i = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+			// System.out.println(dbApp.selectFromTable(arrSQLTerms, strarrOperators));
+			Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
-			// for (int ind = 0; ind < 20; ind++) {
-			// if (i.hasNext()) {
-			// Tuple t = (Tuple) i.next();
-			// System.out.println(t.getColumnValue("id"));
+			// for(int i = 0; i < 20; i++){
+			// if(i == 5){
+			// assert iterator.hasNext();
+			// Tuple tuple = (Tuple) iterator.next();
+			// assert tuple.getColumnValue("id").equals(5);
+			// assert tuple.getColumnValue("name").equals("Student5");
+			// assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+			// }else{
+			// assert !iterator.hasNext();
 			// }
 			// }
-
-			while (i.hasNext()) {
-				Tuple t = (Tuple) i.next();
-				System.out.println(t.getColumnValue("id"));
+			while (iterator.hasNext()) {
+				Tuple tuple = (Tuple) iterator.next();
+				System.out.println(tuple);
 			}
-
-			// dbApp.createIndex(strTableName, "name", "nameIndex");
-
-			// dbApp.createIndex(strTableName, "gpa", "gpaIndex");
-
-			// // update a row
-
-			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-
-			// htblColNameValue.put("name", "Student20");
-
-			// dbApp.updateTable(strTableName, "0", htblColNameValue);
-
-			// // check that the indexes are updated
-
-			// BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" +
-			// "nameIndex.class");
-
-			// for(int i = 0; i < 21; i++){
-			// if(i == 0){
-			// assert tree.query("Student" + i).size() == 0;
-			// }else{
-			// assert tree.query("Student" + i) != null && tree.query("Student" + i).size()
-			// == 1 && ((Tuple) tree.query("Student" +
-			// i).get(0)).getColumnValue("name").equals("Student" + i);
-			// }
-			// }
-
-			// tree = BPlusTree.deserialize("tables/" + strTableName + "/" +
-			// "gpaIndex.class");
-
-			// for(int i = 0; i < 21; i++){
-			// if(i == 0){
-			// System.out.println(tree.query(3.0 + i));
-			// assert tree.query(3.0 + i).size() == 0;
-			// }else{
-			// assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1 &&
-			// ((Tuple) tree.query(3.0 + i).get(0)).getColumnValue("gpa").equals(3.0 + i);
-			// }
-			// }
+		} catch (Exception e) {
+			e.printStackTrace();
 
 		} finally {
 			cleanUp();
