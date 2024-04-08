@@ -452,52 +452,82 @@ public class DBApp {
 			Tuple tuple = tuples.get(tupleIndex);
 			Tuple tupleOriginalTuple = tuple.clone();
 			
-			Hashtable<String, Hashtable<String, String>> htblMetadata = metadata.getTableMetadata(strTableName);
-
-			for (String columnName : htblColNameValue.keySet()) {
-				Object temp = tuple.getColumnValue(columnName);	
-				Object columnValue = htblColNameValue.get(columnName);
-				tuple.setColumnValue(columnName, columnValue);
-
-				page.serialize("tables/" + strTableName + "/" + page.getPageName() + ".class"); 
-
-				boolean boolindexorno = false;
-				if (htblMetadata.containsKey(columnName)
-						&& metadata.getIndexName(strTableName, columnName) != null) {
-
-					String strindexName = metadata.getIndexName(strTableName, columnName);
-					if (!strindexName.equals("null")) {
-
-						boolindexorno = true;
-					} else
-
-						boolindexorno = false;
+			//Hashtable<String, Hashtable<String, String>> htblMetadata = metadata.getTableMetadata(strTableName);
+			List<String> metaCol = metadata.getColumnNames(strTableName);
+			HashSet<String> indexedonly = new HashSet<String>();
+			for(String name : metaCol){
+				String indexName = metadata.getIndexName(strTableName, name);
+				if (!(indexName.equals("null"))){
+					indexedonly.add(name);
 				}
 
-				if (boolindexorno) {
-					
-					String strindexName = metadata.getIndexName(strTableName, columnName);
-					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strindexName + ".class");
-
-					// Comparable ComVar=(Comparable) value;
-					//Comparable compClusteringKeyValue = (Comparable) cmpClusteringKeyValue;
-					bptTree.remove((Comparable) temp ,(Comparable) tupleOriginalTuple);
-					bptTree.insert((Comparable) htblColNameValue.get(columnName), (Comparable) tuple);
-
-					//bptTree.insert(compClusteringKeyValue, (Comparable) htblColNameValue.get(cmpClusteringKeyValue));
-
-					// tree.insert(key, ComVar); //typecast el value comparable
-
-					bptTree.serialize("tables/" + strTableName + "/" + strindexName + ".class");
-
-				}
 			}
-		} else {
-			throw new DBAppException("Page not found for the given clustering key.");
+			for (String columnName : indexedonly) {
+					Comparable temp = (Comparable)tuple.getColumnValue(columnName);
+					if(htblColNameValue.containsKey(columnName)){
+					temp = (Comparable)tuple.getColumnValue(columnName);
+					Comparable columnValue = (Comparable)htblColNameValue.get(columnName);
+					tuple.setColumnValue(columnName, columnValue);
+				
+					String indexName = metadata.getIndexName(strTableName, columnName);
+					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
+					bptTree.remove(temp, (Comparable) tupleOriginalTuple);
+					bptTree.insert(columnValue, (Comparable) tuple);
+					bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");	
+					}
+					else{
+					String indexName = metadata.getIndexName(strTableName, columnName);
+					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
+					bptTree.remove(temp, (Comparable) tupleOriginalTuple);
+					bptTree.insert(temp, (Comparable) tuple);
+					bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
+					}
+					
+
+				
+			}
+			//System.out.println(tuples);
 		}
 		
-	
+			page.serialize("tables/" + strTableName + "/" + page.getPageName() + ".class");
+			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
+			
 	}
+	
+
+				/*if(metadata.isColumnIndexed(strTableName, columnName) && !(htblMetadata.containsKey(columnName))){
+					String indexName = metadata.getIndexName(strTableName, columnName);
+					if (!indexName.equals("null")) {
+						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
+						bptTree.remove((Comparable) temp, (Comparable) tupleOriginalTuple);
+						bptTree.insert((Comparable) columnValue, (Comparable) tuple);
+						bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
+					}
+				}
+				//bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");	
+				//System.out.print(bptTree.query((Comparable)columnName)+columnName);
+
+
+				List<String> columnNames = metadata.getColumnNames(strTableName);
+				
+				if(metadata.isColumnIndexed(strTableName, columnName) && !(htblMetadata.containsKey(columnName))){
+					String indexName = metadata.getIndexName(strTableName, columnName);
+					if (!indexName.equals("null")) {
+						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
+						bptTree.remove((Comparable) temp, (Comparable) tupleOriginalTuple);
+						bptTree.insert((Comparable) columnValue, (Comparable) tuple);
+						bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
+					}
+				}*/
+				
+				
+			//tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
+			//page.serialize("tables/" + strTableName + "/" + page.getPageName() + ".class");
+			//System.out.print(tuples);
+		
+			
+	
+	
 
 	/**
 	 * The function `getPageByClusteringKey` searches for a specific page in a table

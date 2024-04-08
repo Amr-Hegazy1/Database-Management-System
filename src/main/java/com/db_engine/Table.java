@@ -154,7 +154,7 @@ public class Table implements Serializable {
         vecPages.remove(strPageName);
         
     }
-
+    
     /**
      * The function `printAllPages` iterates through all pages in a table, deserializes each page, and
      * prints it to the console.
