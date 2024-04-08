@@ -1295,7 +1295,7 @@ public class TestCases {
 
     
 
-    private void cleanUp() throws IOException{
+    protected void cleanUp() throws IOException{
         try{
             // delete tables directory
 
