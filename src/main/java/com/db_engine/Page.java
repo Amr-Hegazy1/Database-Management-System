@@ -452,14 +452,14 @@ public class Page implements Serializable {
                         hstups.add(vecTuples.get(index));
                     }
                 }
-            } else {
+             else {
                 String te = (String) val;
                 if (((String) vecTuples.get(index).getColumnValue(col)).compareTo(te) == 0) {
                     hstups.add(vecTuples.get(index));
                 }
             }
-
-        } else {
+        }
+        else {
             for (Tuple tu : vecTuples) {
                 if (val instanceof Integer) {
                     Integer te = (Integer) val;
