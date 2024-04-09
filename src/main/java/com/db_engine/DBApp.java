@@ -1254,7 +1254,7 @@ public class DBApp {
 			HashSet<Tuple> hstup = new HashSet<>();
 			if(sql._strOperator.equals("=")){
 				if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
-					BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName,sql._strColumnName));
+					BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+  metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
 					List<Tuple> listtmp = bptmp.rangeQuery((Comparable)sql._objValue, (Comparable)sql._objValue);
 					for(Tuple tup:listtmp){
 						hstup.add(tup);
@@ -1278,7 +1278,7 @@ public class DBApp {
 			else if(sql._strOperator.equals(">")){
 				if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
 					
-					BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName,sql._strColumnName));
+					BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName+"/"+metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
 					List<Tuple> listtmp;
 					if(sql._objValue instanceof Integer){
 						listtmp = bptmp.rangeQuery((Comparable)sql._objValue,Integer.MAX_VALUE );
@@ -1320,7 +1320,7 @@ public class DBApp {
 			}else if(sql._strOperator.equals(">=")){
 			if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
 				
-				BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName,sql._strColumnName));
+				BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+ metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
 				List<Tuple> listtmp;
 				if(sql._objValue instanceof Integer){
 					listtmp = bptmp.rangeQuery((Comparable)sql._objValue,Integer.MAX_VALUE );
@@ -1356,7 +1356,7 @@ public class DBApp {
 		}else if(sql._strOperator.equals("<")){
 			if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
 				
-				BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName,sql._strColumnName));
+				BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName+"/"+metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
 				List<Tuple> listtmp;
 				if(sql._objValue instanceof Integer){
 					listtmp = bptmp.rangeQuery(Integer.MIN_VALUE,(Comparable)sql._objValue );
@@ -1395,7 +1395,7 @@ public class DBApp {
 		}else if(sql._strOperator.equals("<=")){
 			if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
 				
-				BPlusTree bptmp = BPlusTree.deserialize(metadata.getIndexName(sql._strTableName,sql._strColumnName));
+				BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+ metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
 				List<Tuple> listtmp;
 				if(sql._objValue instanceof Integer){
 					listtmp = bptmp.rangeQuery(Integer.MIN_VALUE,(Comparable)sql._objValue );
@@ -1429,7 +1429,7 @@ public class DBApp {
 				}
 			}	
 		} else{   
-			Table table = Table.deserialize(sql._strTableName);
+			Table table = Table.deserialize("tables/"+sql._strTableName+"/"+sql._strTableName+".class");
 			hstup= table.noteqsearch(sql._strColumnName, sql._objValue);
 			return hstup;
 		}
@@ -1536,17 +1536,18 @@ public class DBApp {
                 htblColNameValue.put("gpa", 3.0 + i);
                 dbApp.insertIntoTable(strTableName, htblColNameValue);
             }
-
-            // select all rows
+			
+			dbApp.createIndex(strTableName, "gpa", "gpa index");
+			// select all rows
 
             SQLTerm[] arrSQLTerms = new SQLTerm[1];
             String[] strarrOperators = new String[0];
 
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = strTableName;
-            arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "<";
-            arrSQLTerms[0]._objValue = 5;
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = 8.0;
 
 			//System.out.println(dbApp.selectFromTable(arrSQLTerms, strarrOperators));
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
@@ -1570,7 +1571,7 @@ public class DBApp {
 			e.printStackTrace();
             
         }finally{
-            cleanUp();
+        	cleanUp();
         }
 	}
 }
