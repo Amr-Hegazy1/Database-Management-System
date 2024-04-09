@@ -183,6 +183,20 @@ public class Tuple implements Serializable, Comparable<Tuple>{
     }
 
 
+    /**
+     * The `clone` function creates a deep copy of a Tuple object by cloning its internal HashMap.
+     * 
+     * @return The `clone` method is returning a deep copy of the `Tuple` object. It creates a new
+     * `Tuple` object `t` and clones the `hmTuple` HashMap by calling its `clone` method. The cloned
+     * HashMap is then assigned to the `hmTuple` of the new `Tuple` object `t`, which is then returned.
+     */
+    public Tuple clone(){
+        Tuple t = new Tuple();
+        t.hmTuple = (HashMap<String, Object>) hmTuple.clone();
+        return t;
+    }
+
+
     
 
 }
