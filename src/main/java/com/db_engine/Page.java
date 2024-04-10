@@ -449,37 +449,37 @@ public class Page implements Serializable {
                 if (((Double) vecTuples.get(index).getColumnValue(col)).equals(te)) {
                     hstups.add(vecTuples.get(index));
                 }
-            }
-        } else {
-            String te = (String) val;
-            if (((String) vecTuples.get(index).getColumnValue(col)).compareTo(te) == 0) {
-                hstups.add(vecTuples.get(index));
-            }
-        }
-
-    }else
-
-    {
-        for (Tuple tu : vecTuples) {
-            if (val instanceof Integer) {
-                Integer te = (Integer) val;
-                if (((Integer) tu.getColumnValue(col)).equals(te)) {
-                    hstups.add(tu);
-                }
-            } else if (val instanceof Double) {
-                Double te = (Double) val;
-                if (((Double) tu.getColumnValue(col)).equals(te)) {
-                    hstups.add(tu);
-                }
             } else {
                 String te = (String) val;
-                if (((String) tu.getColumnValue(col)).compareTo(te) == 0) {
-                    hstups.add(tu);
+                if (((String) vecTuples.get(index).getColumnValue(col)).compareTo(te) == 0) {
+                    hstups.add(vecTuples.get(index));
                 }
             }
 
+        } else
+
+        {
+            for (Tuple tu : vecTuples) {
+                if (val instanceof Integer) {
+                    Integer te = (Integer) val;
+                    if (((Integer) tu.getColumnValue(col)).equals(te)) {
+                        hstups.add(tu);
+                    }
+                } else if (val instanceof Double) {
+                    Double te = (Double) val;
+                    if (((Double) tu.getColumnValue(col)).equals(te)) {
+                        hstups.add(tu);
+                    }
+                } else {
+                    String te = (String) val;
+                    if (((String) tu.getColumnValue(col)).compareTo(te) == 0) {
+                        hstups.add(tu);
+                    }
+                }
+
+            }
         }
-    }return hstups;
+        return hstups;
     }
 
     public HashSet<Tuple> gtrsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
@@ -662,7 +662,7 @@ public class Page implements Serializable {
                 }
 
             }
-        
+        }
         return hstups;
     }
 

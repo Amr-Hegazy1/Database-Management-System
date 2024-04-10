@@ -272,7 +272,7 @@ public class DBApp {
 					tupleNewTuple.setPageName(pgFirstPage.getPageName());
 
 					if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
-						handleInsertOverflow(tblTable, pgFirstPage, intMaxSize, strClustKeyName);
+						handleInsertOverflow(tblTable, pgFirstPage, intMaxSize, strClustKeyName, hsIndexedColumns);
 					} else {
 						pgFirstPage.serialize("tables/" + strTableName + "/" + pgFirstPage.getPageName() + ".class");
 					}
@@ -283,7 +283,7 @@ public class DBApp {
 					tupleNewTuple.setPageName(pgLastPage.getPageName());
 
 					if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
-						handleInsertOverflow(tblTable, pgLastPage, intMaxSize, strClustKeyName);
+						handleInsertOverflow(tblTable, pgLastPage, intMaxSize, strClustKeyName, hsIndexedColumns);
 					} else {
 						pgLastPage.serialize("tables/" + strTableName + "/" + pgLastPage.getPageName() + ".class");
 					}
@@ -307,7 +307,8 @@ public class DBApp {
 				pgInsertPage.addTuple(index, tupleNewTuple);
 
 				if (pgInsertPage.getSize() > intMaxSize) { // check for overflow
-					handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName); // handle overflow
+					handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName, hsIndexedColumns); // handle
+																													// overflow
 				} else { // if no overflow, serialize page
 					pgInsertPage.serialize("tables/" + strTableName + "/" + pgInsertPage.getPageName() + ".class");
 				}
@@ -337,7 +338,8 @@ public class DBApp {
 				Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
 																								// Comparable
 
-				bptTree.insert(colValue, tupleNewTuple); // inserting col value(key) and tuple object(value) into bTree
+				bptTree.insert(colValue, tupleNewTuple.getPageName()); // inserting col value(key) and tuple
+																		// object(value) into bTree
 
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
 			}
@@ -349,7 +351,7 @@ public class DBApp {
 	}
 
 	public void handleInsertOverflow(Table tblTable, Page pgFirstOverflowPage, int intMaxRowsPerPage,
-			String strClustKeyName)
+			String strClustKeyName, HashSet hsIndexedCols)
 			throws DBAppException {
 
 		Vector<String> vecPages = tblTable.getPages(); // Vector of Page names in table
@@ -377,8 +379,28 @@ public class DBApp {
 				throw new DBAppException("Primary Key Already Exists");
 			}
 			// if unique clustering key, insert in page and adjust page name in tuple object
-			tupleLastTuple.setPageName(page.getPageName());
-			page.addTuple(index, tupleLastTuple);
+			// and in B+ Tree(if present)
+			page.addTuple(index, tupleLastTuple); // add tuple to new/next page
+			tupleLastTuple.setPageName(page.getPageName()); // update page name in tuple obj
+			if (hsIndexedCols.size() > 0) {
+				for (Object objColName : hsIndexedCols) {
+					String strColName = (String) objColName;
+					String strTableName = tblTable.getTableName();
+					String strIndexName = metadata.getIndexName(strTableName, strColName); // getting index name
+					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class"); // getting
+																															// the
+																															// tree
+
+					Comparable colValue = (Comparable) tupleLastTuple.getColumnValue(strColName); // cast column value
+																									// to
+																									// Comparable
+
+					bptTree.insert(colValue, tupleLastTuple.getPageName()); // inserting col value(key) and Page Name
+																			// (value) into bTree
+
+					bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
+				}
+			}
 
 			// check for overflow
 			if (page.getSize() > intMaxRowsPerPage) { // if overflowed, remove last tuple and serialize current page
@@ -392,9 +414,29 @@ public class DBApp {
 
 		// if we reach this point, this means that we overflowed in all pages until no
 		// pages were left, therefore a new page is needed
-		String newPageName = tblTable.addPage();
-		Page newPage = new Page(newPageName);
-		newPage.addTuple(0, tupleLastTuple);
+		String newPageName = tblTable.addPage(); // creating new page
+		Page newPage = new Page(newPageName); // creating new page object with new page name
+		tupleLastTuple.setPageName(newPageName); // adjusting page name in tuple obj
+		if (hsIndexedCols.size() > 0) { // adjusting indicies (if any)
+			for (Object objColName : hsIndexedCols) {
+				String strColName = (String) objColName;
+				String strTableName = tblTable.getTableName();
+				String strIndexName = metadata.getIndexName(strTableName, strColName); // getting index name
+				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class"); // getting
+																														// the
+																														// tree
+
+				Comparable colValue = (Comparable) tupleLastTuple.getColumnValue(strColName); // cast column value
+																								// to
+																								// Comparable
+
+				bptTree.insert(colValue, tupleLastTuple.getPageName()); // inserting col value(key) and Page Name
+																		// (value) into bTree
+
+				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
+			}
+		}
+		newPage.addTuple(0, tupleLastTuple); // inserting tuple in new object
 		newPage.serialize("tables/" + tblTable.getTableName() + "/" + newPageName + ".class");
 
 	}
@@ -1473,45 +1515,59 @@ public class DBApp {
 	public static void main(String[] args) throws DBAppException, IOException, ClassNotFoundException {
 
 		try {
-			DBApp dbApp = new DBApp();
+			// DBApp dbApp = new DBApp();
 
-			dbApp.init();
+			// dbApp.init();
 
-			String strTableName = "Student";
+			// String strTableName = "Student";
 
-			Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+			// Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
-			htblColNameType.put("id", "java.lang.Integer");
+			// htblColNameType.put("id", "java.lang.Integer");
 
-			htblColNameType.put("name", "java.lang.String");
+			// htblColNameType.put("name", "java.lang.String");
 
-			htblColNameType.put("gpa", "java.lang.Double");
+			// htblColNameType.put("gpa", "java.lang.Double");
 
-			dbApp.createTable(strTableName, "id", htblColNameType);
+			// dbApp.createTable(strTableName, "id", htblColNameType);
 
-			// insert 20 rows
+			// // insert 20 rows
 
-			for (int i = 0; i < 20; i++) {
-				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-				htblColNameValue.put("id", i);
-				htblColNameValue.put("name", "Student" + i);
-				htblColNameValue.put("gpa", 3.0 + i);
-				dbApp.insertIntoTable(strTableName, htblColNameValue);
+			// for (int i = 0; i < 20; i++) {
+			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			// htblColNameValue.put("id", i);
+			// htblColNameValue.put("name", "Student" + i);
+			// htblColNameValue.put("gpa", 3.0 + i);
+			// dbApp.insertIntoTable(strTableName, htblColNameValue);
+			// }
+			String s1 = "Student1";
+			String s2 = "Student19";
+
+			int result = s1.compareTo(s2);
+
+			if (result < 0) {
+				System.out.println(s2 + " is bigger");
+			} else if (result > 0) {
+				System.out.println(s1 + " is bigger");
+			} else {
+				System.out.println("Both strings are equal");
 			}
+
+			// System.out.println("inserted");
 
 			// select all rows
 
-			SQLTerm[] arrSQLTerms = new SQLTerm[1];
-			String[] strarrOperators = new String[0];
+			// SQLTerm[] arrSQLTerms = new SQLTerm[1];
+			// String[] strarrOperators = new String[0];
 
-			arrSQLTerms[0] = new SQLTerm();
-			arrSQLTerms[0]._strTableName = strTableName;
-			arrSQLTerms[0]._strColumnName = "id";
-			arrSQLTerms[0]._strOperator = "<";
-			arrSQLTerms[0]._objValue = 5;
+			// arrSQLTerms[0] = new SQLTerm();
+			// arrSQLTerms[0]._strTableName = strTableName;
+			// arrSQLTerms[0]._strColumnName = "id";
+			// arrSQLTerms[0]._strOperator = "<";
+			// arrSQLTerms[0]._objValue = 5;
 
-			// System.out.println(dbApp.selectFromTable(arrSQLTerms, strarrOperators));
-			Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+			// // System.out.println(dbApp.selectFromTable(arrSQLTerms, strarrOperators));
+			// Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
 			// for(int i = 0; i < 20; i++){
 			// if(i == 5){
@@ -1524,10 +1580,10 @@ public class DBApp {
 			// assert !iterator.hasNext();
 			// }
 			// }
-			while (iterator.hasNext()) {
-				Tuple tuple = (Tuple) iterator.next();
-				System.out.println(tuple);
-			}
+			// while (iterator.hasNext()) {
+			// Tuple tuple = (Tuple) iterator.next();
+			// System.out.println(tuple);
+			// }
 		} catch (Exception e) {
 			e.printStackTrace();
 
