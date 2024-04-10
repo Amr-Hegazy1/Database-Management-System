@@ -966,6 +966,9 @@ public class DBApp {
 
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms,
 			String[] strarrOperators) throws DBAppException, ClassNotFoundException, IOException{
+				if(arrSQLTerms.length==0){
+					throw new DBAppException("Nothing to query on");
+				}
 				if(arrSQLTerms.length!= strarrOperators.length+1){
 					throw new DBAppException("something wrong in the input");
 				}
@@ -989,9 +992,9 @@ public class DBApp {
 			}
 			boolean indexhelp=true;
 			for(int i=0;i<strarrOperators.length;i++){
-				if((!strarrOperators[i].equals("and"))&&(!strarrOperators[i].equals("or"))&&(!strarrOperators[i].equals("xor")))
+				if((!strarrOperators[i].equals("AND"))&&(!strarrOperators[i].equals("OR"))&&(!strarrOperators[i].equals("XOR")&&(!strarrOperators[i].equals("and"))&&(!strarrOperators[i].equals("or"))&&(!strarrOperators[i].equals("xor"))))
 				throw new DBAppException("Undefined operator is being used");
-				if(!strarrOperators[i].equals("and"))
+				if(!(strarrOperators[i].equals("AND")||strarrOperators[i].equals("and")))
 				indexhelp=false;
 			}
 				// el hashes at end of if statements are stand by
@@ -1071,10 +1074,10 @@ public class DBApp {
 							tm2= (HashSet<Tuple>) stack.pop();
 						}
 					}
-					if(vec.get(i).equals("and")){
+					if(vec.get(i).equals("AND")||vec.get(i).equals("and")){
 						stack.add(and2bp(tm, tm2));
 					}
-					else if(vec.get(i).equals("or")){
+					else if(vec.get(i).equals("OR")||vec.get(i).equals("or")){
 						stack.add(or2hs(tm, tm2));
 					}
 					else{
@@ -1091,20 +1094,19 @@ public class DBApp {
 		public static int findIndex(SQLTerm arr[], SQLTerm t) 
 			{ 
 		  
-				// if array is Null 
+
 				if (arr == null) { 
 					return -1; 
 				} 
 		  
-				// find length of array 
+				
 				int len = arr.length; 
 				int i = 0; 
 		  
-				// traverse in the array 
+ 
 				while (i < len) { 
 		  
-					// if the i-th element is t 
-					// then return the index 
+
 					if (arr[i]._strTableName.equals(t._strTableName) && arr[i]._strColumnName.equals(t._strColumnName)&& arr[i]._strOperator.equals(t._strOperator)) { 
 					   if(t._objValue instanceof Integer){
 					   Integer te = (Integer) t._objValue;
@@ -1465,11 +1467,11 @@ public class DBApp {
 	private static int precedence(String operator) {
 		switch (operator) {
 
-			case "and":
+			case "AND":
 				return 3;
-			case "or":
+			case "OR":
 				return 2;
-			case "xor":
+			case "XOR":
 				return 1;
 			default:
 				return -1;
