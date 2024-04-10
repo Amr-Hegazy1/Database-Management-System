@@ -93,6 +93,12 @@ public class SelectTestCases {
             SQLTerm[] arrSQLTerms = new SQLTerm[1];
             String[] strarrOperators = new String[0];
 
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "WrongStudent";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
             // select with invalid Table name
             final SQLTerm[] finalArrSQLTerms = arrSQLTerms;
             final String[] finalStrarrOperators = strarrOperators;
@@ -155,6 +161,11 @@ public class SelectTestCases {
 
             // select with invalid strarrOperators Value (Test 2: 2 Operators, One Valid,
             // One Invalid)
+
+            strarrOperators = new String[2];
+            arrSQLTerms = new SQLTerm[3];
+
+            arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strColumnName = "id";
             arrSQLTerms[0]._strOperator = "=";
             arrSQLTerms[0]._objValue = 1;
