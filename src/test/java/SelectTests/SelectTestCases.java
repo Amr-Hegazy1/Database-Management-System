@@ -253,6 +253,28 @@ public class SelectTestCases {
                 dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
             });
 
+            // select with joining (two different tables)
+            arrSQLTerms = new SQLTerm[2];
+            strarrOperators = new String[1];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 1;
+
+            strarrOperators[0] = "AND";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Instructor";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 4;
+
+            assertThrows(DBAppException.class, () -> { // Selecting from Student and from Instructor
+                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+            });
+
         }
 
         finally {
@@ -924,6 +946,197 @@ public class SelectTestCases {
             assert count == 0;
 
             count = 0;
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void testPrecedence() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20);
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[3];
+            String[] strarrOperators = new String[2];
+
+            // Testing OR + AND
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = "Student2";
+
+            strarrOperators[0] = "or";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "name";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = "Student1";
+
+            strarrOperators[1] = "and";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "name";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = "Student1";
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name
+                                                                                     // = "Student2" OR name =
+                                                                                     // "Student1"
+                                                                                     // AND name = "Student1";
+            int count = 0;
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert tuple.getColumnValue("name").equals("Student1")
+                        || tuple.getColumnValue("name").equals("Student2");
+                count++;
+            }
+
+            assert count == 2;
+
+            count = 0;
+
+            // Testing XOR+AND
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = "Student1";
+
+            strarrOperators[0] = "xor";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 2;
+
+            strarrOperators[1] = "and";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "name";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = "Student2";
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
+                                                                            // "Student1" XOR id = 2 AND name =
+                                                                            // "Student2";
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert tuple.getColumnValue("name").equals("Student1") || (int) tuple.getColumnValue("id") == 2;
+                count++;
+            }
+
+            assert count == 2;
+
+            count = 0;
+
+            // Testing XOR+OR
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = "Student2";
+
+            strarrOperators[0] = "xor";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 2;
+
+            strarrOperators[1] = "or";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "id";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = 3;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
+                                                                            // "Student1" XOR id = 2 OR id = 3;
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert tuple.getColumnValue("name").equals("Student3") && (int) tuple.getColumnValue("id") == 3;
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Testing XOR+OR+AND
+            arrSQLTerms = new SQLTerm[4];
+            strarrOperators = new String[3];
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 1;
+
+            strarrOperators[0] = "xor";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 2;
+
+            strarrOperators[1] = "or";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "id";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = 3;
+
+            strarrOperators[2] = "and";
+
+            arrSQLTerms[3] = new SQLTerm();
+            arrSQLTerms[3]._strTableName = "Student";
+            arrSQLTerms[3]._strColumnName = "id";
+            arrSQLTerms[3]._strOperator = "=";
+            arrSQLTerms[3]._objValue = 4;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
+                                                                            // "Student1" XOR id = 2 OR id = 3 AND id =
+                                                                            // 4;
+            while (!iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (int) tuple.getColumnValue("id") == 1
+                        || (int) tuple.getColumnValue("id") == 2;
+                count++;
+            }
+
+            assert count == 2;
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test // TODO
+    public void testOperatorCapitilzation() throws IOException, DBAppException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20);
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[4];
+            String[] strarrOperators = new String[3];
         } finally {
             cleanUp();
         }

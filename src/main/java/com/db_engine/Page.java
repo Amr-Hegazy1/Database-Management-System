@@ -374,6 +374,7 @@ public class Page implements Serializable {
         // TODO: make vecTuple.remove() work
 
         for (int i = 0; i < vecTuples.size(); i++) {
+
             if (vecTuples.get(i).equals(tuple)) {
 
                 vecTuples.remove(i);
@@ -456,9 +457,7 @@ public class Page implements Serializable {
                 }
             }
 
-        } else
-
-        {
+        } else {
             for (Tuple tu : vecTuples) {
                 if (val instanceof Integer) {
                     Integer te = (Integer) val;

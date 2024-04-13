@@ -269,6 +269,7 @@ public class DBApp {
 																			// key, insert in index 0
 						.getColumnValue(strClustKeyName)) < 0) {
 					pgFirstPage.addTuple(0, tupleNewTuple);
+					tblTable.setMin(pgFirstPage.getPageName(), tupleNewTuple.getColumnValue(strClustKeyName));
 					tupleNewTuple.setPageName(pgFirstPage.getPageName());
 
 					if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
@@ -280,6 +281,8 @@ public class DBApp {
 				} else {// only option left is that its bigger than last key in last page, so insert in
 						// last index in last page
 					pgLastPage.addTuple(pgLastPage.getSize(), tupleNewTuple);
+					System.out.println(" MAX LINE 284");
+					tblTable.setMax(pgLastPage.getPageName(), tupleNewTuple.getColumnValue(strClustKeyName));
 					tupleNewTuple.setPageName(pgLastPage.getPageName());
 
 					if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
@@ -321,6 +324,8 @@ public class DBApp {
 			Page newPage = new Page(strPageName);
 			tupleNewTuple.setPageName(strPageName);
 			newPage.addTuple(0, tupleNewTuple);
+			tblTable.setMin(strPageName, tupleNewTuple.getColumnValue(strClustKeyName));
+			tblTable.setMax(strPageName, tupleNewTuple.getColumnValue(strClustKeyName));
 
 			newPage.serialize("tables/" + strTableName + "/" + strPageName + ".class");
 		}
@@ -359,6 +364,12 @@ public class DBApp {
 		int intStartIndex = vecPages.indexOf(overflowPage.getPageName()); // get index of first overflowed page in the
 																			// vecPages Vector
 		Tuple tupleLastTuple = overflowPage.removeLastTuple(); // last tuple in overflow page
+		System.out.println("max line 368 LAST TUPLE " + overflowPage.getLastTuple());
+		tblTable.setMax(overflowPage.getPageName(),
+				overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in overflow
+																				// page
+		// System.out.println("LAST TUPLE IN 1ST OVERFLOW PAGE:" +
+		// pgFirstOverflowPage.getLastTuple());
 		overflowPage.serialize("tables/" + tblTable.getTableName() + "/" + overflowPage.getPageName() + ".class"); // serialize
 																													// the
 																													// overflow
@@ -367,6 +378,9 @@ public class DBApp {
 		// Loop through the rest of the pages to handle the overflow
 		for (int i = intStartIndex + 1; i < vecPages.size(); i++) {
 			Page page = Page.deserialize("tables/" + tblTable.getTableName() + "/" + vecPages.get(i) + ".class"); // get
+																													// page
+			tblTable.setMax(page.getPageName(),
+					page.getLastTuple().getColumnValue(strClustKeyName));
 			int index = 0;
 			Comparable inputClustKey = (Comparable) tupleLastTuple.getColumnValue(strClustKeyName); // clust key in my
 																									// last tuple (thats
@@ -383,6 +397,11 @@ public class DBApp {
 			} else if (inputClustKey.compareTo((Comparable) pageClustKey) == 0) {
 
 				throw new DBAppException("Primary Key Already Exists");
+			}
+			// if lastTuple is inserted into first row of next page, then next page's min
+			// needs to be changed
+			if (index == 0) {
+				tblTable.setMin(page.getPageName(), tupleLastTuple.getColumnValue(strClustKeyName));
 			}
 
 			// if unique clustering key, insert in page and adjust page name in tuple object
@@ -413,7 +432,8 @@ public class DBApp {
 			}
 
 			// check for overflow
-			if (page.getSize() > intMaxRowsPerPage) { // if overflowed, remove last tuple and serialize current page
+			if (page.getSize() > intMaxRowsPerPage) { // if overflowed, remove last tuple, adjust max value and
+														// serialize current page
 				tupleLastTuple = page.removeLastTuple();
 				page.serialize("tables/" + tblTable.getTableName() + "/" + page.getPageName() + ".class");
 			} else { // if no overflow, serialize page and break the loop
@@ -427,6 +447,9 @@ public class DBApp {
 		String newPageName = tblTable.addPage(); // creating new page
 		Page newPage = new Page(newPageName); // creating new page object with new page name
 		tupleLastTuple.setPageName(newPageName); // adjusting page name in tuple obj
+		tblTable.setMin(newPageName, tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value of new page
+		System.out.println("max line 452");
+		tblTable.setMax(newPageName, tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value of new page
 		if (hsIndexedCols.size() > 0) { // adjusting indicies (if any)
 			for (Object objColName : hsIndexedCols) {
 				String strColName = (String) objColName;
@@ -1169,6 +1192,12 @@ public class DBApp {
 	}
 
 	private static HashSet<Tuple> xor2hs(HashSet<Tuple> hs1, HashSet<Tuple> hs2) {
+		if (hs1.size() == 0) {
+			return hs2;
+		}
+		if (hs2.size() == 0) {
+			return hs1;
+		}
 		for (Tuple tm : hs1) {
 			if (hs2.contains(tm)) {
 				hs2.remove(tm);
@@ -1544,17 +1573,91 @@ public class DBApp {
 
 			// dbApp.createTable(strTableName, "id", htblColNameType);
 
-			// // insert 20 rows
-
-			// dbApp.createIndex(strTableName, "id", "idIndex");
-
-			// for (int i = 0; i < 19; i++) {
+			// for (int i = 0; i < 21; i++) {
 			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
 			// htblColNameValue.put("id", i);
 			// htblColNameValue.put("name", "Student" + i);
 			// htblColNameValue.put("gpa", 3.0 + i);
 			// dbApp.insertIntoTable(strTableName, htblColNameValue);
 			// }
+
+			// int i = -2;
+			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			// htblColNameValue.put("id", i);
+			// htblColNameValue.put("name", "Student" + i);
+			// htblColNameValue.put("gpa", 3.0 + i);
+			// dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			// Table t = Table.deserialize("tables/Student/Student.class");
+
+			// System.out.println("min0: " + t.getMin("Student_0"));
+			// System.out.println("max0: " + t.getMax("Student_0"));
+
+			// System.out.println("min1: " + t.getMin("Student_1"));
+			// System.out.println("max1: " + t.getMax("Student_1"));
+
+			// Page p = Page.deserialize("tables/Student/Student_0.class");
+
+			// Vector<Tuple> v = p.getVecTuples();
+
+			// for (Tuple tuple : v) {
+			// System.out.println(tuple);
+			// }
+
+			// // delete id = 50
+			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			// htblColNameValue.put("id", -1);
+			// dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+			// SQLTerm[] arrSQLTerms = new SQLTerm[3];
+			// String[] strarrOperators = new String[2];
+			// int count = 0;
+			// arrSQLTerms = new SQLTerm[4];
+			// strarrOperators = new String[3];
+			// arrSQLTerms[0] = new SQLTerm();
+			// arrSQLTerms[0]._strTableName = "Student";
+			// arrSQLTerms[0]._strColumnName = "id";
+			// arrSQLTerms[0]._strOperator = "=";
+			// arrSQLTerms[0]._objValue = 1;
+
+			// strarrOperators[0] = "xor";
+
+			// arrSQLTerms[1] = new SQLTerm();
+			// arrSQLTerms[1]._strTableName = "Student";
+			// arrSQLTerms[1]._strColumnName = "id";
+			// arrSQLTerms[1]._strOperator = "=";
+			// arrSQLTerms[1]._objValue = 2;
+
+			// strarrOperators[1] = "or";
+
+			// arrSQLTerms[2] = new SQLTerm();
+			// arrSQLTerms[2]._strTableName = "Student";
+			// arrSQLTerms[2]._strColumnName = "id";
+			// arrSQLTerms[2]._strOperator = "=";
+			// arrSQLTerms[2]._objValue = 3;
+
+			// strarrOperators[2] = "and";
+
+			// arrSQLTerms[3] = new SQLTerm();
+			// arrSQLTerms[3]._strTableName = "Student";
+			// arrSQLTerms[3]._strColumnName = "id";
+			// arrSQLTerms[3]._strOperator = "=";
+			// arrSQLTerms[3]._objValue = 4;
+
+			// Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); //
+			// Select * from Student where name
+			// // =
+			// // "Student1" XOR id = 2 OR id = 3 AND id =
+			// // 4;
+			// while (!iterator.hasNext()) {
+			// Tuple tuple = (Tuple) iterator.next();
+			// // assert (int) tuple.getColumnValue("id") == 1
+			// // || (int) tuple.getColumnValue("id") == 2;
+			// // System.out.println(tuple.getColumnValue("id"));
+			// count++;
+			// }
+
+			// System.out.println("COUNT: " + count);
 
 			// int i = 19;
 			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
