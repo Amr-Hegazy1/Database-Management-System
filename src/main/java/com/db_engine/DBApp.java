@@ -367,21 +367,27 @@ public class DBApp {
 		// Loop through the rest of the pages to handle the overflow
 		for (int i = intStartIndex + 1; i < vecPages.size(); i++) {
 			Page page = Page.deserialize("tables/" + tblTable.getTableName() + "/" + vecPages.get(i) + ".class"); // get
-																													// page
-			int index = page.binarySearchTuples(strClustKeyName,
-					tupleLastTuple.getColumnValue(strClustKeyName)); // get correct index to insert tuple in page
-			Tuple tuplecheckTuple = page.getTuple(index); // tuple used to check for duplicate clustering key
+			int index = 0;
+			Comparable inputClustKey = (Comparable) tupleLastTuple.getColumnValue(strClustKeyName); // clust key in my
+																									// last tuple (thats
+																									// gonna move pages)
+			Comparable pageClustKey = (Comparable) page.getTuple(0).getColumnValue(strClustKeyName); // clust key in the
+																										// page i want
+																										// to insert
+																										// into
 
-			// make sure new clustering key is not a duplicate
-			if (tuplecheckTuple.getColumnValue(strClustKeyName) == tupleLastTuple.getColumnValue(strClustKeyName)
-					|| tuplecheckTuple.getColumnValue(strClustKeyName)
-							.equals(tupleLastTuple.getColumnValue(strClustKeyName))) {
+			if (inputClustKey.compareTo((Comparable) pageClustKey) > 0) {
+
+				index = page.binarySearchTuples(strClustKeyName,
+						tupleLastTuple.getColumnValue(strClustKeyName)); // get correct index to insert tuple in page
+			} else if (inputClustKey.compareTo((Comparable) pageClustKey) == 0) {
+
 				throw new DBAppException("Primary Key Already Exists");
 			}
+
 			// if unique clustering key, insert in page and adjust page name in tuple object
 			// and in B+ Tree(if present)
 			page.addTuple(index, tupleLastTuple); // add tuple to new/next page
-			tupleLastTuple.setPageName(page.getPageName()); // update page name in tuple obj
 			if (hsIndexedCols.size() > 0) {
 				for (Object objColName : hsIndexedCols) {
 					String strColName = (String) objColName;
@@ -393,13 +399,17 @@ public class DBApp {
 
 					Comparable colValue = (Comparable) tupleLastTuple.getColumnValue(strColName); // cast column value
 																									// to
-																									// Comparable
 
-					bptTree.insert(colValue, tupleLastTuple.getPageName()); // inserting col value(key) and Page Name
-																			// (value) into bTree
+					// Update Tree Page Name Value
+					bptTree.remove(colValue);
+					bptTree.insert(colValue, page.getPageName());
+
+					tupleLastTuple.setPageName(page.getPageName()); // update page name in tuple obj
 
 					bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
 				}
+			} else {
+				tupleLastTuple.setPageName(page.getPageName()); // update page name in tuple obj
 			}
 
 			// check for overflow
@@ -430,6 +440,7 @@ public class DBApp {
 																								// to
 																								// Comparable
 
+				bptTree.remove(colValue);
 				bptTree.insert(colValue, tupleLastTuple.getPageName()); // inserting col value(key) and Page Name
 																		// (value) into bTree
 
@@ -1515,11 +1526,13 @@ public class DBApp {
 	public static void main(String[] args) throws DBAppException, IOException, ClassNotFoundException {
 
 		try {
-			// DBApp dbApp = new DBApp();
+			// cleanUp();
 
-			// dbApp.init();
+			DBApp dbApp = new DBApp();
 
-			// String strTableName = "Student";
+			dbApp.init();
+
+			String strTableName = "Student";
 
 			// Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
@@ -1533,25 +1546,50 @@ public class DBApp {
 
 			// // insert 20 rows
 
-			// for (int i = 0; i < 20; i++) {
+			// dbApp.createIndex(strTableName, "id", "idIndex");
+
+			// for (int i = 0; i < 19; i++) {
 			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
 			// htblColNameValue.put("id", i);
 			// htblColNameValue.put("name", "Student" + i);
 			// htblColNameValue.put("gpa", 3.0 + i);
 			// dbApp.insertIntoTable(strTableName, htblColNameValue);
 			// }
-			String s1 = "Student1";
-			String s2 = "Student19";
 
-			int result = s1.compareTo(s2);
+			// int i = 19;
+			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			// htblColNameValue.put("id", i);
+			// htblColNameValue.put("name", "Student" + i);
+			// htblColNameValue.put("gpa", 3.0 + i);
+			// dbApp.insertIntoTable(strTableName, htblColNameValue);
 
-			if (result < 0) {
-				System.out.println(s2 + " is bigger");
-			} else if (result > 0) {
-				System.out.println(s1 + " is bigger");
-			} else {
-				System.out.println("Both strings are equal");
-			}
+			// BPlusTree bt = BPlusTree.deserialize("tables/Student/idIndex.class");
+
+			// System.out.println(bt.query(19));
+
+			// Page p = Page.deserialize("tables" + "/" + strTableName + "/" +
+			// "Student_0.class");
+
+			// Vector<Tuple> v = p.getVecTuples();
+
+			// for (Tuple t : v) {
+			// System.out.println(t);
+			// }
+
+			// cleanUp();
+
+			// String s1 = "Student1";
+			// String s2 = "Student19";
+
+			// int result = s1.compareTo(s2);
+
+			// if (result < 0) {
+			// System.out.println(s2 + " is bigger");
+			// } else if (result > 0) {
+			// System.out.println(s1 + " is bigger");
+			// } else {
+			// System.out.println("Both strings are equal");
+			// }
 
 			// System.out.println("inserted");
 
@@ -1587,8 +1625,10 @@ public class DBApp {
 		} catch (Exception e) {
 			e.printStackTrace();
 
-		} finally {
-			cleanUp();
 		}
+
+		// finally {
+		// cleanUp();
+		// }
 	}
 }
