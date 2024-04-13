@@ -258,7 +258,9 @@ public class DBApp {
 				String strLastPage = vecPages.get(vecPages.size() - 1); // get last page name
 
 				// get 1st and last page objects
+				
 				Page pgFirstPage = Page.deserialize("tables/" + strTableName + "/" + strFirstPage + ".class");
+				
 				Page pgLastPage = Page.deserialize("tables/" + strTableName + "/" + strLastPage + ".class");
 
 				Tuple tupleFirstTuple = pgFirstPage.getTupleWithIndex(0); // get first tuple in 1st page(smallest clust
@@ -274,9 +276,14 @@ public class DBApp {
 					tupleNewTuple.setPageName(pgFirstPage.getPageName());
 
 					if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
+						Long l = System.currentTimeMillis();
 						handleInsertOverflow(tblTable, pgFirstPage, intMaxSize, strClustKeyName);
+						Long l2 = System.currentTimeMillis();
+						System.out.println("Time taken to handle overflow with tuple " + tupleNewTuple + ": " + (l2 - l) + "ms");
 					} else {
+						
 						pgFirstPage.serialize("tables/" + strTableName + "/" + pgFirstPage.getPageName() + ".class");
+						
 					}
 
 				} else {// only option left is that its bigger than last key in last page, so insert in
@@ -285,9 +292,14 @@ public class DBApp {
 					tupleNewTuple.setPageName(pgLastPage.getPageName());
 
 					if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
+						Long l = System.currentTimeMillis();
 						handleInsertOverflow(tblTable, pgLastPage, intMaxSize, strClustKeyName);
+						Long l2 = System.currentTimeMillis();
+						System.out.println("Time taken to handle overflow with tuple " + tupleNewTuple + ": " + (l2 - l) + "ms");
 					} else {
+						
 						pgLastPage.serialize("tables/" + strTableName + "/" + pgLastPage.getPageName() + ".class");
+						
 					}
 				}
 			}
@@ -309,7 +321,11 @@ public class DBApp {
 				pgInsertPage.addTuple(index, tupleNewTuple);
 
 				if (pgInsertPage.getSize() > intMaxSize) { // check for overflow
+					Long l = System.currentTimeMillis();
 					handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName); // handle overflow
+					Long l2 = System.currentTimeMillis();
+					System.out.println("Time taken to handle overflow with tuple " + tupleNewTuple + ": " + (l2 - l) + "ms");
+
 				} else { // if no overflow, serialize page
 					pgInsertPage.serialize("tables/" + strTableName + "/" + pgInsertPage.getPageName() + ".class");
 				}
@@ -853,6 +869,7 @@ public class DBApp {
 				System.out.println("Indexed column: " + col + " found.");
 				if (htblTuples == null) {
 					htblTuples = getTuplesFromIndex(strTableName, col, htblColNameValue);
+					
 				} else {
 					// get the intersection hashmap entries
 
@@ -867,12 +884,17 @@ public class DBApp {
 		if (htblTuples != null) {
 
 			for (Tuple tuple : htblTuples.keySet()) {
+				if (!tupleSatisfiesAndedConditions(tuple, htblColNameValue)) {
+					continue;
+				}
+				
 				String strPageName = htblTuples.get(tuple);
 
 				Page pagePage = Page.deserialize("tables/" + strTableName + "/" + strPageName + ".class");
 
 				pagePage.deleteTuple(tuple);
-				pagePage.serialize(pagePage.getPageName());
+				
+				pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 				if (pagePage.getSize() == 0) {
 					Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 					table.removePage(pagePage.getPageName());
@@ -958,7 +980,7 @@ public class DBApp {
 		if (htblColNameValue.containsKey(strClusteringKey)) {
 			deleteWithClusteringKey(strTableName, strClusteringKey, htblColNameValue, table);
 		} else {
-
+			
 			deleteWithoutClusteringKey(strTableName, htblColNameValue, table);
 		}
 

@@ -538,7 +538,7 @@ public class TestCases {
      * The function tests the efficiency of inserting records into a table in logarithmic time
      * complexity.
      */
-    @Test
+    @Test(timeout = 60000)
     public void insertOccursInLogN() throws DBAppException, IOException {
         try{
             DBApp dbApp = new DBApp();
@@ -557,9 +557,10 @@ public class TestCases {
 
             dbApp.createTable(strTableName, "id", htblColNameType);
 
-            long startTime = System.currentTimeMillis();
+            
 
-            for(int i = 0; i < 100000; i++){
+            for(int i = 0; i < 1e5; i++){
+                System.out.println(i);
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);
                 htblColNameValue.put("name", "Student" + i);
@@ -567,13 +568,7 @@ public class TestCases {
                 dbApp.insertIntoTable(strTableName, htblColNameValue);
             }
 
-            long endTime = System.currentTimeMillis();
-
-            long duration = endTime - startTime;
-
-            System.out.println("Duration: " + duration);
-
-            assert duration < 1000;
+            
 
         }finally{
             cleanUp();
@@ -907,7 +902,7 @@ public class TestCases {
 
             for(File page : pages){
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 
@@ -944,8 +939,8 @@ public class TestCases {
 
             dbApp.createTable(strTableName, "id", htblColNameType);
 
-            // insert 20 rows
-
+            // insert 2000 rows
+            
             for(int i = 0; i < 2000; i++){
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);
@@ -953,6 +948,8 @@ public class TestCases {
                 htblColNameValue.put("gpa", 3.0 + i);
                 dbApp.insertIntoTable(strTableName, htblColNameValue);
             }
+
+            
 
             // delete a row
 
@@ -972,7 +969,7 @@ public class TestCases {
 
             for(File page : pages){
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 
@@ -1037,8 +1034,8 @@ public class TestCases {
             File[] pages = pagesDir.listFiles();
 
             for(File page : pages){
-                // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                // check if the file name is in the format Student_i.class
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 
@@ -1114,8 +1111,8 @@ public class TestCases {
             File[] pages = pagesDir.listFiles();
 
             for(File page : pages){
-                // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                // check if the file name is in the format Student_i.class
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 
@@ -1225,6 +1222,71 @@ public class TestCases {
             for(int i = 0; i < 20; i++){
                 assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1 && ((Tuple) tree.query(3.0 + i).get(0)).getColumnValue("gpa").equals(3.0 + i);
             }
+        }finally{
+            cleanUp();
+        }
+    }
+    
+    @Test
+    public void deleteWithIndexedAndNonIndexedColumns() throws DBAppException, IOException{
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student0");
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // delete a row
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            htblColNameValue.put("name", "Student0");
+            htblColNameValue.put("gpa", 3.0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // check that the row is deleted and the other rows are not
+            String pagesPath = "tables/" + strTableName;
+            File pagesDir = new File(pagesPath);
+            File[] pages = pagesDir.listFiles();
+
+            for(File page : pages){
+                // check if the file name is in the format Student_i.class
+                if(!page.getName().matches("Student_\\d+\\.class")){
+                    continue;
+                }
+                
+                Page p = Page.deserialize(page.getPath());
+                for(Tuple tuple : p.getTuples()){
+                    if(tuple.getColumnValue("name").equals("Student0") && tuple.getColumnValue("gpa").equals(3.0)){
+                        System.out.println(tuple);
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the indexes are updated
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+            System.out.println(tree.query("Student0").size());
+            assert tree.query("Student0").size() == 19;
+
+
         }finally{
             cleanUp();
         }

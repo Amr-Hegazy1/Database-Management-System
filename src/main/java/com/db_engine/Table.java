@@ -12,6 +12,8 @@ public class Table implements Serializable {
     private String strTableName;
 
     private Vector<String> vecPages;
+    private Vector<Object> vecMin;
+    private Vector<Object> vecMax;
 
     public Table(String strTableName) {
         this.strTableName = strTableName;
@@ -127,6 +129,36 @@ public class Table implements Serializable {
     public Vector<String> getPages (){
         return this.vecPages;
     }
+
+    
+    /**
+     * The function `getMin` retrieves the minimum value associated with a given page name.
+     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of a page for
+     * which you want to retrieve the minimum value.
+     * @return The `getMin` method is returning the minimum value associated with the given `pageName`.
+     * It retrieves this value from the `vecMin` list using the index of the `pageName` in the
+     * `vecPages` list.
+     */
+    public Object getMin(String pageName){
+        //get the minimum value of a page
+        return this.vecMin.get(this.vecPages.indexOf(pageName));
+    }
+
+    /**
+     * The function `getMax` retrieves the maximum value associated with a given page name.
+     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of a page for
+     * which you want to retrieve the maximum value.
+     * @return The `getMax` method is returning the maximum value associated with the given `pageName`.
+     * It retrieves this value from the `vecMax` list using the index of the `pageName` in the
+     * `vecPages` list.
+     */
+    public Object getMax(String pageName){
+        //get the maximum value of a page
+        return this.vecMax.get(this.vecPages.indexOf(pageName));
+    }
+    
 
 
 
