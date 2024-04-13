@@ -13,6 +13,7 @@ import java.util.*;
 
 import com.bplustree.*;
 
+
 public class DBApp {
 
 	private Metadata metadata;
@@ -1559,6 +1560,10 @@ public class DBApp {
 	public static void main(String[] args) throws DBAppException, IOException {
 
 		try{
+			
+			
+			  
+
             DBApp dbApp = new DBApp();
 
             dbApp.init();

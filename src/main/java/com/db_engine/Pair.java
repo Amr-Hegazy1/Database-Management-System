@@ -1,6 +1,8 @@
 package com.db_engine;
 
-public class Pair<K, V> {
+import java.io.Serializable;
+
+public class Pair<K, V> implements Serializable{
     private K key;
     private V value;
 
@@ -23,6 +25,16 @@ public class Pair<K, V> {
     public String toString() {
         return key + "=" + value;
     }
+
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pair<?, ?> pair = (Pair<?, ?>) o;
+        if (key != null ? !key.equals(pair.key) : pair.key != null) return false;
+        return value != null ? value.equals(pair.value) : pair.value == null;
+    }
+
+    
     
 
 
