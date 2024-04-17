@@ -10,18 +10,23 @@ public class Pair<K, V> implements Serializable, Comparable<Pair<K, V>>{
         this.key = key;
         this.value = value;
     }
+
     public K getKey() {
         return key;
     }
+
     public V getValue() {
         return value;
     }
+
     public void setKey(K key) {
         this.key = key;
     }
+
     public void setValue(V value) {
         this.value = value;
     }
+
     public String toString() {
         return key + "=" + value;
     }
