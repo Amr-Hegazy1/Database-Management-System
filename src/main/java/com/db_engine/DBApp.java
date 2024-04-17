@@ -1487,32 +1487,32 @@ public class DBApp {
 		HashSet<String> hstup = new HashSet<>();
 		if(sql._strOperator.equals("=")){
 				BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+  metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-				Vector <String> listtmp = (Vector<String>) bptmp.rangeQuery((Comparable)sql._objValue, (Comparable)sql._objValue);
-				for(String tup:listtmp){
-					hstup.add(tup);
+				Vector <Pair> listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable)sql._objValue, (Comparable)sql._objValue);
+				for(Pair tup:listtmp){
+					hstup.add((String)tup.getValue());
 				} 
 				return hstup;
 		}
 		
 		else if(sql._strOperator.equals(">=")||sql._strOperator.equals(">")){
 			BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+ metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-			Vector <String> listtmp = (Vector<String>)bptmp.rangeQuery((Comparable)sql._objValue,Integer.MAX_VALUE );;
+			Vector <Pair> listtmp;
 			if(sql._objValue instanceof Integer){
-				listtmp = (Vector<String>) bptmp.rangeQuery((Comparable)sql._objValue,Integer.MAX_VALUE );
-				for(String tup:listtmp){
-					hstup.add(tup);
+				listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable)sql._objValue,Integer.MAX_VALUE );
+				for(Pair tup:listtmp){
+					hstup.add((String)tup.getValue());
 				} 
 			}	
 			else if(sql._objValue instanceof Double){
-				listtmp = (Vector<String>)bptmp.rangeQuery((Comparable)sql._objValue,Double.MAX_VALUE );
-				for(String tup:listtmp){
-					hstup.add(tup);
+				listtmp = (Vector<Pair>)bptmp.rangeQuery((Comparable)sql._objValue,Double.MAX_VALUE );
+				for(Pair tup:listtmp){
+					hstup.add((String)tup.getValue());
 				} 	
 			}
 			else{
-				listtmp = (Vector<String>)bptmp.rangeQuery((Comparable)sql._objValue,"{" );
-				for(String tup:listtmp){
-					hstup.add(tup);
+				listtmp = (Vector<Pair>)bptmp.rangeQuery((Comparable)sql._objValue,"{" );
+				for(Pair tup:listtmp){
+					hstup.add((String)tup.getValue());
 				} 
 			}
 			return hstup;
@@ -1521,23 +1521,23 @@ public class DBApp {
 	}
 	else {
 			BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+ metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-			Vector<String> listtmp;
+			Vector<Pair> listtmp;
 			if(sql._objValue instanceof Integer){
-				listtmp = (Vector<String>)bptmp.rangeQuery(Integer.MIN_VALUE,(Comparable)sql._objValue );
-				for(String tup:listtmp){
-					hstup.add(tup);
+				listtmp = (Vector<Pair>)bptmp.rangeQuery(Integer.MIN_VALUE,(Comparable)sql._objValue );
+				for(Pair tup:listtmp){
+					hstup.add((String)tup.getValue());
 				} 
 			}	
 			else if(sql._objValue instanceof Double){
-				listtmp = (Vector<String>)bptmp.rangeQuery(Double.MIN_VALUE,(Comparable)sql._objValue );
-				for(String tup:listtmp){
-					hstup.add(tup);
+				listtmp = (Vector<Pair>)bptmp.rangeQuery(Double.MIN_VALUE,(Comparable)sql._objValue );
+				for(Pair tup:listtmp){
+					hstup.add((String)tup.getValue());
 				} 	
 			}
 			else{
-				listtmp = (Vector<String>)bptmp.rangeQuery("",(Comparable)sql._objValue );
-				for(String tup:listtmp){
-					hstup.add(tup);
+				listtmp = (Vector<Pair>)bptmp.rangeQuery("",(Comparable)sql._objValue );
+				for(Pair tup:listtmp){
+					hstup.add((String)tup.getValue());
 				}  
 			}
 			return hstup;
