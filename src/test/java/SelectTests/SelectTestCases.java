@@ -80,9 +80,7 @@ public class SelectTestCases {
     // }
 
     @Test
-    public void selectExceptionTests() throws IOException, DBAppException {
-        // Test Invalid Inputs for Select (Ensure Correct Exception Handling)
-
+    public void invalidTableNameException() throws DBAppException, IOException {
         try {
             DBApp dbApp = new DBApp();
             dbApp.init();
@@ -100,47 +98,147 @@ public class SelectTestCases {
             arrSQLTerms[0]._objValue = 5;
 
             // select with invalid Table name
-            final SQLTerm[] finalArrSQLTerms = arrSQLTerms;
-            final String[] finalStrarrOperators = strarrOperators;
+            // final SQLTerm[] arrSQLTerms = arrSQLTerms;
+            // final String[] strarrOperators = strarrOperators;
             assertThrows(DBAppException.class, () -> { // select * from WrongStudent where id=5;
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
+        } finally {
+            cleanUp();
+        }
+    }
 
-            // select with invalid operator
+    @Test
+    public void invalidOperatorException() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "id";
             arrSQLTerms[0]._strOperator = "==";
+            arrSQLTerms[0]._objValue = 5;
 
             assertThrows(DBAppException.class, () -> { // select * from student where id==5;
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void invalidDataTypeOnClustKeyException() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
 
             // select with invalid datatype on clust key
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
             arrSQLTerms[0]._strOperator = "=";
             arrSQLTerms[0]._objValue = "hello";
 
-            assertThrows(DBAppException.class, () -> { // Select * from student where id="Hello";
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+            assertThrows(DBAppException.class, () -> { // select * from student where id="hello";
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
 
-            // select with invalid datatype on non-clustering column
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void invalidDataTypeOnNonClustKeyException() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            // select with invalid datatype on non-clust key
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
             arrSQLTerms[0]._objValue = 5;
 
-            assertThrows(DBAppException.class, () -> { // Select * from student where name=5;
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+            assertThrows(DBAppException.class, () -> { // select * from student where name=5;
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
 
-            // select with strarrOperators empty
-            arrSQLTerms[0]._strColumnName = "id";
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void EmptystrarrOperatorsException() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
             String[] EmptystrarrOperators = new String[1];
 
-            assertThrows(DBAppException.class, () -> { // Select * from student where id=5; (With empty strarrOperators)
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "name";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = "Student5";
+
+            // select with strarrOperators empty
+            assertThrows(DBAppException.class, () -> { // Select * from student where id=5 .... name="Student5"; (With
+                                                       // empty strarrOperators)
+                dbApp.selectFromTable(arrSQLTerms, EmptystrarrOperators);
             });
 
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void invalidArgOperatorException1() throws DBAppException, IOException { // Test 1: Base Case - 1 Operator
+                                                                                    // (Arg operators : AND, OR, XOR)
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[1];
+
             // select with invalid strarrOperators Value (Test 1: Base Case - 1 Operator)
-            arrSQLTerms = new SQLTerm[2];
-            strarrOperators = new String[1];
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "id";
@@ -151,21 +249,38 @@ public class SelectTestCases {
 
             arrSQLTerms[1] = new SQLTerm();
             arrSQLTerms[1]._strTableName = "Student";
-            // final SQLTerm[] arrSQLTerms = arrSQLTerms;
-            // final String[] strarrOperators = strarrOperators;
-            // System.out.println(strarrOperators[0]);
+            arrSQLTerms[1]._strColumnName = "gpa";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 3.2;
 
             assertThrows(DBAppException.class, () -> { // Select * from student where id=1 NOT gpa=3.2;
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void invalidArgOperatorException2() throws DBAppException, IOException { // Test 2: 2 Operators, One Valid,
+                                                                                    // One Invalid (Arg operators : AND,
+                                                                                    // OR, XOR)
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[3];
 
             // select with invalid strarrOperators Value (Test 2: 2 Operators, One Valid,
             // One Invalid)
 
-            strarrOperators = new String[2];
-            arrSQLTerms = new SQLTerm[3];
-
             arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "id";
             arrSQLTerms[0]._strOperator = "=";
             arrSQLTerms[0]._objValue = 1;
@@ -188,12 +303,28 @@ public class SelectTestCases {
 
             assertThrows(DBAppException.class, () -> { // Select * from student where id=1 AND gpa=3.2 NOT
                                                        // name="Student1"
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
 
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void invalidArgOperatorException3() throws DBAppException, IOException { // Test 3: Invalid Num of
+                                                                                    // ArgOperators (Arg operators :
+                                                                                    // AND, OR, XOR)
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
+
             // select with invalid number of strarrOperators Value (Test 3)
-            arrSQLTerms = new SQLTerm[3];
-            strarrOperators = new String[1];
+            SQLTerm[] arrSQLTerms = new SQLTerm[3];
+            String[] strarrOperators = new String[1];
 
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = "Student";
@@ -217,12 +348,27 @@ public class SelectTestCases {
 
             assertThrows(DBAppException.class, () -> { // Select * from student where id =1 AND GPA = 3.2 ...name =
                                                        // Student1;
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
 
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void invalidArgOperatorException4() throws DBAppException, IOException { // Test 4: Invalid Num of
+                                                                                    // ArgOperators (Arg operators :
+                                                                                    // AND, OR, XOR)
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
             // select with invalid number of strarrOperators Value (Test 4)
-            arrSQLTerms = new SQLTerm[3];
-            strarrOperators = new String[3];
+            SQLTerm[] arrSQLTerms = new SQLTerm[3];
+            String[] strarrOperators = new String[3];
 
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = "Student";
@@ -250,12 +396,26 @@ public class SelectTestCases {
 
             assertThrows(DBAppException.class, () -> { // Select * from student where id=1 AND gpa=3.2 AND
                                                        // name="Student1" OR;
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void invalidJoinException() throws DBAppException, IOException { // Joins are not allowed in our system
+                                                                            // whatsoever
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
 
             // select with joining (two different tables)
-            arrSQLTerms = new SQLTerm[2];
-            strarrOperators = new String[1];
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[1];
 
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = "Student";
@@ -272,15 +432,11 @@ public class SelectTestCases {
             arrSQLTerms[1]._objValue = 4;
 
             assertThrows(DBAppException.class, () -> { // Selecting from Student and from Instructor
-                dbApp.selectFromTable(finalArrSQLTerms, finalStrarrOperators);
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
-
-        }
-
-        finally {
+        } finally {
             cleanUp();
         }
-
     }
 
     @Test

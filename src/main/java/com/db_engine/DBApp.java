@@ -342,9 +342,11 @@ public class DBApp {
 				// object
 				Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
 																								// Comparable
+				Pair pairIndexPair = new Pair(tupleNewTuple.getColumnValue(strClustKeyName),
+						tupleNewTuple.getPageName());
 
-				bptTree.insert(colValue, tupleNewTuple.getPageName()); // inserting col value(key) and tuple
-																		// object(value) into bTree
+				bptTree.insert(colValue, pairIndexPair); // inserting col value(key) and tuple
+															// object(value) into bTree
 
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
 			}
@@ -364,7 +366,6 @@ public class DBApp {
 		int intStartIndex = vecPages.indexOf(overflowPage.getPageName()); // get index of first overflowed page in the
 																			// vecPages Vector
 		Tuple tupleLastTuple = overflowPage.removeLastTuple(); // last tuple in overflow page
-		System.out.println("max line 368 LAST TUPLE " + overflowPage.getLastTuple());
 		tblTable.setMax(overflowPage.getPageName(),
 				overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in overflow
 																				// page
@@ -420,8 +421,13 @@ public class DBApp {
 																									// to
 
 					// Update Tree Page Name Value
-					bptTree.remove(colValue);
-					bptTree.insert(colValue, page.getPageName());
+					Pair pairOldIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
+							tupleLastTuple.getPageName());
+					Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
+							page.getPageName());
+
+					bptTree.remove(colValue, pairOldIndexPair);
+					bptTree.insert(colValue, pairNewIndexPair);
 
 					tupleLastTuple.setPageName(page.getPageName()); // update page name in tuple obj
 
@@ -446,9 +452,7 @@ public class DBApp {
 		// pages were left, therefore a new page is needed
 		String newPageName = tblTable.addPage(); // creating new page
 		Page newPage = new Page(newPageName); // creating new page object with new page name
-		tupleLastTuple.setPageName(newPageName); // adjusting page name in tuple obj
 		tblTable.setMin(newPageName, tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value of new page
-		System.out.println("max line 452");
 		tblTable.setMax(newPageName, tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value of new page
 		if (hsIndexedCols.size() > 0) { // adjusting indicies (if any)
 			for (Object objColName : hsIndexedCols) {
@@ -463,12 +467,21 @@ public class DBApp {
 																								// to
 																								// Comparable
 
-				bptTree.remove(colValue);
-				bptTree.insert(colValue, tupleLastTuple.getPageName()); // inserting col value(key) and Page Name
-																		// (value) into bTree
+				Pair pairOldIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
+						tupleLastTuple.getPageName());
+				Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
+						newPageName);
+
+				bptTree.remove(colValue, pairOldIndexPair);
+				bptTree.insert(colValue, pairNewIndexPair); // inserting col value[key] and Pair(clust key val, page
+															// name) [value] into bTree
+
+				tupleLastTuple.setPageName(newPageName); // adjusting page name in tuple obj
 
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
 			}
+		} else {
+			tupleLastTuple.setPageName(newPageName); // adjusting page name in tuple obj
 		}
 		newPage.addTuple(0, tupleLastTuple); // inserting tuple in new object
 		newPage.serialize("tables/" + tblTable.getTableName() + "/" + newPageName + ".class");
