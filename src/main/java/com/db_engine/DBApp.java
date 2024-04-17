@@ -663,7 +663,7 @@ public class DBApp {
 			if (metadata.isColumnIndexed(strTableName, col)) {
 				String strIndexName = metadata.getIndexName(strTableName, col);
 				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-				Pair<String, Object> pair = new Pair<>(tupleTuple.getPageName(), tupleTuple.getColumnValue(strClusteringKey));
+				Pair<Object, String> pair = new Pair<>(tupleTuple.getColumnValue(strClusteringKeyColName), tupleTuple.getPageName());
 				bptTree.remove((Comparable) tupleTuple.getColumnValue(col), pair);
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 			}
@@ -721,9 +721,9 @@ public class DBApp {
 
 		for (Pair pairPair : arrayPairs) {
 
-			String strPageName = (String) pairPair.getKey();
+			String strPageName = (String) pairPair.getValue();
 
-			Comparable cmpClusteringKeyValue = (Comparable) pairPair.getValue();
+			Comparable cmpClusteringKeyValue = (Comparable) pairPair.getKey();
 
 			Page pagePage = getPageByClusteringKey(strTableName, strClusteringKeyColName, cmpClusteringKeyValue, table);
 
@@ -941,7 +941,7 @@ public class DBApp {
 						String strIndexName = metadata.getIndexName(strTableName, col);
 						BPlusTree bptTree = BPlusTree
 								.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-						Pair<String, Object> pair = new Pair<>(tuple.getPageName(), tuple.getColumnValue(col));
+						Pair<Object, String> pair = new Pair<>(tuple.getColumnValue(strClusteringKeyColName), tuple.getPageName());
 						bptTree.remove((Comparable) tuple.getColumnValue(col), pair);
 						bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 					}
