@@ -408,125 +408,104 @@ public class DBApp {
 	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
 		
 		if (!metadata.checkTableName(strTableName)) 
-			throw new DBAppException("Table does not exist");
+			throw new DBAppException("Table does not exist.");
 
-		if (strClusteringKeyValue == null) {
-			throw new DBAppException("Clustering key value is null");
-		}
-		if (htblColNameValue.isEmpty()) {
-			throw new DBAppException("no column to update");
-		}
+		if (strClusteringKeyValue == null) 
+			throw new DBAppException("Clustering key value is null.");
+		
+		if (htblColNameValue.isEmpty()) 
+			throw new DBAppException("No column to update.");
+		
+			for (String strColumnName : htblColNameValue.keySet()) {
+				if (!metadata.checkColumnName(strTableName,strColumnName)) { 
+					throw new DBAppException("Column doesn't exist.");
+				}
+				else{
+					String strColumnTypeMetadata = metadata.getColumnType(strTableName, strColumnName);
+					Object ObjcolumnValue = htblColNameValue.get(strColumnName);
+					String strdatatype = ObjcolumnValue.getClass().getName();
 
-		for (String columnName : htblColNameValue.keySet()) {
-
-			String columnTypeMetadata = metadata.getColumnType(strTableName, columnName);
-			Object columnValue = htblColNameValue.get(columnName);
-			String strdatatype = columnValue.getClass().getName();
-
-			if (!columnTypeMetadata.equals(strdatatype)) {
-				throw new DBAppException("Datatypes do not match for the column");
+						if (!strColumnTypeMetadata.equals(strdatatype)) {
+							throw new DBAppException("Datatypes do not match for the column");
 			}
 		}
-
+	}
 		String strClusteringKey = metadata.getClusteringkey(strTableName);
-
-		String clusteringKeyType = metadata.getColumnType(strTableName, strClusteringKey);
+		String strclusteringKeyType = metadata.getColumnType(strTableName, strClusteringKey);
 		Comparable cmpClusteringKeyValue;
 
-		if (clusteringKeyType.equals("java.lang.Integer")) {
+		try{
+		  if (strclusteringKeyType.equals("java.lang.Integer")) {
 			cmpClusteringKeyValue = Integer.parseInt(strClusteringKeyValue);
-		} else if (clusteringKeyType.equals("java.lang.Double")) {
+		} else if (strclusteringKeyType.equals("java.lang.Double")) {
 			cmpClusteringKeyValue = Double.parseDouble(strClusteringKeyValue);
-		} else
-		cmpClusteringKeyValue = strClusteringKeyValue.toString();
+		} else if (strclusteringKeyType.equals("java.lang.String")) {
+            cmpClusteringKeyValue = strClusteringKeyValue;
+        } else {
+            throw new DBAppException("Unsupported data type for clustering key");
+        }
+    	} 
+		catch (NumberFormatException e) {
+          throw new DBAppException("Clustering key value does not match expected data type");
+    }
 
 		Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
-		String key = metadata.getClusteringkey(strTableName);
+		String strKey = metadata.getClusteringkey(strTableName);
 
-		Page page = getPageByClusteringKey(strTableName, key, cmpClusteringKeyValue, tblTable);
-		int tupleIndex = page.searchTuplesByClusteringKey(key, cmpClusteringKeyValue);
+		Page pagePage = getPageByClusteringKey(strTableName, strKey, cmpClusteringKeyValue, tblTable);
+		int intTupleIndex = pagePage.searchTuplesByClusteringKey(strKey, cmpClusteringKeyValue);
+		
 
-		if (page != null) {
+		if (pagePage != null) {
 
-			Vector<Tuple> tuples = page.getVecTuples();
-			Tuple tuple = tuples.get(tupleIndex);
-			Tuple tupleOriginalTuple = tuple.clone();
-			
-			//Hashtable<String, Hashtable<String, String>> htblMetadata = metadata.getTableMetadata(strTableName);
-			List<String> metaCol = metadata.getColumnNames(strTableName);
-			HashSet<String> indexedonly = new HashSet<String>();
-			for(String name : metaCol){
-				String indexName = metadata.getIndexName(strTableName, name);
-				if (!(indexName.equals("null"))){
-					indexedonly.add(name);
+			Vector<Tuple> vecTuples = pagePage.getVecTuples();
+			Tuple tplTuple = vecTuples.get(intTupleIndex);
+			Tuple tupleOriginalTuple = tplTuple.clone();
+			List<String> listMetaCol = metadata.getColumnNames(strTableName);
+			HashSet<String> hashsetIndexedonly = new HashSet<String>();
+			for(String strName : listMetaCol){
+				String strIndexName = metadata.getIndexName(strTableName, strName);
+				if (!(strIndexName.equals("null"))){
+					hashsetIndexedonly.add(strName);
 				}
-
 			}
-			for (String columnName : indexedonly) {
-					Comparable temp = (Comparable)tuple.getColumnValue(columnName);
-					if(htblColNameValue.containsKey(columnName)){
-					temp = (Comparable)tuple.getColumnValue(columnName);
-					Comparable columnValue = (Comparable)htblColNameValue.get(columnName);
-					tuple.setColumnValue(columnName, columnValue);
+			for (String strColumnName : hashsetIndexedonly) {
+					Comparable cmpTemp = (Comparable)tplTuple.getColumnValue(strColumnName);
+					
+					if(htblColNameValue.containsKey(strColumnName)){
+						cmpTemp = (Comparable)tplTuple.getColumnValue(strColumnName);
+						Comparable cmpColumnValue = (Comparable)htblColNameValue.get(strColumnName);
+						tplTuple.setColumnValue(strColumnName, cmpColumnValue);
 				
-					String indexName = metadata.getIndexName(strTableName, columnName);
-					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-					bptTree.remove(temp, (Comparable) tupleOriginalTuple);
-					bptTree.insert(columnValue, (Comparable) tuple);
-					bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");	
+						String indexName = metadata.getIndexName(strTableName, strColumnName);
+						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
+						// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
+						// bptTree.insert(cmpColumnValue, (Comparable) tplTuple);
+						Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(), tplTuple.getColumnValue(strClusteringKey));
+               			bptTree.remove(cmpTemp, keyPair);
+                		bptTree.insert(cmpColumnValue, keyPair);
+						bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");	
+					
+					pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
+					tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
 					}
 					else{
-					String indexName = metadata.getIndexName(strTableName, columnName);
-					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-					bptTree.remove(temp, (Comparable) tupleOriginalTuple);
-					bptTree.insert(temp, (Comparable) tuple);
-					bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
+						String strIndexName = metadata.getIndexName(strTableName, strColumnName);
+						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
+						// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
+						// bptTree.insert(cmpTemp, (Comparable) tplTuple);
+						Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(), tplTuple.getColumnValue(strClusteringKey));
+                		bptTree.remove(cmpTemp, keyPair);
+                		bptTree.insert(cmpTemp, keyPair);
+						bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 					}
-					
 
-				
 			}
-			//System.out.println(tuples);
 		}
-		
-			page.serialize("tables/" + strTableName + "/" + page.getPageName() + ".class");
+			pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
 			
 	}
-	
-
-				/*if(metadata.isColumnIndexed(strTableName, columnName) && !(htblMetadata.containsKey(columnName))){
-					String indexName = metadata.getIndexName(strTableName, columnName);
-					if (!indexName.equals("null")) {
-						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-						bptTree.remove((Comparable) temp, (Comparable) tupleOriginalTuple);
-						bptTree.insert((Comparable) columnValue, (Comparable) tuple);
-						bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
-					}
-				}
-				//bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");	
-				//System.out.print(bptTree.query((Comparable)columnName)+columnName);
-
-
-				List<String> columnNames = metadata.getColumnNames(strTableName);
-				
-				if(metadata.isColumnIndexed(strTableName, columnName) && !(htblMetadata.containsKey(columnName))){
-					String indexName = metadata.getIndexName(strTableName, columnName);
-					if (!indexName.equals("null")) {
-						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-						bptTree.remove((Comparable) temp, (Comparable) tupleOriginalTuple);
-						bptTree.insert((Comparable) columnValue, (Comparable) tuple);
-						bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
-					}
-				}*/
-				
-				
-			//tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-			//page.serialize("tables/" + strTableName + "/" + page.getPageName() + ".class");
-			//System.out.print(tuples);
-		
-			
-	
 	
 
 	/**

@@ -568,11 +568,13 @@ public class TestCases {
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
 
             for(int i = 0; i < 21; i++){
+                
                 if(i == 0){
                     assert tree.query("Student" + i).size() == 0;
                 }else{
                     assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1 && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
                 }
+                
             }
             
         }finally{
@@ -643,7 +645,7 @@ public class TestCases {
                 }else{
                     assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1 && ((Tuple) tree.query(3.0 + i).get(0)).getColumnValue("gpa").equals(3.0 + i);
                 }
-                
+                System.out.println(tree.query(3.0 + i));
             }
 
         }finally{
