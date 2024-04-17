@@ -512,35 +512,7 @@ public class DBApp {
 	}
 	
 
-				/*if(metadata.isColumnIndexed(strTableName, columnName) && !(htblMetadata.containsKey(columnName))){
-					String indexName = metadata.getIndexName(strTableName, columnName);
-					if (!indexName.equals("null")) {
-						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-						bptTree.remove((Comparable) temp, (Comparable) tupleOriginalTuple);
-						bptTree.insert((Comparable) columnValue, (Comparable) tuple);
-						bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
-					}
-				}
-				//bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");	
-				//System.out.print(bptTree.query((Comparable)columnName)+columnName);
-
-
-				List<String> columnNames = metadata.getColumnNames(strTableName);
 				
-				if(metadata.isColumnIndexed(strTableName, columnName) && !(htblMetadata.containsKey(columnName))){
-					String indexName = metadata.getIndexName(strTableName, columnName);
-					if (!indexName.equals("null")) {
-						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-						bptTree.remove((Comparable) temp, (Comparable) tupleOriginalTuple);
-						bptTree.insert((Comparable) columnValue, (Comparable) tuple);
-						bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
-					}
-				}*/
-				
-				
-			//tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-			//page.serialize("tables/" + strTableName + "/" + page.getPageName() + ".class");
-			//System.out.print(tuples);
 		
 			
 	
@@ -596,9 +568,11 @@ public class DBApp {
 
 			int intMiddlePageSize = pageMiddlePage.getSize();
 
-			Tuple tupleMiddlePageTopTuple = pageMiddlePage.getTupleWithIndex(0);
+			Comparable cmpPageMinValue = table.getMin(strMiddlePage);
 
-			Tuple tupleMiddlePageBottomTuple = pageMiddlePage.getTupleWithIndex(intMiddlePageSize - 1);
+			Comparable cmpPageMaxValue = table.getMax(strMiddlePage);
+
+			
 
 			// convert the object to comparable to compare it with the clustering key
 
@@ -606,11 +580,11 @@ public class DBApp {
 
 			// check if the clustering key is in the page by checking if the value is
 			// between the top and bottom tuple
-			if (cmpClusteringKeyValue.compareTo(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey)) >= 0
+			if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) >= 0
 					&& cmpClusteringKeyValue
-							.compareTo(tupleMiddlePageBottomTuple.getColumnValue(strClusteringKey)) <= 0) {
+							.compareTo(cmpPageMaxValue) <= 0) {
 				return pageMiddlePage;
-			} else if (cmpClusteringKeyValue.compareTo(tupleMiddlePageTopTuple.getColumnValue(strClusteringKey)) < 0) {
+			} else if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) < 0) {
 				intBottomPageIndex = intMiddlePageIndex - 1;
 			} else {
 				intTopPageIndex = intMiddlePageIndex + 1;
@@ -672,7 +646,8 @@ public class DBApp {
 			if (metadata.isColumnIndexed(strTableName, col)) {
 				String strIndexName = metadata.getIndexName(strTableName, col);
 				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-				bptTree.remove((Comparable) tupleTuple.getColumnValue(col), tupleTuple);
+				Pair<String, Object> pair = new Pair<>(tupleTuple.getPageName(), tupleTuple.getColumnValue(strClusteringKey));
+				bptTree.remove((Comparable) tupleTuple.getColumnValue(col), pair);
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 			}
 		}
@@ -909,7 +884,8 @@ public class DBApp {
 						String strIndexName = metadata.getIndexName(strTableName, col);
 						BPlusTree bptTree = BPlusTree
 								.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-						bptTree.remove((Comparable) tuple.getColumnValue(col), tuple);
+						Pair<String, Object> pair = new Pair<>(tuple.getPageName(), tuple.getColumnValue(col));
+						bptTree.remove((Comparable) tuple.getColumnValue(col), pair);
 						bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 					}
 				}

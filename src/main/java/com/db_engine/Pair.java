@@ -2,7 +2,7 @@ package com.db_engine;
 
 import java.io.Serializable;
 
-public class Pair<K, V> implements Serializable{
+public class Pair<K, V> implements Serializable, Comparable<Pair<K, V>>{
     private K key;
     private V value;
 
@@ -32,6 +32,10 @@ public class Pair<K, V> implements Serializable{
         Pair<?, ?> pair = (Pair<?, ?>) o;
         if (key != null ? !key.equals(pair.key) : pair.key != null) return false;
         return value != null ? value.equals(pair.value) : pair.value == null;
+    }
+
+    public int compareTo(Pair<K, V> o) {
+        return ((Comparable<K>) key).compareTo(o.key);
     }
 
     

@@ -12,8 +12,8 @@ public class Table implements Serializable {
     private String strTableName;
 
     private Vector<String> vecPages;
-    private Vector<Object> vecMin;
-    private Vector<Object> vecMax;
+    private Vector<Comparable> vecMin;
+    private Vector<Comparable> vecMax;
 
     public Table(String strTableName) {
         this.strTableName = strTableName;
@@ -140,7 +140,7 @@ public class Table implements Serializable {
      * It retrieves this value from the `vecMin` list using the index of the `pageName` in the
      * `vecPages` list.
      */
-    public Object getMin(String pageName){
+    public Comparable getMin(String pageName){
         //get the minimum value of a page
         return this.vecMin.get(this.vecPages.indexOf(pageName));
     }
@@ -154,7 +154,7 @@ public class Table implements Serializable {
      * It retrieves this value from the `vecMax` list using the index of the `pageName` in the
      * `vecPages` list.
      */
-    public Object getMax(String pageName){
+    public Comparable getMax(String pageName){
         //get the maximum value of a page
         return this.vecMax.get(this.vecPages.indexOf(pageName));
     }
