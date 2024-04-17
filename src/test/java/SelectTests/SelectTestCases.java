@@ -439,6 +439,54 @@ public class SelectTestCases {
         }
     }
 
+    // TODO: empty sql term exception (case1: empty sql term array (size:0), case2:
+    // null sql term object, case 3: empty sql term object(size>0))
+    @Test
+    public void emptySQLTermException() throws DBAppException, IOException { // Joins are not allowed in our system
+                                                                             // whatsoever
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
+
+            // select with joining (two different tables)
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[0];
+
+            assertThrows(DBAppException.class, () -> { // Selecting from Student and from Instructor
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            });
+        } finally {
+            cleanUp();
+        }
+    }
+
+    // TODO: arrsqlTerm where strTable is present and true(select * from Student),
+    // the rest is null (where condition)
+    @Test
+    public void selectAllFromTable() throws DBAppException, IOException { // Joins are not allowed in our system
+                                                                          // whatsoever
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
+                                            // = 20
+
+            // select with joining (two different tables)
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[0];
+
+            assertThrows(DBAppException.class, () -> { // Selecting from Student and from Instructor
+                dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            });
+        } finally {
+            cleanUp();
+        }
+    }
+
     @Test
     public void ExistingTuplesExactValues() throws DBAppException, ClassNotFoundException, IOException {
         // testing the base case: Searching for a tuple that exists using exact values.
