@@ -136,6 +136,8 @@ public class DBApp {
 
 		} else {
 
+			String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
+
 			metadata.addIndex(strTableName, strColName, "B+Tree", strIndexName);
 
 			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
@@ -155,16 +157,12 @@ public class DBApp {
 				Page pgPage = Page.deserialize("tables/" + strTableName + "/" + pgPage_name + ".class");
 				Vector<Tuple> vecTuples = pgPage.getTuples();
 				for (Tuple tplTuple : vecTuples) {
-					if (tplTuple.getColumnValue(strColName) instanceof Integer) {
-						int key = (int) tplTuple.getColumnValue(strColName);
-						bplsBplustree.insert(key, tplTuple);
-					} else if (tplTuple.getColumnValue(strColName) instanceof String) {
-						String key = (String) tplTuple.getColumnValue(strColName);
-						bplsBplustree.insert(key, tplTuple);
-					} else {
-						double key = (double) tplTuple.getColumnValue(strColName);
-						bplsBplustree.insert(key, tplTuple);
-					}
+					
+					Comparable key = (int) tplTuple.getColumnValue(strColName);
+					Comparable cmpClusteringKeyValue = (Comparable) tplTuple.getColumnValue(strClusteringKeyColName);
+					Pair pair = new Pair(cmpClusteringKeyValue, pgPage_name);
+					bplsBplustree.insert(key, pair);
+				
 
 				}
 			}
