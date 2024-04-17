@@ -158,7 +158,56 @@ public class Table implements Serializable {
         //get the maximum value of a page
         return this.vecMax.get(this.vecPages.indexOf(pageName));
     }
+
+    /**
+     * The function `setMin` sets the minimum value associated with a given page name.
+     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of a page for
+     * which you want to set the minimum value.
+     * @param min The `min` parameter is a `Comparable` object that represents the minimum value you
+     * want to set for the given `pageName`.
+     */
+    public void setMin(String pageName, Comparable min){
+        //set the minimum value of a page
+        this.vecMin.set(this.vecPages.indexOf(pageName), min);
+    }
+
+    /**
+     * The function `setMax` sets the maximum value associated with a given page name.
+     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of a page for
+     * which you want to set the maximum value.
+     * @param max The `max` parameter is a `Comparable` object that represents the maximum value you
+     * want to set for the given `pageName`.
+     */
+
+    public void setMax(String pageName, Comparable max){
+        //set the maximum value of a page
+        this.vecMax.set(this.vecPages.indexOf(pageName), max);
+    }
     
+
+    /**
+     * The `removeMin` function removes the minimum value from a list based on the provided page name.
+     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of the page from
+     * which the minimum value needs to be removed.
+     */
+    public void removeMin(String pageName){
+        //remove the minimum value of a page
+        this.vecMin.remove(this.vecPages.indexOf(pageName));
+    }
+
+    /**
+     * The `removeMax` function removes the maximum value from a page in a Java program.
+     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of the page from
+     * which you want to remove the maximum value.
+     */
+    public void removeMax(String pageName){
+        //remove the maximum value of a page
+        this.vecMax.remove(this.vecPages.indexOf(pageName));
+    }
 
 
 
