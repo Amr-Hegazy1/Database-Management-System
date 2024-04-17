@@ -270,7 +270,7 @@ public class DBApp {
 																			// key, insert in index 0
 						.getColumnValue(strClustKeyName)) < 0) {
 					pgFirstPage.addTuple(0, tupleNewTuple);
-					tblTable.setMin(pgFirstPage.getPageName(), tupleNewTuple.getColumnValue(strClustKeyName));
+					tblTable.setMin(pgFirstPage.getPageName(), (Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
 					tupleNewTuple.setPageName(pgFirstPage.getPageName());
 
 					if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
@@ -285,7 +285,7 @@ public class DBApp {
 						// last index in last page
 					pgLastPage.addTuple(pgLastPage.getSize(), tupleNewTuple);
 					System.out.println(" MAX LINE 284");
-					tblTable.setMax(pgLastPage.getPageName(), tupleNewTuple.getColumnValue(strClustKeyName));
+					tblTable.setMax(pgLastPage.getPageName(), (Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
 					tupleNewTuple.setPageName(pgLastPage.getPageName());
 
 					if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
@@ -329,8 +329,8 @@ public class DBApp {
 			Page newPage = new Page(strPageName);
 			tupleNewTuple.setPageName(strPageName);
 			newPage.addTuple(0, tupleNewTuple);
-			tblTable.setMin(strPageName, tupleNewTuple.getColumnValue(strClustKeyName));
-			tblTable.setMax(strPageName, tupleNewTuple.getColumnValue(strClustKeyName));
+			tblTable.setMin(strPageName, (Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
+			tblTable.setMax(strPageName, (Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
 
 			newPage.serialize("tables/" + strTableName + "/" + strPageName + ".class");
 		}
@@ -372,7 +372,7 @@ public class DBApp {
 																			// vecPages Vector
 		Tuple tupleLastTuple = overflowPage.removeLastTuple(); // last tuple in overflow page
 		tblTable.setMax(overflowPage.getPageName(),
-				overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in overflow
+		(Comparable) overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in overflow
 																				// page
 		// System.out.println("LAST TUPLE IN 1ST OVERFLOW PAGE:" +
 		// pgFirstOverflowPage.getLastTuple());
@@ -386,7 +386,7 @@ public class DBApp {
 			Page page = Page.deserialize("tables/" + tblTable.getTableName() + "/" + vecPages.get(i) + ".class"); // get
 																													// page
 			tblTable.setMax(page.getPageName(),
-					page.getLastTuple().getColumnValue(strClustKeyName));
+			(Comparable) page.getLastTuple().getColumnValue(strClustKeyName));
 			int index = 0;
 			Comparable inputClustKey = (Comparable) tupleLastTuple.getColumnValue(strClustKeyName); // clust key in my
 																									// last tuple (thats
@@ -407,7 +407,7 @@ public class DBApp {
 			// if lastTuple is inserted into first row of next page, then next page's min
 			// needs to be changed
 			if (index == 0) {
-				tblTable.setMin(page.getPageName(), tupleLastTuple.getColumnValue(strClustKeyName));
+				tblTable.setMin(page.getPageName(), (Comparable) tupleLastTuple.getColumnValue(strClustKeyName));
 			}
 
 			// if unique clustering key, insert in page and adjust page name in tuple object
@@ -457,8 +457,8 @@ public class DBApp {
 		// pages were left, therefore a new page is needed
 		String newPageName = tblTable.addPage(); // creating new page
 		Page newPage = new Page(newPageName); // creating new page object with new page name
-		tblTable.setMin(newPageName, tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value of new page
-		tblTable.setMax(newPageName, tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value of new page
+		tblTable.setMin(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value of new page
+		tblTable.setMax(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value of new page
 		if (hsIndexedCols.size() > 0) { // adjusting indicies (if any)
 			for (Object objColName : hsIndexedCols) {
 				String strColName = (String) objColName;
