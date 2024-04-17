@@ -375,8 +375,9 @@ public class Page implements Serializable {
 
         for (int i = 0; i < vecTuples.size(); i++) {
 
+            
             if (vecTuples.get(i).equals(tuple)) {
-
+                
                 vecTuples.remove(i);
                 return;
             }
@@ -450,14 +451,14 @@ public class Page implements Serializable {
                 if (((Double) vecTuples.get(index).getColumnValue(col)).equals(te)) {
                     hstups.add(vecTuples.get(index));
                 }
-            } else {
+             else {
                 String te = (String) val;
                 if (((String) vecTuples.get(index).getColumnValue(col)).compareTo(te) == 0) {
                     hstups.add(vecTuples.get(index));
                 }
             }
 
-        } else {
+        }else {
             for (Tuple tu : vecTuples) {
                 if (val instanceof Integer) {
                     Integer te = (Integer) val;

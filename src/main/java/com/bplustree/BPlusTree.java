@@ -7,7 +7,7 @@ import com.db_engine.Page;
 
 import java.io.*;
 
-public class BPlusTree<K extends Comparable<K> & Serializable, E extends Comparable<E> & Serializable> implements Serializable{
+public class BPlusTree<K extends Comparable<K> & Serializable, E extends Serializable> implements Serializable{
 
     private final int OVERFLOW_BOUND;
 
@@ -180,6 +180,8 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Compara
         public abstract void combine(BPlusTreeNode neighbor, K parentEntry);
 
         public abstract void borrow(BPlusTreeNode neighbor, K parentEntry, boolean isLeft);
+        
+        
     }
 
     private class BPlusTreeNonLeafNode extends BPlusTreeNode {

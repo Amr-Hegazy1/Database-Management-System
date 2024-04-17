@@ -12,14 +12,14 @@ public class Table implements Serializable {
     private String strTableName;
 
     private Vector<String> vecPages;
-    private Vector<Object> vecMin;
-    private Vector<Object> vecMax;
+    private Vector<Comparable> vecMin;
+    private Vector<Comparable> vecMax;
 
     public Table(String strTableName) {
         this.strTableName = strTableName;
         this.vecPages = new Vector<String>();
-        this.vecMin = new Vector<Object>();
-        this.vecMax = new Vector<Object>();
+        this.vecMin = new Vector<Comparable>();
+        this.vecMax = new Vector<Comparable>();
     }
 
     /**
@@ -128,80 +128,88 @@ public class Table implements Serializable {
         return this.vecPages;
     }
 
+    
     /**
-     * The function `getMin` retrieves the minimum value associated with a given
-     * page name.
+     * The function `getMin` retrieves the minimum value associated with a given page name.
      * 
-     * @param pageName The `pageName` parameter is a string that represents the name
-     *                 of a page for
-     *                 which you want to retrieve the minimum value.
-     * @return The `getMin` method is returning the minimum value associated with
-     *         the given `pageName`.
-     *         It retrieves this value from the `vecMin` list using the index of the
-     *         `pageName` in the
-     *         `vecPages` list.
+     * @param pageName The `pageName` parameter is a string that represents the name of a page for
+     * which you want to retrieve the minimum value.
+     * @return The `getMin` method is returning the minimum value associated with the given `pageName`.
+     * It retrieves this value from the `vecMin` list using the index of the `pageName` in the
+     * `vecPages` list.
      */
-    public Object getMin(String pageName) {
-        // get the minimum value of a page
+    public Comparable getMin(String pageName){
+        //get the minimum value of a page
         return this.vecMin.get(this.vecPages.indexOf(pageName));
     }
 
     /**
-     * The function `getMax` retrieves the maximum value associated with a given
-     * page name.
+     * The function `getMax` retrieves the maximum value associated with a given page name.
      * 
-     * @param pageName The `pageName` parameter is a string that represents the name
-     *                 of a page for
-     *                 which you want to retrieve the maximum value.
-     * @return The `getMax` method is returning the maximum value associated with
-     *         the given `pageName`.
-     *         It retrieves this value from the `vecMax` list using the index of the
-     *         `pageName` in the
-     *         `vecPages` list.
+     * @param pageName The `pageName` parameter is a string that represents the name of a page for
+     * which you want to retrieve the maximum value.
+     * @return The `getMax` method is returning the maximum value associated with the given `pageName`.
+     * It retrieves this value from the `vecMax` list using the index of the `pageName` in the
+     * `vecPages` list.
      */
-    public Object getMax(String pageName) {
-        // get the maximum value of a page
+    public Comparable getMax(String pageName){
+        //get the maximum value of a page
         return this.vecMax.get(this.vecPages.indexOf(pageName));
     }
 
     /**
-     * The function `setMin` changes the minimum value associated with a given
-     * page name.
+     * The function `setMin` sets the minimum value associated with a given page name.
      * 
-     * @param pageName The `pageName` parameter is a string that represents the name
-     *                 of a page for
-     *                 which you want to retrieve the minimum value.
-     * 
-     * @param input    The `input` parameter is the new minimum value that you want
-     * 
-     * @return The `changeMin` method is changing the minimum value associated with
-     *         the given `pageName`.
-     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of a page for
+     * which you want to set the minimum value.
+     * @param min The `min` parameter is a `Comparable` object that represents the minimum value you
+     * want to set for the given `pageName`.
      */
-    public void setMin(String pageName, Object input) {
-        // change the minimum value of a page
-        this.vecMin.add(this.vecPages.indexOf(pageName), input);
+    public void setMin(String pageName, Comparable min){
+        //set the minimum value of a page
+        this.vecMin.set(this.vecPages.indexOf(pageName), min);
     }
 
     /**
-     * The function `setMax` changes the maximum value associated with a given
-     * page name.
+     * The function `setMax` sets the maximum value associated with a given page name.
      * 
-     * @param pageName The `pageName` parameter is a string that represents the name
-     *                 of a page for
-     *                 which you want to retrieve the maximum value.
-     * 
-     * @param input    The `input` parameter is the new maximum value that you want
-     * 
-     * @return The `changeMax` method is chaning the maximum value associated with
-     *         the given `pageName`.
-     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of a page for
+     * which you want to set the maximum value.
+     * @param max The `max` parameter is a `Comparable` object that represents the maximum value you
+     * want to set for the given `pageName`.
      */
-    public void setMax(String pageName, Object input) {
-        // change the maximum value of a page
-        this.vecMax.add(this.vecPages.indexOf(pageName), input);
+
+    public void setMax(String pageName, Comparable max){
+        //set the maximum value of a page
+        this.vecMax.set(this.vecPages.indexOf(pageName), max);
+    }
+    
+
+    /**
+     * The `removeMin` function removes the minimum value from a list based on the provided page name.
+     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of the page from
+     * which the minimum value needs to be removed.
+     */
+    public void removeMin(String pageName){
+        //remove the minimum value of a page
+        this.vecMin.remove(this.vecPages.indexOf(pageName));
     }
 
+    /**
+     * The `removeMax` function removes the maximum value from a page in a Java program.
+     * 
+     * @param pageName The `pageName` parameter is a string that represents the name of the page from
+     * which you want to remove the maximum value.
+     */
+    public void removeMax(String pageName){
+        //remove the maximum value of a page
+        this.vecMax.remove(this.vecPages.indexOf(pageName));
+    }
+
+
+
+    
     /**
      * The function `getPageAtIndex` returns the page at the specified index from a
      * vector of pages.
@@ -230,7 +238,7 @@ public class Table implements Serializable {
         vecPages.remove(strPageName);
 
     }
-
+    
     /**
      * The function `printAllPages` iterates through all pages in a table,
      * deserializes each page, and
