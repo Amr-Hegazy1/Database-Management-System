@@ -281,8 +281,6 @@ public class Page implements Serializable {
 
             String strMidClusteringKeyValue = vecTuples.get(mid).getColumnValue(strClusteringKeyName).toString();
 
-            
-
             Comparable midClusteringKeyValue = (Comparable) vecTuples.get(mid).getColumnValue(strClusteringKeyName);
 
             Comparable compClusteringKeyValue = (Comparable) objClusteringKeyValue;
@@ -376,8 +374,10 @@ public class Page implements Serializable {
         // TODO: make vecTuple.remove() work
 
         for (int i = 0; i < vecTuples.size(); i++) {
-            if (vecTuples.get(i).equals(tuple)) {
 
+            
+            if (vecTuples.get(i).equals(tuple)) {
+                
                 vecTuples.remove(i);
                 return;
             }
@@ -441,31 +441,33 @@ public class Page implements Serializable {
 
             if (val instanceof Integer) {
                 Integer te = (Integer) val;
-                if (((Integer) vecTuples.get(index).getColumnValue(col)) == (te)) {
+                System.out.println(te);
+                System.out.println((Integer) vecTuples.get(index).getColumnValue(col));
+                if (((Integer) vecTuples.get(index).getColumnValue(col)).equals(te)) {
                     hstups.add(vecTuples.get(index));
                 }
             } else if (val instanceof Double) {
                 Double te = (Double) val;
-                if (((Double) vecTuples.get(index).getColumnValue(col)) == (te)) {
+                if (((Double) vecTuples.get(index).getColumnValue(col)).equals(te)) {
                     hstups.add(vecTuples.get(index));
                 }
-            } else {
+             else {
                 String te = (String) val;
                 if (((String) vecTuples.get(index).getColumnValue(col)).compareTo(te) == 0) {
                     hstups.add(vecTuples.get(index));
                 }
             }
 
-        } else {
+        }else {
             for (Tuple tu : vecTuples) {
                 if (val instanceof Integer) {
                     Integer te = (Integer) val;
-                    if (((Integer) tu.getColumnValue(col)) == (te)) {
+                    if (((Integer) tu.getColumnValue(col)).equals(te)) {
                         hstups.add(tu);
                     }
                 } else if (val instanceof Double) {
                     Double te = (Double) val;
-                    if (((Double) tu.getColumnValue(col)) == (te)) {
+                    if (((Double) tu.getColumnValue(col)).equals(te)) {
                         hstups.add(tu);
                     }
                 } else {
@@ -669,12 +671,12 @@ public class Page implements Serializable {
         for (Tuple tu : vecTuples) {
             if (val instanceof Integer) {
                 Integer te = (Integer) val;
-                if (((Integer) tu.getColumnValue(col)) != (te)) {
+                if (!((Integer) tu.getColumnValue(col)).equals(te)) {
                     hstups.add(tu);
                 }
             } else if (val instanceof Double) {
                 Double te = (Double) val;
-                if (((Double) tu.getColumnValue(col)) != (te)) {
+                if (!((Double) tu.getColumnValue(col)).equals(te)) {
                     hstups.add(tu);
                 }
             } else {
