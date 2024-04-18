@@ -1,1 +1,1 @@
-INSERT INTO "Student" ("id") VALUES (2,3,4);
+INSERT INTO "Student4" ("id","name","gpa") VALUES (1, "John", 2.5);

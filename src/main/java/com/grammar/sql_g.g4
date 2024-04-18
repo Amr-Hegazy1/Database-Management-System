@@ -78,8 +78,12 @@ createindex :
 'CREATE INDEX' indexname 'ON' tablename '(' indexCols')' semicoloncloserindex
 ;
 
+insertValuePair:
+insertColValues (',' insertColValues)*
+;
+
 insert:
-'INSERT INTO' tablename '(' insertColNames (',' insertColNames)* ')' 'VALUES' '(' insertColValues (',' insertColValues)* ')' semicoloncloserinsert
+'INSERT INTO' tablename '(' insertColNames (',' insertColNames)* ')' 'VALUES' '(' insertValuePair ')' (',' '(' insertValuePair ')')* semicoloncloserinsert
 ;
 
 

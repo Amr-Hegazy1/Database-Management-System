@@ -5,7 +5,7 @@ import com.db_engine.DBAppException;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import com.grammar.sql_gBaseVisitor;
+import com.grammar.com.grammar.sql_gBaseVisitor;
 import com.grammar.sql_gVisitor;
 import com.grammar.sql_gVisitor;
 import com.grammar.sql_gParser;
@@ -51,11 +51,11 @@ public class Main extends sql_gBaseVisitor {
         for (int i = 0; i < ctx.getChildCount(); i++) {
             String datatype = ctx.getChild(i).getText();
             if (datatype.equals("INT")) {
-                colTypes.add(i, "java.lang.Integer");
+                colTypes.add("java.lang.Integer");
             } else if (datatype.equals("STRING")) {
-                colTypes.add(i, "java.lang.String");
+                colTypes.add("java.lang.String");
             } else if (datatype.equals("DOUBLE")) {
-                colTypes.add(i, "java.lang.Double");
+                colTypes.add("java.lang.Double");
             }
         }
 
@@ -155,28 +155,40 @@ public class Main extends sql_gBaseVisitor {
 
     }
 
+    @Override public Object visitInsertValuePair(com.grammar.sql_gParser.InsertValuePairContext ctx) {
+
+        int colnamesSize = colNames.size();
+
+//        for (int i = 0; i < ctx.getChildCount(); i++) {
+//
+//        int pairsize = ctx.getChild(i).getChildCount();
+//
+//
+//        }
+
+        if((( ctx.getChildCount() / 2 ) + 1 ) != colnamesSize){
+            throw new RuntimeException("Number of columns and values do not match: "+ ctx.getText());
+        }
+        return visitChildren(ctx);
+    }
+
 
     @Override
     public Object visitSemicoloncloserinsert(sql_gParser.SemicoloncloserinsertContext ctx) {
 
 
-        System.out.println("Table Name: " + strTableName);
-        System.out.println("Table Name: " + colNames.get(0));
+        System.out.println("colname size: " + colNames.size());
+        System.out.println("colValues size: " + colValues.size());
+        Hashtable<String, Object> htblColNameValue = new Hashtable<>();
         for (int i = 0; i < colNames.size(); i++) {
-            Hashtable<String, Object> htblColNameValue = new Hashtable<>();
-            System.out.print("Column Value: " + colValues.get(0).getClass() + "\n");
             htblColNameValue.put(colNames.get(i), colValues.get(i));
-            try {
-                DBApp db = new DBApp();
-                db.init();
-                db.insertIntoTable(strTableName, htblColNameValue);
-            } catch (DBAppException e) {
-                throw new RuntimeException(e);
-            }
-
-            System.out.print("Column Name: " + colNames.get(i) + "\n");
-            System.out.print("Column Value: " + colValues.get(i) + "\n");
-
+        }
+        try {
+            DBApp db = new DBApp();
+            db.init();
+            db.insertIntoTable(strTableName, htblColNameValue);
+        } catch (DBAppException e) {
+            throw new RuntimeException(e);
         }
 
 
