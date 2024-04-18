@@ -1558,6 +1558,92 @@ public class TestCases {
         }
     }
 
+    @Test
+    public void deleteWrongDataTypes() throws DBAppException, IOException{
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student0");
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            htblColNameValue.put("name", 0);
+
+            assertThrows(DBAppException.class, () -> {
+                dbApp.deleteFromTable(strTableName, htblColNameValue);
+            });
+
+        }finally{
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deleteAllRows() throws DBAppException, IOException{
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+            for(int i = 0; i < 20; i++){
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student0");
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete all rows
+            dbApp.deleteFromTable(strTableName, new Hashtable<String, Object>());
+
+            // check that all rows are deleted
+            String pagesPath = "tables/" + strTableName;
+            File pagesDir = new File(pagesPath);
+            File[] pages = pagesDir.listFiles();
+
+            for(File page : pages){
+                // check if the file name is in the format Student_i.class
+                if(!page.getName().matches("Student_\\d+\\.class")){
+                    continue;
+                }
+                
+                Page p = Page.deserialize(page.getPath());
+                assert p.getTuples().size() == 0;
+            }
+
+        }finally{
+            cleanUp();
+        }
+    }
+
     
 
 

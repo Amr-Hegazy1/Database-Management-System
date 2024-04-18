@@ -667,9 +667,7 @@ public class DBApp {
 
 			String strMiddlePage = table.getPageAtIndex(intMiddlePageIndex);
 
-			Page pageMiddlePage = Page.deserialize("tables/" + strTableName + "/" + strMiddlePage + ".class");
-
-			int intMiddlePageSize = pageMiddlePage.getSize();
+			
 
 			Comparable cmpPageMinValue = table.getMin(strMiddlePage);
 
@@ -686,6 +684,7 @@ public class DBApp {
 			if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) >= 0
 					&& cmpClusteringKeyValue
 							.compareTo(cmpPageMaxValue) <= 0) {
+				Page pageMiddlePage = Page.deserialize("tables/" + strTableName + "/" + strMiddlePage + ".class");
 				return pageMiddlePage;
 			} else if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) < 0) {
 				intBottomPageIndex = intMiddlePageIndex - 1;
@@ -732,6 +731,11 @@ public class DBApp {
 		}
 
 		int intTupleIndex = pagePage.searchTuplesByClusteringKey(strClusteringKey, objClusteringKeyValue);
+
+		if (intTupleIndex < 0) {
+			return;
+		}
+
 		Tuple tupleTuple = pagePage.getTupleWithIndex(intTupleIndex);
 		if (!tupleSatisfiesAndedConditions(tupleTuple, htblColNameValue)) {
 			return;
@@ -742,17 +746,17 @@ public class DBApp {
 		
 		if (pagePage.getSize() == 0) {
 			Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-			table.removePage(pagePage.getPageName());
-			table.removeMin(pagePage.getPageName());
-			table.removeMax(pagePage.getPageName());
+			table.removePage(intTupleIndex);
+			table.removeMin(intTupleIndex);
+			table.removeMax(intTupleIndex);
 			
 		}else{
 			// set min and max values for the page
 			Comparable cmpMin = (Comparable) pagePage.getTupleWithIndex(0).getColumnValue(strClusteringKeyColName);
 			Comparable cmpMax = (Comparable) pagePage.getTupleWithIndex(pagePage.getSize() - 1)
 					.getColumnValue(strClusteringKeyColName);
-			table.setMin(pagePage.getPageName(), cmpMin);
-			table.setMax(pagePage.getPageName(), cmpMax);
+			table.setMin(intTupleIndex, cmpMin);
+			table.setMax(intTupleIndex, cmpMax);
 
 			pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 			
@@ -831,6 +835,10 @@ public class DBApp {
 			Page pagePage = getPageByClusteringKey(strTableName, strClusteringKeyColName, cmpClusteringKeyValue, table);
 
 			int intTupleIndex = pagePage.searchTuplesByClusteringKey(strClusteringKeyColName, cmpClusteringKeyValue);
+
+			if (intTupleIndex < 0) {
+				continue;
+			}
 
 			Tuple tupleTuple = pagePage.getTupleWithIndex(intTupleIndex);
 
@@ -916,16 +924,9 @@ public class DBApp {
 			while (intCurrentPageIndex < intCurrentPageSize) {
 				Tuple tupleCurrentTuple = pageCurrentPage.getTupleWithIndex(intCurrentPageIndex);
 				boolean boolToBeDeletedTuple = false;
-				// AND all columns
-				for (String strCol : htblColNameValue.keySet()) {
-					boolToBeDeletedTuple = true;
-					if (!tupleCurrentTuple.getColumnValue(strCol).equals(htblColNameValue.get(strCol))) {
-						boolToBeDeletedTuple = false;
-						break;
-					}
-				}
+				
 
-				if (boolToBeDeletedTuple) {
+				if (tupleSatisfiesAndedConditions(tupleCurrentTuple, htblColNameValue)) {
 					pageCurrentPage.deleteTupleWithIndex(intCurrentPageIndex);
 				} else {
 					intCurrentPageIndex++;
@@ -995,7 +996,7 @@ public class DBApp {
 				} else {
 					// get the intersection hashmap entries
 
-					htblTuples = getHashMapIntersection(htblTuples,
+					htblTuples = getHashTableIntersection(htblTuples,
 							getTuplesFromIndex(strTableName, col, htblColNameValue, table));
 
 				}
@@ -1076,7 +1077,7 @@ public class DBApp {
 	 *         the intersection of keys
 	 *         between the two input Hashtables `htbl1` and `htbl2`.
 	 */
-	private Hashtable<Tuple, String> getHashMapIntersection(Hashtable<Tuple, String> htbl1,
+	private Hashtable<Tuple, String> getHashTableIntersection(Hashtable<Tuple, String> htbl1,
 			Hashtable<Tuple, String> htbl2) {
 		Hashtable<Tuple, String> htblIntersection = new Hashtable<>();
 
@@ -1109,15 +1110,24 @@ public class DBApp {
 			throw new DBAppException("Table does not exist");
 		}
 
-		if (htblColNameValue.isEmpty()) {
-			throw new DBAppException("No columns to delete");
-		}
+		
 
+		// check if the column names exist & if the column values are of the correct type
 		for (String strCol : htblColNameValue.keySet()) {
+
+			// check if the column name exists
 			if (!metadata.checkColumnName(strTableName, strCol)) {
 				throw new DBAppException("Column does not exist");
 			}
+			// check if the column value is of the correct type
+			String strColType = metadata.getColumnType(strTableName, strCol);
+			Object objValue = htblColNameValue.get(strCol);
+			if (!objValue.getClass().getName().equals(strColType)) {
+				throw new DBAppException("Data type mismatch");
+			}
 		}
+		
+		
 
 		Table table = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 		String strClusteringKey = metadata.getClusteringKey(strTableName);

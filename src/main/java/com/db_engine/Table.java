@@ -171,6 +171,21 @@ public class Table implements Serializable {
     }
 
     /**
+     * The function `setMin` sets the minimum value of a page at a specified index in a vector.
+     * 
+     * @param index The `index` parameter specifies the position at which the minimum value should be
+     * added in the `vecMin` list.
+     * @param min The `min` parameter represents the minimum value that you want to set for a specific
+     * page in your data structure. It is of type `Comparable`, which means that it can hold any object
+     * that implements the `Comparable` interface. This allows you to compare objects and determine
+     * their ordering.
+     */
+    public void setMin(int index, Comparable min){
+        //set the minimum value of a page
+        this.vecMin.add(index, min);
+    }
+
+    /**
      * The function `setMax` sets the maximum value associated with a given page name.
      * 
      * @param pageName The `pageName` parameter is a string that represents the name of a page for
@@ -184,6 +199,10 @@ public class Table implements Serializable {
         this.vecMax.add(this.vecPages.indexOf(pageName), max);
     }
     
+    public void setMax(int index, Comparable max){
+        //set the maximum value of a page
+        this.vecMax.add(index, max);
+    }
 
     /**
      * The `removeMin` function removes the minimum value from a list based on the provided page name.
@@ -197,6 +216,17 @@ public class Table implements Serializable {
     }
 
     /**
+     * The `removeMin` function removes the minimum value at a specified index from a vector.
+     * 
+     * @param index The `index` parameter specifies the position of the minimum value that you want to
+     * remove from the `vecMin` vector.
+     */
+    public void removeMin(int index){
+        //remove the minimum value of a page
+        this.vecMin.remove(index);
+    }
+
+    /**
      * The `removeMax` function removes the maximum value from a page in a Java program.
      * 
      * @param pageName The `pageName` parameter is a string that represents the name of the page from
@@ -207,6 +237,18 @@ public class Table implements Serializable {
         this.vecMax.remove(this.vecPages.indexOf(pageName));
     }
 
+    
+
+   /**
+    * The `removeMax` function removes the maximum value at a specified index from a list.
+    * 
+    * @param index The `index` parameter specifies the position of the maximum value that you want to
+    * remove from the `vecMax` list.
+    */
+    public void removeMax(int index){
+        //remove the maximum value of a page
+        this.vecMax.remove(index);
+    }
 
 
     
@@ -237,6 +279,10 @@ public class Table implements Serializable {
 
         vecPages.remove(strPageName);
 
+    }
+
+    public void removePage(int index) {
+        vecPages.remove(index);
     }
     
     /**

@@ -183,7 +183,7 @@ public class Page implements Serializable {
 
         }
 
-        throw new DBAppException("Column Value doesn't exist");
+        return -1;
 
     }
 
