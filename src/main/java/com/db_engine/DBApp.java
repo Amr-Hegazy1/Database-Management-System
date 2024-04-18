@@ -63,7 +63,7 @@ public class DBApp {
 	 *                               The data type of that column will be passed in
 	 *                               htblColNameType.
 	 * 
-	 * @param htblColNameValue       The `htblColNameValue` will have the column
+	 * @param htblColNameType       The `htblColNameType` will have the column
 	 *                               name as key and
 	 *                               the data type as value.
 	 * 
@@ -76,6 +76,16 @@ public class DBApp {
 	public void createTable(String strTableName,
 			String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws DBAppException {
+
+		boolean boolValidTypes = true;
+		Vector<String> vecValidTypes = new Vector<>(Arrays.asList("java.lang.Integer"
+				,"java.lang.Double" , "java.lang.String"));
+		for(String strColumnName : htblColNameType.keySet()){
+			boolValidTypes &= vecValidTypes.contains(htblColNameType.get(strColumnName));
+		}
+		if(!boolValidTypes){
+			throw new DBAppException("Unsupported Data Types!");
+		}
 
 		metadata.addTable(strTableName, strClusteringKeyColumn, htblColNameType);
 		metadata.save();
