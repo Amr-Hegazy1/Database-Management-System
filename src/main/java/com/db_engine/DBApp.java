@@ -12,6 +12,8 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import com.bplustree.*;
+import com.grammar.Main;
+import com.grammar.main2;
 
 public class DBApp {
 
@@ -1514,6 +1516,31 @@ public class DBApp {
 		}
 	}
 
+	// below method returns Iterator with result set if passed
+// strbufSQL is a select, otherwise returns null.
+	public Iterator parseSQL( StringBuffer strbufSQL ) throws
+            DBAppException, IOException {
+		String filePath = "C:\\Users\\gchehata\\IdeaProjects\\DB2\\src\\main\\java\\com\\grammar\\test.txt";
+
+		FileWriter fileWriter = new FileWriter(filePath);
+
+		BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+		bufferedWriter.write(strbufSQL.toString());
+
+		bufferedWriter.close();
+
+		main2 obj = new main2();
+		obj.main(new String[]{});
+
+//		Iterator iterator = Main.getIterator();
+		return Main.iterator;
+
+
+	}
+
+
+
 	private static void cleanUp() throws IOException {
 		try {
 			// delete tables directory
@@ -1577,7 +1604,24 @@ public class DBApp {
 
 			dbApp.init();
 
-			String strTableName = "Student";
+			//CREATE TABLE "STUDENT" ("ID" INT PRIMARY KEY, "NAME" STRING , "AGE" INT);
+			//"CREATE INDEX \"idIndex\" ON \"STUDENT\" (\"ID\");"
+			//"INSERT INTO \"STUDENT\" (\"ID\",\"NAME\",\"AGE\") VALUES (5,\"AHMED\",19);"
+			//"UPDATE \"STUDENT\" SET \"AGE\" = 50 WHERE \"ID\"= 5;"
+			//"DELETE FROM \"STUDENT\" WHERE \"ID\" = 1 and \"NAME\" = \"Ibra\";"
+			//
+			String s= "SELECT * FROM \"STUDENT\" WHERE \"NAME\" = \"AHMED\";";
+			StringBuffer sb = new StringBuffer();
+			sb.append(s);
+
+			Iterator i = dbApp.parseSQL(sb);
+
+			while(i.hasNext()){
+				Tuple t= (Tuple) i.next();
+				System.out.println(t);
+			}
+
+//			String strTableName = "Student";
 //
 //			 Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 //
@@ -1593,14 +1637,14 @@ public class DBApp {
 //			 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
 //			 htblColNameValue.put("id", 1);
 //			 dbApp.insertIntoTable(strTableName, htblColNameValue);
-
-			 Page p = Page.deserialize("tables/STUDENT/STUDENT_0.class");
-			 Vector<Tuple> v= p.getTuples();
-			 for ( Tuple t : v){
-				 System.out.println("id:"+ t.getColumnValue("ID"));
-				 System.out.println("name:"+ t.getColumnValue("NAME"));
-				 System.out.println("gpa:"+ t.getColumnValue("AGE"));
-			 }
+//
+//			 Page p = Page.deserialize("tables/STUDENT/STUDENT_0.class");
+//			 Vector<Tuple> v= p.getTuples();
+//			 for ( Tuple t : v){
+//				 System.out.println("id:"+ t.getColumnValue("ID"));
+//				 System.out.println("name:"+ t.getColumnValue("NAME"));
+//				 System.out.println("age:"+ t.getColumnValue("AGE"));
+//			 }
 
 
 			// }

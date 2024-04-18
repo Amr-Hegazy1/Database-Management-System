@@ -16,6 +16,7 @@ import com.grammar.com.grammar.sql_gParser;
 
 public class Main extends sql_gBaseVisitor {
 
+    public static Iterator iterator;
     Vector<String> colNames = new Vector<String>();
     Vector<String> colTypes = new Vector<String>();
     Vector<Object> colValues = new Vector<Object>();
@@ -233,11 +234,11 @@ public class Main extends sql_gBaseVisitor {
 
     //HARRIDY CODE
 
-     String tablename;
-     Vector<String> colnames = new Vector<>();
-     Vector<String> operators = new Vector<>();
-     Vector<Object> values = new Vector<>();
-     Vector<String> opera = new Vector<>();
+    String tablename;
+    Vector<String> colnames = new Vector<>();
+    Vector<String> operators = new Vector<>();
+    Vector<Object> values = new Vector<>();
+    Vector<String> opera = new Vector<>();
 
 
     @Override
@@ -271,7 +272,7 @@ public class Main extends sql_gBaseVisitor {
         for (int i = 0; i < ctx.getChildCount(); i++) {
             Object val = ctx.getChild(i).getText();
             if (Main.tryParseInt((String) val) != null) {
-                 val = (int) Main.tryParseInt((String) val);
+                val = (int) Main.tryParseInt((String) val);
             } else if (Main.tryParseDouble((String) val) != null) {
                 val = (Double) Main.tryParseDouble((String) val);
             }
@@ -305,12 +306,12 @@ public class Main extends sql_gBaseVisitor {
         try{
             DBApp dbApp = new DBApp();
             dbApp.init();
-            Iterator i = dbApp.selectFromTable(sql, strarrOperators);
-            while(i.hasNext()){
-                Tuple t = (Tuple) i.next();
+           iterator = dbApp.selectFromTable(sql, strarrOperators);
+            while(iterator.hasNext()){
+                Tuple t = (Tuple) iterator.next();
                 System.out.println(t);
             }
-            return i;
+            return iterator;
 
         }
         catch(DBAppException | ClassNotFoundException | IOException e){
@@ -360,4 +361,3 @@ public class Main extends sql_gBaseVisitor {
 
 
 }
-
