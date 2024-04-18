@@ -4,6 +4,9 @@ program :
 createtable EOF
 |createindex EOF
 |insert EOF
+|update EOF
+|delete EOF
+|select EOF
 ;
 
 STRING
@@ -82,9 +85,82 @@ insertValuePair:
 insertColValues (',' insertColValues)*
 ;
 
+//INSERT INTO "Student" ("ID","NAME","AGE") VALUES (1,"Ibra",53);
 insert:
 'INSERT INTO' tablename '(' insertColNames (',' insertColNames)* ')' 'VALUES' '(' insertValuePair ')' (',' '(' insertValuePair ')')* semicoloncloserinsert
 ;
+
+//HARRIDY GRAMMAR
+attrname
+ :STRING
+ ;
+values
+: INT|DOUBLE|STRING
+;
+  eq
+  : '='
+  ;
+   cluster
+   : attrname eq values
+   ;
+
+name
+ : STRING
+ ;
+
+
+   closerupdate
+   :';'
+   ;
+   // UPDATE Student SET gpa=0.69 WHERE id=3;
+  update
+  : 'UPDATE' name 'SET' columndelete(COMMA columndelete)* 'WHERE' cluster closerupdate
+  ;
+
+
+  //DELETE FROM STUDENT WHERE id= 7 and name ="hamada"
+    columndelete
+    : attrname eq values
+    ;
+    and
+    : 'and'|'AND'
+    ;
+
+    operaone
+    : and
+    ;
+    closerdelete
+    :';'
+    ;
+    delete
+    : 'DELETE FROM' name('WHERE'columndelete (operaone columndelete)*)*closerdelete
+    ;
+
+
+columns
+: attrname oper values
+;
+
+oper
+: '='|'!='|'>'|'>='|'<'|'<='
+;
+
+
+
+opera
+: 'AND'|'and'|'OR'|'or'|'XOR'|'xor'
+;
+
+closerselect
+: ';'
+;
+ //SELECT * FROM Student WHERE id = 78 AND name = "hamada" Or name="Batates";
+ select
+  : 'SELECT * FROM' name( 'WHERE' columns (opera columns)* )?closerselect
+  ;
+
+
+
 
 
 

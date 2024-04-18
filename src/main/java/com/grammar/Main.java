@@ -2,13 +2,18 @@ package com.grammar;
 
 import com.db_engine.DBApp;
 import com.db_engine.DBAppException;
+
+import java.io.IOException;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Vector;
 
+import com.db_engine.SQLTerm;
+import com.db_engine.Tuple;
 import com.grammar.com.grammar.sql_gBaseVisitor;
-import com.grammar.sql_gVisitor;
-import com.grammar.sql_gVisitor;
-import com.grammar.sql_gParser;
+import com.grammar.com.grammar.sql_gParser;
+//import com.grammar.sql_gBaseVisitor;
+
 public class Main extends sql_gBaseVisitor {
 
     Vector<String> colNames = new Vector<String>();
@@ -155,7 +160,7 @@ public class Main extends sql_gBaseVisitor {
 
     }
 
-    @Override public Object visitInsertValuePair(com.grammar.sql_gParser.InsertValuePairContext ctx) {
+    @Override public Object visitInsertValuePair(sql_gParser.InsertValuePairContext ctx) {
 
         int colnamesSize = colNames.size();
 
@@ -225,6 +230,134 @@ public class Main extends sql_gBaseVisitor {
     public static String removeQuotations(String str) {
         return  str.substring(1, str.length() - 1);
     }
+
+    //HARRIDY CODE
+
+     String tablename;
+     Vector<String> colnames = new Vector<>();
+     Vector<String> operators = new Vector<>();
+     Vector<Object> values = new Vector<>();
+     Vector<String> opera = new Vector<>();
+
+
+    @Override
+    public Object visitName(sql_gParser.NameContext ctx) {
+        tablename = ctx.getText();
+        tablename = removeQuotations(tablename);
+        System.out.println(tablename);
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public Object visitAttrname(sql_gParser.AttrnameContext ctx) {
+
+        for (Object val : ctx.children) {
+            colnames.add(Main.removeQuotations(val.toString()));
+        }
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public Object visitOper(sql_gParser.OperContext ctx) {
+        for (Object val : ctx.children) {
+//            operators.add(Main.removeQuotations(val.toString()));
+            operators.add(val.toString());
+        }
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public Object visitValues(sql_gParser.ValuesContext ctx) {
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            Object val = ctx.getChild(i).getText();
+            if (Main.tryParseInt((String) val) != null) {
+                 val = (int) Main.tryParseInt((String) val);
+            } else if (Main.tryParseDouble((String) val) != null) {
+                val = (Double) Main.tryParseDouble((String) val);
+            }
+            values.add(val);
+        }
+
+        return visitChildren(ctx);
+    }
+    @Override public Object visitOpera(sql_gParser.OperaContext ctx) {
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            Object val = ctx.getChild(i).getText();
+            opera.add((String) val);
+        }
+
+        return visitChildren(ctx); }
+
+    @Override public Iterator<Tuple> visitCloserselect(sql_gParser.CloserselectContext ctx) {
+        SQLTerm [] sql  = new SQLTerm[colnames.size()];
+        for(int i=0;i<colnames.size();i++){
+            sql[i]= new SQLTerm();
+            sql[i]._strTableName=tablename;
+            sql[i]._strColumnName=colnames.get(i);
+            sql[i]._strOperator= operators.get(i);
+            sql[i]._objValue= values.get(i);
+        }
+        String[] strarrOperators = new String[opera.size()];
+        for(int i=0;i<opera.size();i++){
+            strarrOperators[i]=opera.get(i);
+        }
+
+        try{
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+            Iterator i = dbApp.selectFromTable(sql, strarrOperators);
+            while(i.hasNext()){
+                Tuple t = (Tuple) i.next();
+                System.out.println(t);
+            }
+            return i;
+
+        }
+        catch(DBAppException | ClassNotFoundException | IOException e){
+            e.printStackTrace();
+        }
+
+        return null;
+
+
+    }
+    @Override public Object visitCloserdelete(sql_gParser.CloserdeleteContext ctx) {
+
+        Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+        for(int i=0;i<colnames.size();i++){
+            htblColNameValue.put(colnames.get(i), values.get(i));
+        }
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+            dbApp.deleteFromTable(tablename, htblColNameValue);
+        }
+        catch(DBAppException e){
+            e.printStackTrace();
+        }
+
+        return visitChildren(ctx); }
+
+    @Override public Object visitCloserupdate(sql_gParser.CloserupdateContext ctx) {
+        Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+        for(int i=0;i<colnames.size()-1;i++){
+            htblColNameValue.put(colnames.get(i), values.get(i));
+        }
+        String strkey="" + values.getLast();
+//        if(values.getLast() instanceof String){
+//             strkey =(String) values.getLast();
+//        }
+
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+            dbApp.updateTable(tablename, strkey, htblColNameValue);
+        }
+        catch(DBAppException  e){
+            e.printStackTrace();
+        }
+        return visitChildren(ctx); }
+
 
 }
 

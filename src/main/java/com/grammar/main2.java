@@ -1,12 +1,13 @@
 package com.grammar;
 
+import com.grammar.com.grammar.sql_gParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 
-import com.grammar.sql_gParser;
-import com.grammar.sql_gLexer;
+//import com.grammar.sql_gParser;
+import com.grammar.com.grammar.sql_gLexer;
 
 import java.io.IOException;
 
@@ -18,7 +19,7 @@ public class main2 {
             String source = "C:\\Users\\gchehata\\IdeaProjects\\DB2\\src\\main\\java\\com\\grammar\\test.txt";
             CharStream cs = fromFileName(source);
             System.out.println(cs);
-            sql_gLexer lexer = new com.grammar.sql_gLexer(cs);
+            sql_gLexer lexer = new sql_gLexer(cs);
             CommonTokenStream token = new CommonTokenStream(lexer);
             sql_gParser parser = new sql_gParser(token);
             ParseTree tree = parser.program();

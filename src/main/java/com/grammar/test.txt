@@ -1,1 +1,1 @@
-INSERT INTO "Student4" ("id","name","gpa") VALUES (1, "John", 2.5);
+SELECT * FROM "STUDENT" WHERE "NAME" = "Ibra" and "AGE" = 20;

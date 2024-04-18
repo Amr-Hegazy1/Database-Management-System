@@ -1594,17 +1594,15 @@ public class DBApp {
 //			 htblColNameValue.put("id", 1);
 //			 dbApp.insertIntoTable(strTableName, htblColNameValue);
 
-			 Page p = Page.deserialize("tables/Student4/Student4_0.class");
+			 Page p = Page.deserialize("tables/STUDENT/STUDENT_0.class");
 			 Vector<Tuple> v= p.getTuples();
-			 Tuple t= v.get(0);
-//			 for ( Tuple t : v){
-//				 System.out.print("id:"+ t.getColumnValue("id"));
-//				 System.out.println(t);
-//			 }
+			 for ( Tuple t : v){
+				 System.out.println("id:"+ t.getColumnValue("ID"));
+				 System.out.println("name:"+ t.getColumnValue("NAME"));
+				 System.out.println("gpa:"+ t.getColumnValue("AGE"));
+			 }
 
-			System.out.println("id:"+ t.getColumnValue("id"));
-			System.out.println("name:"+ t.getColumnValue("name"));
-			System.out.println("gpa:"+ t.getColumnValue("gpa"));
+
 			// }
 
 			// int i = -2;
