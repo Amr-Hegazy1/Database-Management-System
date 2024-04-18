@@ -158,7 +158,7 @@ public class DBApp {
 				Vector<Tuple> vecTuples = pgPage.getTuples();
 				for (Tuple tplTuple : vecTuples) {
 					
-					Comparable key = (int) tplTuple.getColumnValue(strColName);
+					Comparable key = (Comparable) tplTuple.getColumnValue(strColName);
 					Comparable cmpClusteringKeyValue = (Comparable) tplTuple.getColumnValue(strClusteringKeyColName);
 					Pair pair = new Pair(cmpClusteringKeyValue, pgPage_name);
 					bplsBplustree.insert(key, pair);
