@@ -12,21 +12,20 @@ public class Table implements Serializable {
     private String strTableName;
 
     private Vector<String> vecPages;
-    private Vector<Object> vecMin;
-    private Vector<Object> vecMax;
+    private Vector<Comparable> vecMin;
+    private Vector<Comparable> vecMax;
 
     public Table(String strTableName) {
         this.strTableName = strTableName;
         this.vecPages = new Vector<String>();
-        this.vecMin = new Vector<Object>();
-        this.vecMax = new Vector<Object>();
     }
     /**
      * This Java function returns the number of pages in a vector.
      * 
-     * @return The method `getNumberOfPages` returns the number of elements in the `vecPages` vector.
+     * @return The method `getNumberOfPages` returns the number of elements in the
+     *         `vecPages` vector.
      */
-    public int getNumberOfPages(){
+    public int getNumberOfPages() {
         return vecPages.size();
     }
 
@@ -40,7 +39,7 @@ public class Table implements Serializable {
     public String addPage() {
         int newPageNum = vecPages.size();
         String newPage = strTableName + "_" + newPageNum;
-        
+
         vecPages.add(newPage);
         return newPage;
     }
@@ -53,7 +52,6 @@ public class Table implements Serializable {
     public Vector<String> getPageVector() {
         return vecPages;
     }
-
 
     /**
      * The getNumofPages returns Number of Pages in the Table.
@@ -77,20 +75,17 @@ public class Table implements Serializable {
      *                    serialized form.
      */
     public void serialize(String strFileName) throws DBAppException {
-        
-        
-        
-        try{
-      
-            
-            FileOutputStream fos= new FileOutputStream(strFileName);
-            ObjectOutputStream oos=new ObjectOutputStream(fos);
+
+        try {
+
+            FileOutputStream fos = new FileOutputStream(strFileName);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(this);
 
             oos.close();
             fos.close();
 
-        }catch(IOException ioe){
+        } catch (IOException ioe) {
             throw new DBAppException("Error in Serialization");
         }
 
@@ -108,7 +103,7 @@ public class Table implements Serializable {
      */
     public static Table deserialize(String strFileName) throws DBAppException {
 
-        try{
+        try {
 
             FileInputStream fis = new FileInputStream(strFileName);
             ObjectInputStream ois = new ObjectInputStream(fis);
@@ -117,17 +112,16 @@ public class Table implements Serializable {
             ois.close();
             fis.close();
             return table;
-        }catch(IOException ioe){
+        } catch (IOException ioe) {
             throw new DBAppException("Error in Deserialization");
-        }catch(ClassNotFoundException c){
+        } catch (ClassNotFoundException c) {
             throw new DBAppException("Class not found");
         }
 
-        
-
     }
-    //get all the pages used to store the table's data
-    public Vector<String> getPages (){
+
+    // get all the pages used to store the table's data
+    public Vector<String> getPages() {
         return this.vecPages;
     }
 /**
@@ -207,41 +201,47 @@ public class Table implements Serializable {
 
     
     /**
-     * The function `getPageAtIndex` returns the page at the specified index from a vector of pages.
+     * The function `getPageAtIndex` returns the page at the specified index from a
+     * vector of pages.
      * 
-     * @param i The parameter `i` in the `getPageAtIndex` method represents the index of the page you
-     * want to retrieve from the `vecPages` vector.
-     * @return The method `getPageAtIndex` is returning the page at the specified index `i` from the
-     * `vecPages` vector.
+     * @param i The parameter `i` in the `getPageAtIndex` method represents the
+     *          index of the page you
+     *          want to retrieve from the `vecPages` vector.
+     * @return The method `getPageAtIndex` is returning the page at the specified
+     *         index `i` from the
+     *         `vecPages` vector.
      */
-    public String getPageAtIndex(int i){
+    public String getPageAtIndex(int i) {
         return vecPages.get(i);
     }
 
     /**
-     * The `removePage` function removes a page with the specified name from a vector of pages.
+     * The `removePage` function removes a page with the specified name from a
+     * vector of pages.
      * 
-     * @param strPageName The parameter `strPageName` is a String representing the name of the page
-     * that you want to remove from the `vecPages` vector.
+     * @param strPageName The parameter `strPageName` is a String representing the
+     *                    name of the page
+     *                    that you want to remove from the `vecPages` vector.
      */
-    public void removePage(String strPageName){
-        
+    public void removePage(String strPageName) {
+
         vecPages.remove(strPageName);
-        
+
     }
     
     /**
-     * The function `printAllPages` iterates through all pages in a table, deserializes each page, and
+     * The function `printAllPages` iterates through all pages in a table,
+     * deserializes each page, and
      * prints it to the console.
      * 
      */
-    public void printAllPages() throws DBAppException{
-        for(int i = 0; i < this.getNumberOfPages(); i++){
+    public void printAllPages() throws DBAppException {
+        for (int i = 0; i < this.getNumberOfPages(); i++) {
 
-            
             String strPage = this.getPageAtIndex(i);
             Page page = Page.deserialize(strPage + ".class");
-            System.out.println("#################################### PAGE " + i + " ########################################");
+            System.out.println(
+                    "#################################### PAGE " + i + " ########################################");
             System.out.println(page);
         }
     }
@@ -249,16 +249,18 @@ public class Table implements Serializable {
     /**
      * The function getTableName() returns the name of the table as a String.
      * 
-     * @return The method getTableName() returns the value of the variable strTableName, which is the
-     * name of the table.
+     * @return The method getTableName() returns the value of the variable
+     *         strTableName, which is the
+     *         name of the table.
      */
-    public String getTableName(){
+    public String getTableName() {
         return strTableName;
     }
 
-    public HashSet<Tuple> greaterthan(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
-        
-        HashSet<Tuple> hmtup = new HashSet<>();   
+    public HashSet<Tuple> greaterthan(String col, Object val)
+            throws ClassNotFoundException, IOException, DBAppException {
+
+        HashSet<Tuple> hmtup = new HashSet<>();
         boolean noneed = false;
         for(int i=0;i<vecPages.size();i++){
             if(val instanceof Integer){
@@ -271,7 +273,7 @@ public class Table implements Serializable {
                     Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtrsearch(col, val, true, index));
-                    noneed=true;
+                    noneed = true;
                 }
             }
             else if(val instanceof Double){
@@ -297,25 +299,27 @@ public class Table implements Serializable {
                     Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtrsearch(col, val, true, index));
-                    noneed=true;
-                }     
+                    noneed = true;
+                }
             }
-        }  
+        }
         return hmtup;
     }
-    public HashSet<Tuple> greaterthannc(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+
+    public HashSet<Tuple> greaterthannc(String col, Object val)
+            throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
-        for(int i=0;i<vecPages.size();i++){
-            Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+        for (int i = 0; i < vecPages.size(); i++) {
+            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
             hmtup.addAll(page1.gtrsearch(col, val, false, 201));
         }
         return hmtup;
     }
 
-
     // greater than equal
-    public HashSet<Tuple> greaterthaneq(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
-        HashSet<Tuple> hmtup = new HashSet<>();   
+    public HashSet<Tuple> greaterthaneq(String col, Object val)
+            throws ClassNotFoundException, IOException, DBAppException {
+        HashSet<Tuple> hmtup = new HashSet<>();
         boolean noneed = false;
         for(int i=0;i<vecPages.size();i++){
             if(val instanceof Integer){
@@ -328,7 +332,7 @@ public class Table implements Serializable {
                     Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtreqsearch(col, val, true, index));
-                    noneed=true;
+                    noneed = true;
                 }
             }
             else if(val instanceof Double){
@@ -354,24 +358,26 @@ public class Table implements Serializable {
                     Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtreqsearch(col, val, true, index));
-                    noneed=true;
-                }     
+                    noneed = true;
+                }
             }
-        }  
+        }
         return hmtup;
     }
-    public HashSet<Tuple> greaterthaneqnc(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+
+    public HashSet<Tuple> greaterthaneqnc(String col, Object val)
+            throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
-        for(int i=0;i<vecPages.size();i++){
-            Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+        for (int i = 0; i < vecPages.size(); i++) {
+            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
             hmtup.addAll(page1.gtreqsearch(col, val, false, 201));
         }
         return hmtup;
     }
 
-
-    public HashSet<Tuple> lesserthan(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
-        HashSet<Tuple> hmtup = new HashSet<>();   
+    public HashSet<Tuple> lesserthan(String col, Object val)
+            throws ClassNotFoundException, IOException, DBAppException {
+        HashSet<Tuple> hmtup = new HashSet<>();
         boolean noneed = false;
         for(int i=vecPages.size()-1;i>=0;i--){
             if(val instanceof Integer){
@@ -384,7 +390,7 @@ public class Table implements Serializable {
                     Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
-                    noneed=true;
+                    noneed = true;
                 }
             }
             else if(val instanceof Double){
@@ -410,24 +416,26 @@ public class Table implements Serializable {
                     Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
-                    noneed=true;
-                }     
+                    noneed = true;
+                }
             }
         }
         return hmtup;
     }
-    
-    public HashSet<Tuple> lesserthannc(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+
+    public HashSet<Tuple> lesserthannc(String col, Object val)
+            throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
-        for(int i=0;i<vecPages.size();i++){  
-            Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+        for (int i = 0; i < vecPages.size(); i++) {
+            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
             hmtup.addAll(page1.lessearch(col, val, false, 201));
         }
         return hmtup;
     }
 
-    public HashSet<Tuple> lesserthaneq(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
-        HashSet<Tuple> hmtup = new HashSet<>();   
+    public HashSet<Tuple> lesserthaneq(String col, Object val)
+            throws ClassNotFoundException, IOException, DBAppException {
+        HashSet<Tuple> hmtup = new HashSet<>();
         boolean noneed = false;
         for(int i=vecPages.size()-1;i>=0;i--){
             
@@ -441,7 +449,7 @@ public class Table implements Serializable {
                     Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.leseqsearch(col, val, true, index));
-                    noneed=true;
+                    noneed = true;
                 }
             } 
             else if(val instanceof Double){
@@ -467,17 +475,18 @@ public class Table implements Serializable {
                     Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
-                    noneed=true;
-                }     
+                    noneed = true;
+                }
             }
         }
         return hmtup;
     }
-    
-    public HashSet<Tuple> lesserthannceq(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+
+    public HashSet<Tuple> lesserthannceq(String col, Object val)
+            throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
-        for(int i=0;i<vecPages.size();i++){
-            Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+        for (int i = 0; i < vecPages.size(); i++) {
+            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
             hmtup.addAll(page1.leseqsearch(col, val, false, 201));
         }
         return hmtup;
@@ -511,28 +520,29 @@ public class Table implements Serializable {
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.eqsearch(col, val, true, index));
                     break;
-                }     
+                }
             }
         }
         return hmtup;
     }
-    public HashSet<Tuple> eqsearch(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+
+    public HashSet<Tuple> eqsearch(String col, Object val) throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
-        for(String e: vecPages){
-            Page page= Page.deserialize("tables/"+strTableName+"/"+e+".class");
+        for (String e : vecPages) {
+            Page page = Page.deserialize("tables/" + strTableName + "/" + e + ".class");
             hmtup.addAll(page.eqsearch(col, val, false, 201));
         }
         return hmtup;
     }
 
-    public HashSet<Tuple> noteqsearch(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+    public HashSet<Tuple> noteqsearch(String col, Object val)
+            throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
-        for(String e: vecPages){
-            Page page= Page.deserialize("tables/"+strTableName+"/"+e+".class");
+        for (String e : vecPages) {
+            Page page = Page.deserialize("tables/" + strTableName + "/" + e + ".class");
             hmtup.addAll(page.noteqsearch(col, val));
         }
         return hmtup;
     }
-    
 
 }

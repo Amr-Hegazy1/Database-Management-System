@@ -14,6 +14,35 @@
     </properties>
 
     <dependencies>
+
+        <!-- Add relevant manifold runtime dependencies, compile-time dependencies are listed in annotationProcessorPath- -->
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold</artifactId>
+            <version>2024.1.12</version>
+        </dependency>
+
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-strings</artifactId>
+            <version>2024.1.12</version>
+        </dependency>
+
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-ext</artifactId>
+            <version>2024.1.12</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-ext-rt</artifactId>
+            <version>2024.1.12</version>
+        </dependency>
+
+
+        
         
         <!-- https://mvnrepository.com/artifact/junit/junit -->
         <dependency>

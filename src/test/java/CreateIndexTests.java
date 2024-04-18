@@ -201,6 +201,33 @@ public class CreateIndexTests {
         }
     }
 
+    @Test
+    public void createDuplicateIndexNameOnDifferentCols() throws DBAppException, IOException {
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            assertThrows(DBAppException.class, () -> dbApp.createIndex(strTableName, "gpa", "nameIndex"));
+
+        }finally{
+            cleanUp();
+        }
+    }
+
     protected void cleanUp() throws IOException{
         try{
             // delete tables directory
