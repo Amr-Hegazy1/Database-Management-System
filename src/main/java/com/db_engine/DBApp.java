@@ -13,7 +13,6 @@ import java.util.*;
 
 import com.bplustree.*;
 
-
 public class DBApp {
 
 	private Metadata metadata;
@@ -157,12 +156,11 @@ public class DBApp {
 				Page pgPage = Page.deserialize("tables/" + strTableName + "/" + pgPage_name + ".class");
 				Vector<Tuple> vecTuples = pgPage.getTuples();
 				for (Tuple tplTuple : vecTuples) {
-					
+
 					Comparable key = (int) tplTuple.getColumnValue(strColName);
 					Comparable cmpClusteringKeyValue = (Comparable) tplTuple.getColumnValue(strClusteringKeyColName);
 					Pair pair = new Pair(cmpClusteringKeyValue, pgPage_name);
 					bplsBplustree.insert(key, pair);
-				
 
 				}
 			}
@@ -255,9 +253,9 @@ public class DBApp {
 				String strLastPage = vecPages.get(vecPages.size() - 1); // get last page name
 
 				// get 1st and last page objects
-				
+
 				Page pgFirstPage = Page.deserialize("tables/" + strTableName + "/" + strFirstPage + ".class");
-				
+
 				Page pgLastPage = Page.deserialize("tables/" + strTableName + "/" + strLastPage + ".class");
 
 				Tuple tupleFirstTuple = pgFirstPage.getTupleWithIndex(0); // get first tuple in 1st page(smallest clust
@@ -270,30 +268,31 @@ public class DBApp {
 																			// key, insert in index 0
 						.getColumnValue(strClustKeyName)) < 0) {
 					pgFirstPage.addTuple(0, tupleNewTuple);
-					tblTable.setMin(pgFirstPage.getPageName(), (Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
+					tblTable.setMin(pgFirstPage.getPageName(),
+							(Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
 					tupleNewTuple.setPageName(pgFirstPage.getPageName());
 
 					if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
 						handleInsertOverflow(tblTable, pgFirstPage, intMaxSize, strClustKeyName, hsIndexedColumns);
 					} else {
-						
+
 						pgFirstPage.serialize("tables/" + strTableName + "/" + pgFirstPage.getPageName() + ".class");
-						
+
 					}
 
 				} else {// only option left is that its bigger than last key in last page, so insert in
 						// last index in last page
 					pgLastPage.addTuple(pgLastPage.getSize(), tupleNewTuple);
-					System.out.println(" MAX LINE 284");
-					tblTable.setMax(pgLastPage.getPageName(), (Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
+					tblTable.setMax(pgLastPage.getPageName(),
+							(Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
 					tupleNewTuple.setPageName(pgLastPage.getPageName());
 
 					if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
 						handleInsertOverflow(tblTable, pgLastPage, intMaxSize, strClustKeyName, hsIndexedColumns);
 					} else {
-						
+
 						pgLastPage.serialize("tables/" + strTableName + "/" + pgLastPage.getPageName() + ".class");
-						
+
 					}
 				}
 			}
@@ -372,8 +371,9 @@ public class DBApp {
 																			// vecPages Vector
 		Tuple tupleLastTuple = overflowPage.removeLastTuple(); // last tuple in overflow page
 		tblTable.setMax(overflowPage.getPageName(),
-		(Comparable) overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in overflow
-																				// page
+				(Comparable) overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in
+																							// overflow
+																							// page
 		// System.out.println("LAST TUPLE IN 1ST OVERFLOW PAGE:" +
 		// pgFirstOverflowPage.getLastTuple());
 		overflowPage.serialize("tables/" + tblTable.getTableName() + "/" + overflowPage.getPageName() + ".class"); // serialize
@@ -386,7 +386,7 @@ public class DBApp {
 			Page page = Page.deserialize("tables/" + tblTable.getTableName() + "/" + vecPages.get(i) + ".class"); // get
 																													// page
 			tblTable.setMax(page.getPageName(),
-			(Comparable) page.getLastTuple().getColumnValue(strClustKeyName));
+					(Comparable) page.getLastTuple().getColumnValue(strClustKeyName));
 			int index = 0;
 			Comparable inputClustKey = (Comparable) tupleLastTuple.getColumnValue(strClustKeyName); // clust key in my
 																									// last tuple (thats
@@ -457,8 +457,10 @@ public class DBApp {
 		// pages were left, therefore a new page is needed
 		String newPageName = tblTable.addPage(); // creating new page
 		Page newPage = new Page(newPageName); // creating new page object with new page name
-		tblTable.setMin(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value of new page
-		tblTable.setMax(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value of new page
+		tblTable.setMin(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value
+																									// of new page
+		tblTable.setMax(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value
+																									// of new page
 		if (hsIndexedCols.size() > 0) { // adjusting indicies (if any)
 			for (Object objColName : hsIndexedCols) {
 				String strColName = (String) objColName;
@@ -497,56 +499,55 @@ public class DBApp {
 	// htblColNameValue holds the key and new value
 	// htblColNameValue will not include clustering key as column name
 	// strClusteringKeyValue is the value to look for to find the row to update.
-	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
-		if(strTableName==null)
+	public void updateTable(String strTableName, String strClusteringKeyValue,
+			Hashtable<String, Object> htblColNameValue) throws DBAppException {
+		if (strTableName == null)
 			throw new DBAppException("Table does not exist.");
 
-		if (!metadata.checkTableName(strTableName)) 
+		if (!metadata.checkTableName(strTableName))
 			throw new DBAppException("Table does not exist.");
 
-		if (strClusteringKeyValue==null)
+		if (strClusteringKeyValue == null)
 			throw new DBAppException("Clustering key value is null.");
 
-		if(htblColNameValue==null)
+		if (htblColNameValue == null)
 			throw new DBAppException("Column values are null.");
-		
-		if (htblColNameValue.isEmpty()) 
+
+		if (htblColNameValue.isEmpty())
 			throw new DBAppException("No column to update.");
-		
-			for (String strColumnName : htblColNameValue.keySet()) {
-				if (!metadata.checkColumnName(strTableName,strColumnName)) { 
-					throw new DBAppException("Column doesn't exist.");
+
+		for (String strColumnName : htblColNameValue.keySet()) {
+			if (!metadata.checkColumnName(strTableName, strColumnName)) {
+				throw new DBAppException("Column doesn't exist.");
+			} else {
+				String strColumnTypeMetadata = metadata.getColumnType(strTableName, strColumnName);
+				Object objColumnValue = htblColNameValue.get(strColumnName);
+				if (objColumnValue == null) {
+					throw new DBAppException("Column value for " + strColumnName + " is null.");
 				}
-				else{
-					String strColumnTypeMetadata = metadata.getColumnType(strTableName, strColumnName);
-            		Object objColumnValue = htblColNameValue.get(strColumnName);
-            		if (objColumnValue == null) {
-                		throw new DBAppException("Column value for " + strColumnName + " is null.");
-            }
-            String strDataType = objColumnValue.getClass().getName();
-            if (!strColumnTypeMetadata.equals(strDataType)) {
-                throw new DBAppException("Datatypes do not match for the column " + strColumnName);
-            }
+				String strDataType = objColumnValue.getClass().getName();
+				if (!strColumnTypeMetadata.equals(strDataType)) {
+					throw new DBAppException("Datatypes do not match for the column " + strColumnName);
+				}
+			}
 		}
-	}
 		String strClusteringKey = metadata.getClusteringkey(strTableName);
 		String strclusteringKeyType = metadata.getColumnType(strTableName, strClusteringKey);
 		Comparable cmpClusteringKeyValue;
 
-		try{
-		  if (strclusteringKeyType.equals("java.lang.Integer")) {
-			cmpClusteringKeyValue = Integer.parseInt(strClusteringKeyValue);
-		} else if (strclusteringKeyType.equals("java.lang.Double")) {
-			cmpClusteringKeyValue = Double.parseDouble(strClusteringKeyValue);
-		} else if (strclusteringKeyType.equals("java.lang.String")) {
-            cmpClusteringKeyValue = strClusteringKeyValue;
-        } else {
-            throw new DBAppException("Unsupported data type for clustering key.");
-        }
-    	} 
-		catch (NumberFormatException e) {
-          throw new DBAppException("Clustering key value does not match expected data type.");
-    }
+		try {
+			if (strclusteringKeyType.equals("java.lang.Integer")) {
+				cmpClusteringKeyValue = Integer.parseInt(strClusteringKeyValue);
+			} else if (strclusteringKeyType.equals("java.lang.Double")) {
+				cmpClusteringKeyValue = Double.parseDouble(strClusteringKeyValue);
+			} else if (strclusteringKeyType.equals("java.lang.String")) {
+				cmpClusteringKeyValue = strClusteringKeyValue;
+			} else {
+				throw new DBAppException("Unsupported data type for clustering key.");
+			}
+		} catch (NumberFormatException e) {
+			throw new DBAppException("Clustering key value does not match expected data type.");
+		}
 
 		Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 		String strKey = metadata.getClusteringkey(strTableName);
@@ -566,60 +567,60 @@ public class DBApp {
 			System.out.println("No tuples found in the page.");
 			return;
 		}
-	
+
 		Tuple tplTuple = vecTuples.get(intTupleIndex);
 		if (tplTuple == null) {
 			System.out.println("Tuple is null.");
 			return;
 		}
-	
-			Tuple tupleOriginalTuple = tplTuple.clone();
-			List<String> listMetaCol = metadata.getColumnNames(strTableName);
-			HashSet<String> hashsetIndexedonly = new HashSet<String>();
-			for(String strName : listMetaCol){
-				String strIndexName = metadata.getIndexName(strTableName, strName);
-				if (!(strIndexName.equals("null"))){
-					hashsetIndexedonly.add(strName);
-				}
-			}
-			for (String strColumnName : hashsetIndexedonly) {
-					Comparable cmpTemp = (Comparable)tplTuple.getColumnValue(strColumnName);
-					
-					if(htblColNameValue.containsKey(strColumnName)){
-						cmpTemp = (Comparable)tplTuple.getColumnValue(strColumnName);
-						Comparable cmpColumnValue = (Comparable)htblColNameValue.get(strColumnName);
-						tplTuple.setColumnValue(strColumnName, cmpColumnValue);
-				
-						String indexName = metadata.getIndexName(strTableName, strColumnName);
-						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-						// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
-						// bptTree.insert(cmpColumnValue, (Comparable) tplTuple);
-						Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(), tplTuple.getColumnValue(strClusteringKey));
-               			bptTree.remove(cmpTemp, keyPair);
-                		bptTree.insert(cmpColumnValue, keyPair);
-						bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");	
-					
-					pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-					tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-					}
-					else{
-						String strIndexName = metadata.getIndexName(strTableName, strColumnName);
-						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-						// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
-						// bptTree.insert(cmpTemp, (Comparable) tplTuple);
-						Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(), tplTuple.getColumnValue(strClusteringKey));
-                		bptTree.remove(cmpTemp, keyPair);
-                		bptTree.insert(cmpTemp, keyPair);
-						bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
-					}
 
+		Tuple tupleOriginalTuple = tplTuple.clone();
+		List<String> listMetaCol = metadata.getColumnNames(strTableName);
+		HashSet<String> hashsetIndexedonly = new HashSet<String>();
+		for (String strName : listMetaCol) {
+			String strIndexName = metadata.getIndexName(strTableName, strName);
+			if (!(strIndexName.equals("null"))) {
+				hashsetIndexedonly.add(strName);
 			}
-		//}
-			pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-			
+		}
+		for (String strColumnName : hashsetIndexedonly) {
+			Comparable cmpTemp = (Comparable) tplTuple.getColumnValue(strColumnName);
+
+			if (htblColNameValue.containsKey(strColumnName)) {
+				cmpTemp = (Comparable) tplTuple.getColumnValue(strColumnName);
+				Comparable cmpColumnValue = (Comparable) htblColNameValue.get(strColumnName);
+				tplTuple.setColumnValue(strColumnName, cmpColumnValue);
+
+				String indexName = metadata.getIndexName(strTableName, strColumnName);
+				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
+				// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
+				// bptTree.insert(cmpColumnValue, (Comparable) tplTuple);
+				Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(),
+						tplTuple.getColumnValue(strClusteringKey));
+				bptTree.remove(cmpTemp, keyPair);
+				bptTree.insert(cmpColumnValue, keyPair);
+				bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
+
+				pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
+				tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
+			} else {
+				String strIndexName = metadata.getIndexName(strTableName, strColumnName);
+				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
+				// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
+				// bptTree.insert(cmpTemp, (Comparable) tplTuple);
+				Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(),
+						tplTuple.getColumnValue(strClusteringKey));
+				bptTree.remove(cmpTemp, keyPair);
+				bptTree.insert(cmpTemp, keyPair);
+				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
+			}
+
+		}
+		// }
+		pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
+		tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
+
 	}
-	
 
 	/**
 	 * The function `getPageByClusteringKey` searches for a specific page in a table
@@ -675,8 +676,6 @@ public class DBApp {
 
 			Comparable cmpPageMaxValue = table.getMax(strMiddlePage);
 
-			
-
 			// convert the object to comparable to compare it with the clustering key
 
 			Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
@@ -720,7 +719,7 @@ public class DBApp {
 	 */
 	private void deleteWithClusteringKey(String strTableName, String strClusteringKey,
 			Hashtable<String, Object> htblColNameValue, Table table) throws DBAppException {
-		
+
 		String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
 
 		Object objClusteringKeyValue = htblColNameValue.get(strClusteringKey);
@@ -736,17 +735,16 @@ public class DBApp {
 		if (!tupleSatisfiesAndedConditions(tupleTuple, htblColNameValue)) {
 			return;
 		}
-		
+
 		pagePage.deleteTupleWithIndex(intTupleIndex);
 
-		
 		if (pagePage.getSize() == 0) {
 			Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 			table.removePage(pagePage.getPageName());
 			table.removeMin(pagePage.getPageName());
 			table.removeMax(pagePage.getPageName());
-			
-		}else{
+
+		} else {
 			// set min and max values for the page
 			Comparable cmpMin = (Comparable) pagePage.getTupleWithIndex(0).getColumnValue(strClusteringKeyColName);
 			Comparable cmpMax = (Comparable) pagePage.getTupleWithIndex(pagePage.getSize() - 1)
@@ -755,7 +753,7 @@ public class DBApp {
 			table.setMax(pagePage.getPageName(), cmpMax);
 
 			pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-			
+
 		}
 
 		table.serialize("tables/" + strTableName + "/" + strTableName + ".class");
@@ -766,7 +764,8 @@ public class DBApp {
 			if (metadata.isColumnIndexed(strTableName, col)) {
 				String strIndexName = metadata.getIndexName(strTableName, col);
 				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-				Pair<Object, String> pair = new Pair<>(tupleTuple.getColumnValue(strClusteringKeyColName), tupleTuple.getPageName());
+				Pair<Object, String> pair = new Pair<>(tupleTuple.getColumnValue(strClusteringKeyColName),
+						tupleTuple.getPageName());
 				bptTree.remove((Comparable) tupleTuple.getColumnValue(col), pair);
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 			}
@@ -796,17 +795,16 @@ public class DBApp {
 	 *                         `getTuplesFromIndex`, it is used to specify the
 	 *                         column name and value that you want to search for
 	 *                         in the index.
-	 * @param table 		   The `table` parameter is an object of type `Table`
-	 * 					       that represents a table in a database. It contains
-	 * 					       information about the table, such as the number of
-	 * 					       pages and the pages themselves.
+	 * @param table            The `table` parameter is an object of type `Table`
+	 *                         that represents a table in a database. It contains
+	 *                         information about the table, such as the number of
+	 *                         pages and the pages themselves.
 	 * @return This method returns a Hashtable containing tuples and their
 	 *         corresponding page names that
 	 *         match the given indexed column value in the specified table.
 	 */
 	private Hashtable<Tuple, String> getTuplesFromIndex(String strTableName, String strIndexedColumn,
 			Hashtable<String, Object> htblColNameValue, Table table) throws DBAppException {
-
 
 		String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
 
@@ -820,7 +818,7 @@ public class DBApp {
 
 		Hashtable<Tuple, String> htblTuples = new Hashtable<>(); // Tuple, page name
 
-		List<Pair> arrayPairs = bplustreeIndex.query(cmpIndexedColumnValue); 
+		List<Pair> arrayPairs = bplustreeIndex.query(cmpIndexedColumnValue);
 
 		for (Pair pairPair : arrayPairs) {
 
@@ -833,7 +831,6 @@ public class DBApp {
 			int intTupleIndex = pagePage.searchTuplesByClusteringKey(strClusteringKeyColName, cmpClusteringKeyValue);
 
 			Tuple tupleTuple = pagePage.getTupleWithIndex(intTupleIndex);
-
 
 			htblTuples.put(tupleTuple, strPageName);
 
@@ -939,18 +936,20 @@ public class DBApp {
 				table.removePage(pageCurrentPage.getPageName());
 				table.removeMin(pageCurrentPageName);
 				table.removeMax(pageCurrentPageName);
-				
+
 			} else {
 				// set min and max values for the page
-				Comparable cmpMin = (Comparable) pageCurrentPage.getTupleWithIndex(0).getColumnValue(strClusteringKeyColName);
-				Comparable cmpMax = (Comparable) pageCurrentPage.getTupleWithIndex(pageCurrentPage.getSize() - 1).getColumnValue(strClusteringKeyColName);
+				Comparable cmpMin = (Comparable) pageCurrentPage.getTupleWithIndex(0)
+						.getColumnValue(strClusteringKeyColName);
+				Comparable cmpMax = (Comparable) pageCurrentPage.getTupleWithIndex(pageCurrentPage.getSize() - 1)
+						.getColumnValue(strClusteringKeyColName);
 				table.setMin(pageCurrentPageName, cmpMin);
 				table.setMax(pageCurrentPageName, cmpMax);
 
 				// TODO: Don't do this step if no tuples were deleted
 				pageCurrentPage.serialize("tables/" + strTableName + "/" + pageCurrentPageName + ".class");
 				intPageIndex++;
-				
+
 			}
 			intNumberOfPages = table.getNumberOfPages();
 
@@ -979,7 +978,6 @@ public class DBApp {
 	 * @param table
 	 */
 
-	
 	private void deleteWithoutClusteringKey(String strTableName, Hashtable<String, Object> htblColNameValue,
 			Table table) throws DBAppException {
 
@@ -991,7 +989,7 @@ public class DBApp {
 				System.out.println("Indexed column: " + col + " found.");
 				if (htblTuples == null) {
 					htblTuples = getTuplesFromIndex(strTableName, col, htblColNameValue, table);
-					
+
 				} else {
 					// get the intersection hashmap entries
 
@@ -1009,7 +1007,7 @@ public class DBApp {
 				if (!tupleSatisfiesAndedConditions(tuple, htblColNameValue)) {
 					continue;
 				}
-				
+
 				String strPageName = htblTuples.get(tuple);
 
 				Page pagePage = Page.deserialize("tables/" + strTableName + "/" + strPageName + ".class");
@@ -1021,30 +1019,31 @@ public class DBApp {
 					table.removePage(pagePage.getPageName());
 					table.removeMin(strPageName);
 					table.removeMax(strPageName);
-					
-				}else{
+
+				} else {
 
 					// set min and max values for the page
-					Comparable cmpMin = (Comparable) pagePage.getTupleWithIndex(0).getColumnValue(strClusteringKeyColName);
-					Comparable cmpMax = (Comparable) pagePage.getTupleWithIndex(pagePage.getSize() - 1).getColumnValue(strClusteringKeyColName);
+					Comparable cmpMin = (Comparable) pagePage.getTupleWithIndex(0)
+							.getColumnValue(strClusteringKeyColName);
+					Comparable cmpMax = (Comparable) pagePage.getTupleWithIndex(pagePage.getSize() - 1)
+							.getColumnValue(strClusteringKeyColName);
 					table.setMin(strPageName, cmpMin);
 					table.setMax(strPageName, cmpMax);
-					
+
 					pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 				}
-				
+
 				table.serialize("tables/" + strTableName + "/" + strTableName + ".class");
 
 				// delete from all relevant indices
-
-				
 
 				for (String col : metadata.getColumnNames(strTableName)) {
 					if (metadata.isColumnIndexed(strTableName, col)) {
 						String strIndexName = metadata.getIndexName(strTableName, col);
 						BPlusTree bptTree = BPlusTree
 								.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-						Pair<Object, String> pair = new Pair<>(tuple.getColumnValue(strClusteringKeyColName), tuple.getPageName());
+						Pair<Object, String> pair = new Pair<>(tuple.getColumnValue(strClusteringKeyColName),
+								tuple.getPageName());
 						bptTree.remove((Comparable) tuple.getColumnValue(col), pair);
 						bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 					}
@@ -1125,7 +1124,7 @@ public class DBApp {
 		if (htblColNameValue.containsKey(strClusteringKey)) {
 			deleteWithClusteringKey(strTableName, strClusteringKey, htblColNameValue, table);
 		} else {
-			
+
 			deleteWithoutClusteringKey(strTableName, htblColNameValue, table);
 		}
 
@@ -1676,12 +1675,9 @@ public class DBApp {
 
 	public static void main(String[] args) throws DBAppException, IOException, ClassNotFoundException {
 
-		try{
-			
-			
-			  
+		try {
 
-            DBApp dbApp = new DBApp();
+			DBApp dbApp = new DBApp();
 
 			dbApp.init();
 

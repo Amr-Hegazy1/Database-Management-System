@@ -19,7 +19,7 @@ import com.db_engine.Tuple;
 
 public class SelectTestCases {
 
-    // TODO indicies tests
+    // TODO indicies tests (almost complete)
     // TODO add XOR to all tests
 
     // @Test
@@ -1951,6 +1951,365 @@ public class SelectTestCases {
             assert noIndexCount == indexCount;
             assert noIndexCount == 5; // if this assert passes that means the number of values is correct and that
                                       // they are equal.
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void MultipleIndexedQueries() throws DBAppException, ClassNotFoundException, IOException {
+        // Compare Select query results with and without index for more than one indexed
+        // column at
+        // a time
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+            initializeTestTable(dbApp, 20);
+
+            int indexCount = 0;
+            int noIndexCount = 0;
+
+            // Test 1: Two indexed values (Exact Value) (clust key + non-clust key)
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[1];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            strarrOperators[0] = "OR";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "gpa";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 3.0;
+
+            Iterator iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from
+                                                                                                 // Student where id= 5
+                                                                                                 // OR
+                                                                                                 // gpa = 3.0;
+
+            dbApp.createIndex("Student", "id", "idIndex");
+            dbApp.createIndex("Student", "gpa", "gpaIndex");
+
+            Iterator IteratorWithIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iteratorWithoutIndex.hasNext()) {
+                Tuple tuple = (Tuple) iteratorWithoutIndex.next();
+                assert (int) tuple.getColumnValue("id") == 5 || (double) tuple.getColumnValue("gpa") == 3.0;
+                noIndexCount++;
+            }
+
+            while (IteratorWithIndex.hasNext()) {
+                Tuple tuple = (Tuple) IteratorWithIndex.next();
+                assert (int) tuple.getColumnValue("id") == 5 || (double) tuple.getColumnValue("gpa") == 3.0;
+                indexCount++;
+            }
+
+            assert noIndexCount == indexCount;
+            assert noIndexCount == 2; // if this assert passes that means the number of values is correct and that
+                                      // they are equal.
+
+            noIndexCount = 0;
+            indexCount = 0;
+
+            cleanUp(); // remove index
+
+            initializeTestTable(dbApp, 20);
+
+            // Test 2: Two indexed values (Ranged Values) (clust key + non-clust key)
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = 5;
+
+            strarrOperators[0] = "AND";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "gpa";
+            arrSQLTerms[1]._strOperator = "<=";
+            arrSQLTerms[1]._objValue = 3.9;
+
+            iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
+                                                                                        // id= 5 AND gpa = 3.0;
+
+            dbApp.createIndex("Student", "id", "idIndex");
+            dbApp.createIndex("Student", "gpa", "gpaIndex");
+
+            IteratorWithIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iteratorWithoutIndex.hasNext()) {
+                Tuple tuple = (Tuple) iteratorWithoutIndex.next();
+                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") <= 3.0;
+                noIndexCount++;
+            }
+
+            while (IteratorWithIndex.hasNext()) {
+                Tuple tuple = (Tuple) IteratorWithIndex.next();
+                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") <= 3.0;
+            }
+
+            assert noIndexCount == indexCount;
+            assert noIndexCount == 4; // if this assert passes that means the number of values is correct and that
+                                      // they are equal.
+
+            noIndexCount = 0;
+            indexCount = 0;
+
+            cleanUp(); // remove index
+
+            initializeTestTable(dbApp, 20);
+
+            // Test 3: Two indexed values (Exact Value) (non-clust + non-clust)
+            arrSQLTerms = new SQLTerm[2];
+            strarrOperators = new String[1];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = "Student5";
+
+            strarrOperators[0] = "OR";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "gpa";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 3.0;
+
+            iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from
+                                                                                        // Student where name=
+                                                                                        // "Student5"
+                                                                                        // OR
+                                                                                        // gpa = 3.0;
+
+            dbApp.createIndex("Student", "name", "nameIndex");
+            dbApp.createIndex("Student", "gpa", "gpaIndex");
+
+            IteratorWithIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iteratorWithoutIndex.hasNext()) {
+                Tuple tuple = (Tuple) iteratorWithoutIndex.next();
+                assert tuple.getColumnValue("name").equals("Student5") || (double) tuple.getColumnValue("gpa") == 3.0;
+                noIndexCount++;
+            }
+
+            while (IteratorWithIndex.hasNext()) {
+                Tuple tuple = (Tuple) IteratorWithIndex.next();
+                assert tuple.getColumnValue("name").equals("Student5") || (double) tuple.getColumnValue("gpa") == 3.0;
+                indexCount++;
+            }
+
+            assert noIndexCount == indexCount;
+            assert noIndexCount == 2; // if this assert passes that means the number of values is correct and that
+                                      // they are equal.
+
+            noIndexCount = 0;
+            indexCount = 0;
+
+            cleanUp(); // remove index
+
+            initializeTestTable(dbApp, 20);
+
+            // Test 4: Two indexed values (Ranged Values) (non-clust + non-clust)
+            arrSQLTerms = new SQLTerm[2];
+            strarrOperators = new String[1];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = "Student5";
+
+            strarrOperators[0] = "AND";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "gpa";
+            arrSQLTerms[1]._strOperator = "<=";
+            arrSQLTerms[1]._objValue = 3.9;
+
+            iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from
+                                                                                        // Student where name>
+                                                                                        // "Student5"
+                                                                                        // AND
+                                                                                        // gpa <= 3.9;
+
+            dbApp.createIndex("Student", "name", "nameIndex");
+            dbApp.createIndex("Student", "gpa", "gpaIndex");
+
+            IteratorWithIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iteratorWithoutIndex.hasNext()) {
+                Tuple tuple = (Tuple) iteratorWithoutIndex.next();
+                assert ((String) tuple.getColumnValue("name")).compareTo("Student5") > 0
+                        && (double) tuple.getColumnValue("gpa") <= 3.9;
+                noIndexCount++;
+            }
+
+            while (IteratorWithIndex.hasNext()) {
+                Tuple tuple = (Tuple) IteratorWithIndex.next();
+                assert ((String) tuple.getColumnValue("name")).compareTo("Student5") > 0
+                        && (double) tuple.getColumnValue("gpa") <= 3.9;
+                indexCount++;
+            }
+
+            assert noIndexCount == indexCount;
+            assert noIndexCount == 4; // if this assert passes that means the number of values is correct and that
+                                      // they are equal.
+
+            noIndexCount = 0;
+            indexCount = 0;
+
+            cleanUp(); // remove index
+
+            initializeTestTable(dbApp, 20);
+
+            // Test 5: Three indexed values (Exact Value) (clust key + non-clust key +
+            // non-clust)
+            arrSQLTerms = new SQLTerm[3];
+            strarrOperators = new String[2];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            strarrOperators[0] = "OR";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "gpa";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 3.0;
+
+            strarrOperators[1] = "OR";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "name";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = "Student10";
+
+            iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from
+                                                                                        // Student where id= 5
+                                                                                        // OR
+                                                                                        // gpa = 3.0
+                                                                                        // OR
+                                                                                        // name = "Student10";
+
+            dbApp.createIndex("Student", "id", "idIndex");
+            dbApp.createIndex("Student", "gpa", "gpaIndex");
+            dbApp.createIndex("Student", "name", "nameIndex");
+
+            IteratorWithIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iteratorWithoutIndex.hasNext()) {
+                Tuple tuple = (Tuple) iteratorWithoutIndex.next();
+                assert (int) tuple.getColumnValue("id") == 5 || (double) tuple.getColumnValue("gpa") == 3.0
+                        || tuple.getColumnValue("name").equals("Student10");
+                noIndexCount++;
+            }
+
+            while (IteratorWithIndex.hasNext()) {
+                Tuple tuple = (Tuple) IteratorWithIndex.next();
+                assert (int) tuple.getColumnValue("id") == 5 || (double) tuple.getColumnValue("gpa") == 3.0
+                        || tuple.getColumnValue("name").equals("Student10");
+                indexCount++;
+            }
+
+            assert noIndexCount == indexCount;
+            assert noIndexCount == 3; // if this assert passes that means the number of values is correct and that
+                                      // they are equal.
+
+            noIndexCount = 0;
+            indexCount = 0;
+
+            cleanUp(); // remove index
+
+            initializeTestTable(dbApp, 20);
+
+            // Test 6: Three indexed values (Ranged Values) (clust key + non-clust key +
+            // non-clust)
+
+            arrSQLTerms = new SQLTerm[3];
+            strarrOperators = new String[2];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = 5;
+
+            strarrOperators[0] = "AND";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "gpa";
+            arrSQLTerms[1]._strOperator = ">";
+            arrSQLTerms[1]._objValue = 3.6;
+
+            strarrOperators[1] = "AND";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "name";
+            arrSQLTerms[2]._strOperator = "<=";
+            arrSQLTerms[2]._objValue = "Student10";
+
+            iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from
+                                                                                        // Student where id> 5
+                                                                                        // AND
+                                                                                        // gpa > 3.6
+                                                                                        // AND
+                                                                                        // name <= "Student10";
+
+            dbApp.createIndex("Student", "id", "idIndex");
+            dbApp.createIndex("Student", "gpa", "gpaIndex");
+            dbApp.createIndex("Student", "name", "nameIndex");
+
+            IteratorWithIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iteratorWithoutIndex.hasNext()) {
+                Tuple tuple = (Tuple) iteratorWithoutIndex.next();
+                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") > 3.6
+                        && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
+                noIndexCount++;
+            }
+
+            while (IteratorWithIndex.hasNext()) {
+                Tuple tuple = (Tuple) IteratorWithIndex.next();
+                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") > 3.6
+                        && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
+                indexCount++;
+            }
+
+            assert noIndexCount == indexCount;
+            assert noIndexCount == 4; // if this assert passes that means the number of values is correct and that
+                                      // they are equal.
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    // TODO complete query time test
+    @Test
+    public void IndexedQueryTime() throws IOException, DBAppException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 1000);
 
         } finally {
             cleanUp();
