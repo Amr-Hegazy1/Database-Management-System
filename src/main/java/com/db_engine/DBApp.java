@@ -406,12 +406,17 @@ public class DBApp {
 	// htblColNameValue will not include clustering key as column name
 	// strClusteringKeyValue is the value to look for to find the row to update.
 	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
-		
+		if(strTableName==null)
+			throw new DBAppException("Table does not exist.");
+
 		if (!metadata.checkTableName(strTableName)) 
 			throw new DBAppException("Table does not exist.");
 
-		if (strClusteringKeyValue == null) 
+		if (strClusteringKeyValue==null)
 			throw new DBAppException("Clustering key value is null.");
+
+		if(htblColNameValue==null)
+			throw new DBAppException("Column values are null.");
 		
 		if (htblColNameValue.isEmpty()) 
 			throw new DBAppException("No column to update.");
@@ -422,12 +427,14 @@ public class DBApp {
 				}
 				else{
 					String strColumnTypeMetadata = metadata.getColumnType(strTableName, strColumnName);
-					Object ObjcolumnValue = htblColNameValue.get(strColumnName);
-					String strdatatype = ObjcolumnValue.getClass().getName();
-
-						if (!strColumnTypeMetadata.equals(strdatatype)) {
-							throw new DBAppException("Datatypes do not match for the column");
-			}
+            		Object objColumnValue = htblColNameValue.get(strColumnName);
+            		if (objColumnValue == null) {
+                		throw new DBAppException("Column value for " + strColumnName + " is null.");
+            }
+            String strDataType = objColumnValue.getClass().getName();
+            if (!strColumnTypeMetadata.equals(strDataType)) {
+                throw new DBAppException("Datatypes do not match for the column " + strColumnName);
+            }
 		}
 	}
 		String strClusteringKey = metadata.getClusteringkey(strTableName);
@@ -442,24 +449,38 @@ public class DBApp {
 		} else if (strclusteringKeyType.equals("java.lang.String")) {
             cmpClusteringKeyValue = strClusteringKeyValue;
         } else {
-            throw new DBAppException("Unsupported data type for clustering key");
+            throw new DBAppException("Unsupported data type for clustering key.");
         }
     	} 
 		catch (NumberFormatException e) {
-          throw new DBAppException("Clustering key value does not match expected data type");
+          throw new DBAppException("Clustering key value does not match expected data type.");
     }
 
 		Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 		String strKey = metadata.getClusteringkey(strTableName);
 
 		Page pagePage = getPageByClusteringKey(strTableName, strKey, cmpClusteringKeyValue, tblTable);
+		if (pagePage == null) {
+			System.out.println("Page for clustering key value not found.");
+			return;
+		}
 		int intTupleIndex = pagePage.searchTuplesByClusteringKey(strKey, cmpClusteringKeyValue);
-		
-
-		if (pagePage != null) {
-
-			Vector<Tuple> vecTuples = pagePage.getVecTuples();
-			Tuple tplTuple = vecTuples.get(intTupleIndex);
+		if (intTupleIndex < 0) {
+			System.out.println("No matching tuple found for clustering key value.");
+			return;
+		}
+		Vector<Tuple> vecTuples = pagePage.getVecTuples();
+		if (vecTuples == null || vecTuples.isEmpty()) {
+			System.out.println("No tuples found in the page.");
+			return;
+		}
+	
+		Tuple tplTuple = vecTuples.get(intTupleIndex);
+		if (tplTuple == null) {
+			System.out.println("Tuple is null.");
+			return;
+		}
+	
 			Tuple tupleOriginalTuple = tplTuple.clone();
 			List<String> listMetaCol = metadata.getColumnNames(strTableName);
 			HashSet<String> hashsetIndexedonly = new HashSet<String>();
@@ -501,7 +522,7 @@ public class DBApp {
 					}
 
 			}
-		}
+		//}
 			pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
 			
