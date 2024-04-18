@@ -184,7 +184,7 @@ public class TestCases {
 
                 Pair pair = (Pair) tree.query(i).get(0);
 
-                String clusteringKey = (String) pair.getKey();
+                Integer clusteringKey = (Integer) pair.getKey();
 
                 String pageName = (String) pair.getValue();
 
