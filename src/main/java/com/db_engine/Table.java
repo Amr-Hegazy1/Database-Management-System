@@ -167,7 +167,7 @@ public class Table implements Serializable {
      */
     public void setMin(String pageName, Comparable min){
         //set the minimum value of a page
-        this.vecMin.set(this.vecPages.indexOf(pageName), min);
+        this.vecMin.add(this.vecPages.indexOf(pageName), min);
     }
 
     /**
@@ -181,7 +181,7 @@ public class Table implements Serializable {
 
     public void setMax(String pageName, Comparable max){
         //set the maximum value of a page
-        this.vecMax.set(this.vecPages.indexOf(pageName), max);
+        this.vecMax.add(this.vecPages.indexOf(pageName), max);
     }
     
 
@@ -267,253 +267,284 @@ public class Table implements Serializable {
         return strTableName;
     }
 
-    public HashSet<Tuple> greaterthan(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
-
-        HashSet<Tuple> hmtup = new HashSet<>();
+    public HashSet<Tuple> greaterthan(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+        
+        HashSet<Tuple> hmtup = new HashSet<>();   
         boolean noneed = false;
-        for (int i = 0; i < vecPages.size(); i++) {
-            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
-            if (val instanceof Integer) {
-                Integer temp = (Integer) val;
-                if (noneed || ((Integer) page1.Min(col)) < temp) {
-                    hmtup.addAll(page1.allTup());
-                } else if ((Integer) page1.Min(col) <= temp && ((Integer) page1.Max(col)) > temp) {
+        for(int i=0;i<vecPages.size();i++){
+            if(val instanceof Integer){
+                Integer temp = (Integer)val;
+                
+                if(((Integer)getMin(vecPages.get(i)))<= temp && ((Integer)getMax(vecPages.get(i)))>temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtrsearch(col, val, true, index));
-                    noneed = true;
+                    noneed=true;
                 }
-            } else if (val instanceof Double) {
-                Double temp = (Double) val;
-                if (noneed || ((Double) page1.Min(col)) < temp) {
+                else if(noneed || ((Integer)getMin(vecPages.get(i))< temp )){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     hmtup.addAll(page1.allTup());
-                } else if ((Double) page1.Min(col) <= temp && ((Double) page1.Max(col)) > temp) {
-                    int index = page1.binarySearchTuples(col, val);
-                    hmtup.addAll(page1.gtrsearch(col, val, true, index));
-                    noneed = true;
-                }
-            } else {
-                String temp = (String) val;
-                if (noneed || ((String) page1.Min(col)).compareTo(temp) < 0) {
-                    hmtup.addAll(page1.allTup());
-                } else if (((String) page1.Min(col)).compareTo(temp) <= 0
-                        && ((String) page1.Max(col)).compareTo(temp) > 0) {
-                    int index = page1.binarySearchTuples(col, val);
-                    hmtup.addAll(page1.gtrsearch(col, val, true, index));
-                    noneed = true;
                 }
             }
-        }
+            else if(val instanceof Double){
+                Double temp = (Double)val;
+                if(noneed || ((Double)getMin(vecPages.get(i)))<temp ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    hmtup.addAll(page1.allTup());
+                }
+                else if((Double)getMin(vecPages.get(i))<=temp && ((Double)getMax(vecPages.get(i)))>temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    int index = page1.binarySearchTuples(col, val);
+                    hmtup.addAll(page1.gtrsearch(col, val, true, index));
+                    noneed=true;
+                }            
+            }
+            else{
+                String temp = (String)val;
+                if(noneed || ((String)getMin(vecPages.get(i))).compareTo(temp)<0 ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    hmtup.addAll(page1.allTup());
+                }
+                else if(((String)getMin(vecPages.get(i))).compareTo(temp)<=0&& ((String)getMax(vecPages.get(i))).compareTo(temp)>0){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    int index = page1.binarySearchTuples(col, val);
+                    hmtup.addAll(page1.gtrsearch(col, val, true, index));
+                    noneed=true;
+                }     
+            }
+        }  
         return hmtup;
     }
-
-    public HashSet<Tuple> greaterthannc(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
+    public HashSet<Tuple> greaterthannc(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
-        for (int i = 0; i < vecPages.size(); i++) {
-            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
+        for(int i=0;i<vecPages.size();i++){
+            Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
             hmtup.addAll(page1.gtrsearch(col, val, false, 201));
         }
         return hmtup;
     }
 
+
     // greater than equal
-    public HashSet<Tuple> greaterthaneq(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
-        HashSet<Tuple> hmtup = new HashSet<>();
+    public HashSet<Tuple> greaterthaneq(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+        HashSet<Tuple> hmtup = new HashSet<>();   
         boolean noneed = false;
-        for (int i = 0; i < vecPages.size(); i++) {
-            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
-            if (val instanceof Integer) {
-                Integer temp = (Integer) val;
-                if (noneed || ((Integer) page1.Min(col)) <= temp) {
+        for(int i=0;i<vecPages.size();i++){
+            if(val instanceof Integer){
+                Integer temp = (Integer)val;
+                if(noneed || ((Integer)getMin(vecPages.get(i)))<=temp ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     hmtup.addAll(page1.allTup());
-                } else if ((Integer) page1.Min(col) <= temp && ((Integer) page1.Max(col)) >= temp) {
-                    int index = page1.binarySearchTuples(col, val);
-                    hmtup.addAll(page1.gtreqsearch(col, val, true, index));
-                    noneed = true;
                 }
-            } else if (val instanceof Double) {
-                Double temp = (Double) val;
-                if (noneed || ((Double) page1.Min(col)) <= temp) {
-                    hmtup.addAll(page1.allTup());
-                } else if ((Double) page1.Min(col) <= temp && ((Double) page1.Max(col)) >= temp) {
+                else if((Integer)getMin(vecPages.get(i))<= temp && ((Integer)getMax(vecPages.get(i)))>=temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtreqsearch(col, val, true, index));
-                    noneed = true;
-                }
-            } else {
-                String temp = (String) val;
-                if (noneed || ((String) page1.Min(col)).compareTo(temp) <= 0) {
-                    hmtup.addAll(page1.allTup());
-                } else if (((String) page1.Min(col)).compareTo(temp) <= 0
-                        && ((String) page1.Max(col)).compareTo(temp) >= 0) {
-                    int index = page1.binarySearchTuples(col, val);
-                    hmtup.addAll(page1.gtreqsearch(col, val, true, index));
-                    noneed = true;
+                    noneed=true;
                 }
             }
-        }
+            else if(val instanceof Double){
+                Double temp = (Double)val;
+                if(noneed || ((Double)getMin(vecPages.get(i)))<=temp ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    hmtup.addAll(page1.allTup());
+                }
+                else if((Double)getMin(vecPages.get(i))<=temp && ((Double)getMax(vecPages.get(i)))>=temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    int index = page1.binarySearchTuples(col, val);
+                    hmtup.addAll(page1.gtreqsearch(col, val, true, index));
+                    noneed=true;
+                }            
+            }
+            else{
+                String temp = (String)val;
+                if(noneed || ((String)getMin(vecPages.get(i))).compareTo(temp)<=0 ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    hmtup.addAll(page1.allTup());
+                }
+                else if(((String)getMin(vecPages.get(i))).compareTo(temp)<=0&& ((String)getMax(vecPages.get(i))).compareTo(temp)>=0){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    int index = page1.binarySearchTuples(col, val);
+                    hmtup.addAll(page1.gtreqsearch(col, val, true, index));
+                    noneed=true;
+                }     
+            }
+        }  
         return hmtup;
     }
-
-    public HashSet<Tuple> greaterthaneqnc(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
+    public HashSet<Tuple> greaterthaneqnc(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
-        for (int i = 0; i < vecPages.size(); i++) {
-            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
+        for(int i=0;i<vecPages.size();i++){
+            Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
             hmtup.addAll(page1.gtreqsearch(col, val, false, 201));
         }
         return hmtup;
     }
 
-    public HashSet<Tuple> lesserthan(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
-        HashSet<Tuple> hmtup = new HashSet<>();
+
+    public HashSet<Tuple> lesserthan(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+        HashSet<Tuple> hmtup = new HashSet<>();   
         boolean noneed = false;
-        for (int i = vecPages.size() - 1; i >= 0; i--) {
-            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
-            if (val instanceof Integer) {
-                Integer temp = (Integer) val;
-                if (noneed || ((Integer) page1.Max(col)) < temp) {
+        for(int i=vecPages.size()-1;i>=0;i--){
+            if(val instanceof Integer){
+                Integer temp = (Integer)val;
+                if(noneed || ((Integer)getMax(vecPages.get(i)))<temp ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     hmtup.addAll(page1.allTup());
-                } else if ((Integer) page1.Min(col) < temp && ((Integer) page1.Max(col)) >= temp) {
+                }
+                else if((Integer)getMin(vecPages.get(i))<temp && ((Integer)getMax(vecPages.get(i)))>=temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
-                    noneed = true;
+                    noneed=true;
                 }
-            } else if (val instanceof Double) {
-                Double temp = (Double) val;
-                if (noneed || ((Double) page1.Max(col)) < temp) {
+            }
+            else if(val instanceof Double){
+                Double temp = (Double)val;
+                if(noneed || ((Double)getMax(vecPages.get(i)))<temp ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     hmtup.addAll(page1.allTup());
-                } else if ((Double) page1.Min(col) < temp && ((Double) page1.Max(col)) >= temp) {
+                }
+                else if((Double)getMin(vecPages.get(i))<temp && ((Double)getMax(vecPages.get(i)))>=temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
-                    noneed = true;
-                }
-            } else {
-                String temp = (String) val;
-                if (noneed || ((String) page1.Max(col)).compareTo(temp) < 0) {
+                    noneed=true;
+                }            
+            }
+            else{
+                String temp = (String)val;
+                if(noneed || ((String)getMax(vecPages.get(i))).compareTo(temp)<0 ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     hmtup.addAll(page1.allTup());
-                } else if (((String) page1.Min(col)).compareTo(temp) < 0
-                        && ((String) page1.Max(col)).compareTo(temp) >= 0) {
+                }
+                else if(((String)getMin(vecPages.get(i))).compareTo(temp)<0&& ((String)getMax(vecPages.get(i))).compareTo(temp)>=0){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
-                    noneed = true;
-                }
+                    noneed=true;
+                }     
             }
         }
         return hmtup;
     }
-
-    public HashSet<Tuple> lesserthannc(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
+    
+    public HashSet<Tuple> lesserthannc(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
-        for (int i = 0; i < vecPages.size(); i++) {
-            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
+        for(int i=0;i<vecPages.size();i++){  
+            Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
             hmtup.addAll(page1.lessearch(col, val, false, 201));
         }
         return hmtup;
     }
 
-    public HashSet<Tuple> lesserthaneq(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
-        HashSet<Tuple> hmtup = new HashSet<>();
+    public HashSet<Tuple> lesserthaneq(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+        HashSet<Tuple> hmtup = new HashSet<>();   
         boolean noneed = false;
-        for (int i = vecPages.size() - 1; i >= 0; i--) {
-            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
-            if (val instanceof Integer) {
-                Integer temp = (Integer) val;
-                if (noneed || ((Integer) page1.Max(col)) <= temp) {
+        for(int i=vecPages.size()-1;i>=0;i--){
+            
+            if(val instanceof Integer){
+                Integer temp = (Integer)val;
+                if(noneed || ((Integer)getMax(vecPages.get(i)))<=temp ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     hmtup.addAll(page1.allTup());
-                } else if ((Integer) page1.Min(col) <= temp && ((Integer) page1.Max(col)) >= temp) {
+                }
+                else if((Integer)getMin(vecPages.get(i))<=temp && ((Integer)getMax(vecPages.get(i)))>=temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.leseqsearch(col, val, true, index));
-                    noneed = true;
+                    noneed=true;
                 }
-            } else if (val instanceof Double) {
-                Double temp = (Double) val;
-                if (noneed || ((Double) page1.Max(col)) <= temp) {
+            } 
+            else if(val instanceof Double){
+                Double temp = (Double)val;
+                if(noneed || ((Double)getMax(vecPages.get(i)))<=temp ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     hmtup.addAll(page1.allTup());
-                } else if ((Double) page1.Min(col) <= temp && ((Double) page1.Max(col)) >= temp) {
+                }
+                else if((Double)getMin(vecPages.get(i))<=temp && ((Double)getMax(vecPages.get(i)))>=temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.leseqsearch(col, val, true, index));
-                    noneed = true;
-                }
-            } else {
-                String temp = (String) val;
-                if (noneed || ((String) page1.Max(col)).compareTo(temp) <= 0) {
+                    noneed=true;
+                }            
+            }
+            else{
+                String temp = (String)val;
+                if(noneed || ((String)getMax(vecPages.get(i))).compareTo(temp)<=0 ){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     hmtup.addAll(page1.allTup());
-                } else if (((String) page1.Min(col)).compareTo(temp) <= 0
-                        && ((String) page1.Max(col)).compareTo(temp) >= 0) {
+                }
+                else if(((String)getMin(vecPages.get(i))).compareTo(temp)<=0&& ((String)getMax(vecPages.get(i))).compareTo(temp)>=0){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.lessearch(col, val, true, index));
-                    noneed = true;
-                }
+                    noneed=true;
+                }     
             }
         }
         return hmtup;
     }
-
-    public HashSet<Tuple> lesserthannceq(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
+    
+    public HashSet<Tuple> lesserthannceq(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
-        for (int i = 0; i < vecPages.size(); i++) {
-            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
+        for(int i=0;i<vecPages.size();i++){
+            Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
             hmtup.addAll(page1.leseqsearch(col, val, false, 201));
         }
         return hmtup;
     }
-
-    public HashSet<Tuple> cleqsearch(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
-        HashSet<Tuple> hmtup = new HashSet<>();
-        for (int i = 0; i < vecPages.size(); i++) {
-            Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
-            if (val instanceof Integer) {
-                Integer temp = (Integer) val;
-
-                if ((Integer) page1.Min(col) <= temp && ((Integer) page1.Max(col)) >= temp) {
-                    int index = page1.binarySearchTuples(col, val);
-                    hmtup.addAll(page1.eqsearch(col, val, true, index));
-                    break;
-                }
-            } else if (val instanceof Double) {
-                Double temp = (Double) val;
-                if ((Double) page1.Min(col) <= temp && ((Double) page1.Max(col)) >= temp) {
-                    int index = page1.binarySearchTuples(col, val);
-                    hmtup.addAll(page1.eqsearch(col, val, true, index));
-                    break;
-                }
-            } else {
-                String temp = (String) val;
-                if (((String) page1.Min(col)).compareTo(temp) <= 0 && ((String) page1.Max(col)).compareTo(temp) >= 0) {
+    public HashSet<Tuple> cleqsearch(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
+        HashSet<Tuple> hmtup = new HashSet<>();   
+        for(int i=0;i<vecPages.size();i++){
+            if(val instanceof Integer){
+                Integer temp = (Integer)val;
+        
+                 if((Integer)getMin(vecPages.get(i))<=temp && ((Integer)getMax(vecPages.get(i)))>=temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.eqsearch(col, val, true, index));
                     break;
                 }
             }
+            else if(val instanceof Double){
+                Double temp = (Double)val;
+                if((Double)getMin(vecPages.get(i))<=temp && ((Double)getMax(vecPages.get(i)))>=temp){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    int index = page1.binarySearchTuples(col, val);
+                    hmtup.addAll(page1.eqsearch(col, val, true, index));
+                    break;
+                }            
+            }
+            else{
+                String temp = (String)val;
+                if(((String)getMin(vecPages.get(i))).compareTo(temp)<=0&& ((String)getMax(vecPages.get(i))).compareTo(temp)>=0){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    int index = page1.binarySearchTuples(col, val);
+                    hmtup.addAll(page1.eqsearch(col, val, true, index));
+                    break;
+                }     
+            }
         }
         return hmtup;
     }
-
-    public HashSet<Tuple> eqsearch(String col, Object val) throws ClassNotFoundException, IOException, DBAppException {
+    public HashSet<Tuple> eqsearch(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
-        for (String e : vecPages) {
-            Page page = Page.deserialize("tables/" + strTableName + "/" + e + ".class");
+        for(String e: vecPages){
+            Page page= Page.deserialize("tables/"+strTableName+"/"+e+".class");
             hmtup.addAll(page.eqsearch(col, val, false, 201));
         }
         return hmtup;
     }
 
-    public HashSet<Tuple> noteqsearch(String col, Object val)
-            throws ClassNotFoundException, IOException, DBAppException {
+    public HashSet<Tuple> noteqsearch(String col, Object val) throws ClassNotFoundException, IOException, DBAppException{
         HashSet<Tuple> hmtup = new HashSet<>();
-        for (String e : vecPages) {
-            Page page = Page.deserialize("tables/" + strTableName + "/" + e + ".class");
+        for(String e: vecPages){
+            Page page= Page.deserialize("tables/"+strTableName+"/"+e+".class");
             hmtup.addAll(page.noteqsearch(col, val));
         }
         return hmtup;
     }
+    
 
 }

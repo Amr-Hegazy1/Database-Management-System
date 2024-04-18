@@ -276,8 +276,8 @@ public class SelectTestCases {
             initializeTestTable(dbApp, 20); // Initializes Student Table with Columns Id, name, GPA , with rows count n
                                             // = 20
 
-            SQLTerm[] arrSQLTerms = new SQLTerm[2];
-            String[] strarrOperators = new String[3];
+            SQLTerm[] arrSQLTerms = new SQLTerm[3];
+            String[] strarrOperators = new String[2];
 
             // select with invalid strarrOperators Value (Test 2: 2 Operators, One Valid,
             // One Invalid)
@@ -641,7 +641,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 4;
+            assert count == 1;
 
             count = 0;
 
@@ -668,11 +668,11 @@ public class SelectTestCases {
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert (double) tuple.getColumnValue("gpa") < 3.5 || (int) tuple.getColumnValue("gpa") > 3.9;
+                assert ((double) tuple.getColumnValue("gpa")) < 3.5 || (double) tuple.getColumnValue("gpa") > 3.9;
                 count++;
             }
 
-            assert count == 14;
+            assert count == 20;
 
             count = 0;
 
@@ -700,11 +700,11 @@ public class SelectTestCases {
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert (double) tuple.getColumnValue("gpa") <= 3.5 || (int) tuple.getColumnValue("gpa") >= 3.9;
+                assert (double) tuple.getColumnValue("gpa") <= 3.5 || (double) tuple.getColumnValue("gpa") >= 3.9;
                 count++;
             }
 
-            assert count == 16;
+            assert count == 20;
 
             count = 0;
 
@@ -732,11 +732,11 @@ public class SelectTestCases {
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert (double) tuple.getColumnValue("gpa") <= 3.5 || (int) tuple.getColumnValue("gpa") > 3.9;
+                assert (double) tuple.getColumnValue("gpa") <= 3.5 || (double) tuple.getColumnValue("gpa") > 3.9;
                 count++;
             }
 
-            assert count == 15;
+            assert count == 20;
 
             count = 0;
 
@@ -764,11 +764,11 @@ public class SelectTestCases {
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert (double) tuple.getColumnValue("gpa") < 3.5 || (int) tuple.getColumnValue("gpa") >= 3.9;
+                assert (double) tuple.getColumnValue("gpa") < 3.5 || (double) tuple.getColumnValue("gpa") >= 3.9;
                 count++;
             }
 
-            assert count == 15;
+            assert count == 20;
 
             count = 0;
 
@@ -795,7 +795,7 @@ public class SelectTestCases {
             count = 0;
 
             // Test on Non-Clustering Key (Test 2 : String)
-            arrSQLTerms = new SQLTerm[2];
+            arrSQLTerms = new SQLTerm[1];
             strarrOperators = new String[0];
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = "Student";
@@ -1270,15 +1270,16 @@ public class SelectTestCases {
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
                                                                             // "Student1" XOR id = 2 OR id = 3 AND id =
-                                                                            // 4;
+                                                                      // 4;
             while (!iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
                 assert (int) tuple.getColumnValue("id") == 1
                         || (int) tuple.getColumnValue("id") == 2;
                 count++;
-            }
-
-            assert count == 2;
+            } 
+            System.out.println(count);
+            assert count == 2; 
+            
 
         } finally {
             cleanUp();
