@@ -62,7 +62,7 @@ public class DBApp {
 	 *                               The data type of that column will be passed in
 	 *                               htblColNameType.
 	 * 
-	 * @param htblColNameValue       The `htblColNameValue` will have the column
+	 * @param htblColNameType       The `htblColNameValue` will have the column
 	 *                               name as key and
 	 *                               the data type as value.
 	 * 
@@ -345,8 +345,9 @@ public class DBApp {
 				Pair pairIndexPair = new Pair(tupleNewTuple.getColumnValue(strClustKeyName),
 						tupleNewTuple.getPageName());
 
-				bptTree.insert(colValue, pairIndexPair); // inserting col value(key) and tuple
-															// object(value) into bTree
+				//TODO
+//				bptTree.insert(colValue, pairIndexPair); // inserting col value(key) and tuple
+//															// object(value) into bTree
 
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
 			}
@@ -426,8 +427,9 @@ public class DBApp {
 					Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 							page.getPageName());
 
-					bptTree.remove(colValue, pairOldIndexPair);
-					bptTree.insert(colValue, pairNewIndexPair);
+					//TODO
+//					bptTree.remove(colValue, pairOldIndexPair);
+//					bptTree.insert(colValue, pairNewIndexPair);
 
 					tupleLastTuple.setPageName(page.getPageName()); // update page name in tuple obj
 
@@ -472,8 +474,9 @@ public class DBApp {
 				Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 						newPageName);
 
-				bptTree.remove(colValue, pairOldIndexPair);
-				bptTree.insert(colValue, pairNewIndexPair); // inserting col value[key] and Pair(clust key val, page
+				//TODO
+//				bptTree.remove(colValue, pairOldIndexPair);
+//				bptTree.insert(colValue, pairNewIndexPair); // inserting col value[key] and Pair(clust key val, page
 															// name) [value] into bTree
 
 				tupleLastTuple.setPageName(newPageName); // adjusting page name in tuple obj
@@ -1576,22 +1579,26 @@ public class DBApp {
 
 			String strTableName = "Student";
 
-			// Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+			 Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
-			// htblColNameType.put("id", "java.lang.Integer");
+			 htblColNameType.put("id", "java.lang.Integer");
 
-			// htblColNameType.put("name", "java.lang.String");
+//			 htblColNameType.put("name", "java.lang.String");
+//
+//			 htblColNameType.put("gpa", "java.lang.Double");
 
-			// htblColNameType.put("gpa", "java.lang.Double");
-
-			// dbApp.createTable(strTableName, "id", htblColNameType);
+			 dbApp.createTable(strTableName, "id", htblColNameType);
 
 			// for (int i = 0; i < 21; i++) {
-			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-			// htblColNameValue.put("id", i);
-			// htblColNameValue.put("name", "Student" + i);
-			// htblColNameValue.put("gpa", 3.0 + i);
-			// dbApp.insertIntoTable(strTableName, htblColNameValue);
+			 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			 htblColNameValue.put("id", 1);
+			 dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			 Page p = Page.deserialize("tables/Student/Student_0.class");
+			 Vector<Tuple> v= p.getTuples();
+			 for ( Tuple t : v){
+				 System.out.println(t);
+			 }
 			// }
 
 			// int i = -2;
