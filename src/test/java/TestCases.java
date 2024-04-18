@@ -180,8 +180,27 @@ public class TestCases {
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
 
             for (int i = 0; i < 20; i++) {
-                assert tree.query(i) != null && tree.query(i).size() == 1
-                        && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+                assert tree.query(i) != null && tree.query(i).size() == 1;
+
+                Pair pair = (Pair) tree.query(i).get(0);
+
+                String clusteringKey = (String) pair.getKey();
+
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                assert tuple.getColumnValue("id").equals(i);
+
+
+
+                
             }
 
         } finally {
@@ -253,7 +272,25 @@ public class TestCases {
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
 
             for(int i = 0; i < 1000; i++){
-                assert tree.query(i) != null && tree.query(i).size() == 1 && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+                assert tree.query(i) != null && tree.query(i).size() == 1;
+
+                Pair pair = (Pair) tree.query(i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                assert tuple.getColumnValue("id").equals(i);
+
+                
             }
 
         }finally{
@@ -344,8 +381,10 @@ public class TestCases {
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
 
             for (int i = 0; i < 20; i++) {
-                assert tree.query(i) != null && tree.query(i).size() == 1
-                        && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+                
+                assert tree.query(i) != null && tree.query(i).size() == 1;
+
+                assert ((Pair) tree.query(i).get(0)).getKey().equals(i);
             }
 
             // insert a new row
@@ -363,7 +402,7 @@ public class TestCases {
             for (int i = 0; i < 21; i++) {
 
                 assert tree.query(i) != null && tree.query(i).size() == 1
-                        && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+                        && ((Pair) tree.query(i).get(0)).getKey().equals(i);
             }
 
         } finally {
@@ -412,8 +451,23 @@ public class TestCases {
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
 
             for (int i = 0; i < 20; i++) {
-                assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
-                        && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
+                assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+                
+
+                assert tuple.getColumnValue("name").equals("Student" + i);
             }
 
             // insert a new row
@@ -430,8 +484,24 @@ public class TestCases {
 
             for (int i = 0; i < 21; i++) {
 
-                assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
-                        && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
+                assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                assert tuple.getColumnValue("name").equals("Student" + i);
+
+
             }
 
         } finally {
@@ -482,15 +552,56 @@ public class TestCases {
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
 
             for (int i = 0; i < 20; i++) {
-                assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
-                        && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
+                assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                assert tuple.getColumnValue("name").equals("Student" + i);
+
+                
+
+
+            
+            
+            
+            
+            
             }
 
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
 
             for (int i = 0; i < 20; i++) {
-                assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1
-                        && ((Tuple) tree.query(3.0 + i).get(0)).getColumnValue("gpa").equals(3.0 + i);
+                assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
+
+                Pair pair = (Pair) tree.query(3.0 + i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                assert tuple.getColumnValue("gpa").equals(3.0 + i);
+
+
             }
 
             // insert a new row
@@ -506,15 +617,49 @@ public class TestCases {
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
 
             for (int i = 0; i < 21; i++) {
-                assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
-                        && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
+                assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                assert tuple.getColumnValue("name").equals("Student" + i);
+
+
             }
 
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
 
             for (int i = 0; i < 21; i++) {
-                assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1
-                        && ((Tuple) tree.query(3.0 + i).get(0)).getColumnValue("gpa").equals(3.0 + i);
+                assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
+
+                Pair pair = (Pair) tree.query(3.0 + i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                assert tuple.getColumnValue("gpa").equals(3.0 + i);
+
+
             }
 
         } finally {
@@ -760,8 +905,25 @@ public class TestCases {
                 if(i == 0){
                     assert tree.query("Student" + i).size() == 0;
                 } else {
-                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
-                            && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+
                 }
                 
             }
@@ -826,8 +988,25 @@ public class TestCases {
                 if(i == 0){ 
                     assert tree.query("Student" + i).size() == 0;
                 } else {
-                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
-                            && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+
                 }
             }
 
@@ -838,8 +1017,25 @@ public class TestCases {
                     System.out.println(tree.query(3.0 + i));
                     assert tree.query(3.0 + i).size() == 0;
                 } else {
-                    assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1
-                            && ((Tuple) tree.query(3.0 + i).get(0)).getColumnValue("gpa").equals(3.0 + i);
+                    assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query(3.0 + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("gpa").equals(3.0 + i);
+
+
                 }
                 System.out.println(tree.query(3.0 + i));
             }
@@ -1053,8 +1249,25 @@ public class TestCases {
                 if (i == 0) {
                     assert tree.query(i).size() == 0;
                 } else {
-                    assert tree.query(i) != null && tree.query(i).size() == 1
-                            && ((Tuple) tree.query(i).get(0)).getColumnValue("id").equals(i);
+                    assert tree.query(i) != null && tree.query(i).size() == 1;
+
+                    Pair pair = (Pair) tree.query(i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("id").equals(i);
+
+
                 }
             }
         } finally {
@@ -1131,8 +1344,25 @@ public class TestCases {
                 if (i == 0) {
                     assert tree.query("Student0").size() == 0;
                 } else {
-                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
-                            && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+
 
                 }
             }
@@ -1212,8 +1442,25 @@ public class TestCases {
                 if (i == 0) {
                     assert tree.query("Student0").size() == 0;
                 } else {
-                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
-                            && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+
 
                 }
             }
@@ -1221,8 +1468,25 @@ public class TestCases {
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
 
             for (int i = 0; i < 20; i++) {
-                assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1
-                        && ((Tuple) tree.query(3.0 + i).get(0)).getColumnValue("gpa").equals(3.0 + i);
+                assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
+
+                Pair pair = (Pair) tree.query(3.0 + i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                assert tuple.getColumnValue("gpa").equals(3.0 + i);
+
+
             }
         } finally {
             cleanUp();
@@ -1357,6 +1621,63 @@ public class TestCases {
         }
     }
 
+    /**
+     * This Java function searches for tuples by a given clustering key name and
+     * value using binary
+     * search.
+     * 
+     * @param strClusteringKeyName  The `strClusteringKeyName` parameter is the name
+     *                              of the clustering
+     *                              key that you want to search for in the list of
+     *                              tuples. It is used to identify the specific
+     *                              attribute or column in the tuple that serves as
+     *                              the clustering key for the data structure.
+     * @param strClusteringKeyValue The `strClusteringKeyValue` parameter represents
+     *                              the value of the
+     *                              clustering key that you are searching for within
+     *                              the list of tuples. The method
+     *                              `searchTuplesByClusteringKey` is designed to
+     *                              search for a specific tuple within the list of
+     *                              tuples based on the provided clustering key name
+     *                              and value.
+     * @return The method is returning the index of the tuple in the `vecTuples`
+     *         list that matches the
+     *         provided clustering key name and value. If a match is found, the
+     *         method returns the index of
+     *         that tuple. If no match is found after the binary search, it throws a
+     *         `DBAppException` with the
+     *         message "Column Value doesn't exist".
+     */
+    public static int searchTuplesByClusteringKey(String strClusteringKeyName, Object objClusteringKeyValue, Page page) throws DBAppException{
+
+        
+
+        Vector<Tuple> vecTuples = page.getTuples();
+
+        int n = vecTuples.size();
+
+        int left = 0, right = n - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+
+            Comparable midClusteringKeyValue = (Comparable) vecTuples.get(mid).getColumnValue(strClusteringKeyName);
+
+            Comparable compClusteringKeyValue = (Comparable) objClusteringKeyValue;
+
+            if (midClusteringKeyValue.compareTo(compClusteringKeyValue) == 0) {
+                return mid;
+            } else if (midClusteringKeyValue.compareTo(compClusteringKeyValue) < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+
+        }
+
+        return -1;
+
+    }
 
     
 
