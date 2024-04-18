@@ -167,7 +167,7 @@ public class Table implements Serializable {
      */
     public void setMin(String pageName, Comparable min){
         //set the minimum value of a page
-        this.vecMin.set(this.vecPages.indexOf(pageName), min);
+        this.vecMin.add(this.vecPages.indexOf(pageName), min);
     }
 
     /**
@@ -181,7 +181,7 @@ public class Table implements Serializable {
 
     public void setMax(String pageName, Comparable max){
         //set the maximum value of a page
-        this.vecMax.set(this.vecPages.indexOf(pageName), max);
+        this.vecMax.add(this.vecPages.indexOf(pageName), max);
     }
     
 
@@ -274,15 +274,16 @@ public class Table implements Serializable {
         for(int i=0;i<vecPages.size();i++){
             if(val instanceof Integer){
                 Integer temp = (Integer)val;
-                if(noneed || ((Integer)getMin(vecPages.get(i))< temp )){
-                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
-                    hmtup.addAll(page1.allTup());
-                }
-                else if(((Integer)getMin(vecPages.get(i)))<= temp && ((Integer)getMax(vecPages.get(i)))>temp){
+                
+                if(((Integer)getMin(vecPages.get(i)))<= temp && ((Integer)getMax(vecPages.get(i)))>temp){
                     Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
                     int index = page1.binarySearchTuples(col, val);
                     hmtup.addAll(page1.gtrsearch(col, val, true, index));
                     noneed=true;
+                }
+                else if(noneed || ((Integer)getMin(vecPages.get(i))< temp )){
+                    Page page1= Page.deserialize("tables/"+strTableName+"/"+vecPages.get(i)+".class");
+                    hmtup.addAll(page1.allTup());
                 }
             }
             else if(val instanceof Double){

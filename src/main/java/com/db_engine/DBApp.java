@@ -157,7 +157,7 @@ public class DBApp {
 				Page pgPage = Page.deserialize("tables/" + strTableName + "/" + pgPage_name + ".class");
 				Vector<Tuple> vecTuples = pgPage.getTuples();
 				for (Tuple tplTuple : vecTuples) {
-					
+					  
 					Comparable key = (int) tplTuple.getColumnValue(strColName);
 					Comparable cmpClusteringKeyValue = (Comparable) tplTuple.getColumnValue(strClusteringKeyColName);
 					Pair pair = new Pair(cmpClusteringKeyValue, pgPage_name);
@@ -1144,9 +1144,13 @@ public class DBApp {
 				}
 				HashSet<String> checkoperators = new HashSet<>();
 				checkoperators.add("=");checkoperators.add("!=");checkoperators.add(">=");checkoperators.add("<=");checkoperators.add(">");;checkoperators.add("<");
+				boolean indexhelp2 = false;
 				for(int i=0;i<arrSQLTerms.length;i++){
 				if(arrSQLTerms[i]._strTableName!=null&&metadata.checkTableName(arrSQLTerms[i]._strTableName)&&arrSQLTerms[0]._strTableName.equals(arrSQLTerms[i]._strTableName)){
 					if(arrSQLTerms[i]._strColumnName!=null&&metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)){
+						if(!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
+							indexhelp2=true;
+						}
 						String strType= metadata.getColumnType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName);
 						if(arrSQLTerms[i]._strOperator!=null&& checkoperators.contains(arrSQLTerms[i]._strOperator)){	
 							if(arrSQLTerms[i]._strOperator==null||!strType.equals(arrSQLTerms[i]._objValue.getClass().getName())){
@@ -1162,6 +1166,9 @@ public class DBApp {
 			}
 			boolean indexhelp=true;
 			for(int i=0;i<strarrOperators.length;i++){
+				if(Objects.isNull(strarrOperators[i])){
+					throw new DBAppException("null in operator");
+				}
 				if((!strarrOperators[i].toLowerCase().equals("and"))&&(!strarrOperators[i].toLowerCase().equals("or"))&&(!strarrOperators[i].toLowerCase().equals("xor")))
 				throw new DBAppException("Undefined operator is being used");
 				if(!(strarrOperators[i].toLowerCase().equals("and")))
@@ -1173,7 +1180,7 @@ public class DBApp {
 					System.out.println(tut.size());
 					return tut.iterator();
 			}
-			if(indexhelp){
+			if(indexhelp&&indexhelp2){
 				boolean firstornot=true;
 				HashSet<String> hmpage= new HashSet<>();
 				Vector<SQLTerm> indexsql= new Vector<>();
@@ -1222,7 +1229,7 @@ public class DBApp {
 			while(!stack2.isEmpty()){
 				 vec.add(stack2.pop());
 			}
-			
+			System.out.println(vec.size());
 			for(int i=0;i<vec.size();i++){
 				if(vec.get(i) instanceof SQLTerm){
 					stack.push((SQLTerm) vec.get(i));
@@ -1230,6 +1237,7 @@ public class DBApp {
 				else{
 					HashSet <Tuple> tm= null;
 					HashSet <Tuple> tm2= null;
+					System.out.println(i);
 					if(stack.peek() instanceof SQLTerm){
 						 tm=getTuple((SQLTerm) stack.pop());
 						if(stack.peek() instanceof SQLTerm){
@@ -1249,12 +1257,14 @@ public class DBApp {
 						}
 					}
 					if(((String) vec.get(i)).toLowerCase().equals("and")){
+						
 						stack.add(and2hs(tm, tm2));
 					}
 					else if(((String) vec.get(i)).toLowerCase().equals("or")){
 						stack.add(or2hs(tm, tm2));
 					}
 					else{
+						System.out.println("and");
 						stack.add(xor2hs(tm, tm2));
 					}
 		
@@ -1309,20 +1319,26 @@ public class DBApp {
 				return -1; 
 			} 
 		private static HashSet<Tuple> and2hs(HashSet<Tuple> hs1,HashSet<Tuple> hs2){
-			System.out.println(hs1.size());
-			System.out.println(hs2.size());
+			HashSet<Tuple> temp= new HashSet<>();
 			for(Tuple tm: hs1){
 				if(! hs2.contains(tm)){
-					hs1.remove(tm);
+					temp.add(tm);
 				}
+			}
+			for(Tuple tm:temp){
+				hs1.remove(tm);
 			}
 			return hs1;
 		}
 		private static HashSet<String> and2bp(HashSet<String> hs1,HashSet<String> hs2){
+			HashSet<String> temp= new HashSet<>();
 			for(String tm: hs1){
 				if(! hs2.contains(tm)){
-					hs1.remove(tm);
+					temp.add(tm);
 				}
+			}
+			for(String tm:temp){
+				hs1.remove(tm);
 			}
 			return hs1;
 		}
@@ -1347,24 +1363,25 @@ public class DBApp {
 			return hs2;
 		}
 		private static HashSet<Tuple> and1bp(HashSet<Tuple> hs1, SQLTerm sql) throws DBAppException{
+			HashSet<Tuple> temp= new HashSet<>();
 			for(Tuple tm:hs1){
 				if(sql._strOperator.equals("=")){
 					if(sql._objValue instanceof Integer){
 						Integer te = (Integer) sql._objValue;
 						if(!((Integer)tm.getColumnValue(sql._strColumnName)).equals(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else if(sql._objValue instanceof Double){
 						Double te = (Double)sql._objValue;
 						if(!((Double)tm.getColumnValue(sql._strColumnName)).equals(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else{
 						String te = (String) sql._objValue;
 						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)!=0){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 				}
@@ -1372,19 +1389,19 @@ public class DBApp {
 					if(sql._objValue instanceof Integer){
 						Integer te = (Integer) sql._objValue;
 						if(((Integer)tm.getColumnValue(sql._strColumnName))<=(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else if(sql._objValue instanceof Double){
 						Double te = (Double)sql._objValue;
 						if(((Double)tm.getColumnValue(sql._strColumnName))<=(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else{
 						String te = (String) sql._objValue;
 						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)<=0){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 				} 
@@ -1392,19 +1409,19 @@ public class DBApp {
 					if(sql._objValue instanceof Integer){
 						Integer te = (Integer) sql._objValue;
 						if(((Integer)tm.getColumnValue(sql._strColumnName))<(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else if(sql._objValue instanceof Double){
 						Double te = (Double)sql._objValue;
 						if(((Double)tm.getColumnValue(sql._strColumnName))<(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else{
 						String te = (String) sql._objValue;
 						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)<0){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 				}
@@ -1412,19 +1429,19 @@ public class DBApp {
 					if(sql._objValue instanceof Integer){
 						Integer te = (Integer) sql._objValue;
 						if(((Integer)tm.getColumnValue(sql._strColumnName))>=(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else if(sql._objValue instanceof Double){
 						Double te = (Double)sql._objValue;
 						if(((Double)tm.getColumnValue(sql._strColumnName))>=(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else{
 						String te = (String) sql._objValue;
 						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)>=0){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 				}
@@ -1432,19 +1449,19 @@ public class DBApp {
 					if(sql._objValue instanceof Integer){
 						Integer te = (Integer) sql._objValue;
 						if(((Integer)tm.getColumnValue(sql._strColumnName))>(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else if(sql._objValue instanceof Double){
 						Double te = (Double)sql._objValue;
 						if(((Double)tm.getColumnValue(sql._strColumnName))>(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else{
 						String te = (String) sql._objValue;
 						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)>0){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 				}
@@ -1452,22 +1469,25 @@ public class DBApp {
 					if(sql._objValue instanceof Integer){
 						Integer te = (Integer) sql._objValue;
 						if(((Integer)tm.getColumnValue(sql._strColumnName)).equals(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else if(sql._objValue instanceof Double){
 						Double te = (Double)sql._objValue;
 						if(((Double)tm.getColumnValue(sql._strColumnName)).equals(te)){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 					else{
 						String te = (String) sql._objValue;
 						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)==0){
-							hs1.remove(tm);
+							temp.add(tm);
 						}
 					}
 				} 
+			}
+			for(Tuple tm:temp){
+				hs1.remove(tm);
 			}
 			return hs1;
 		}
@@ -1816,34 +1836,40 @@ public class DBApp {
                 htblColNameValue.put("gpa", 3.0 + i);
                 dbApp.insertIntoTable(strTableName, htblColNameValue);
             }
-			// select all rows
+			// select all row
+			// Testing XOR+OR+AND
+			SQLTerm [] arrSQLTerms = new SQLTerm[4];
+          	String [] strarrOperators = new String[3];
 
-            SQLTerm[] arrSQLTerms = new SQLTerm[4];
-            String[] strarrOperators = new String[3];
-
-            arrSQLTerms[0] = new SQLTerm();
-            arrSQLTerms[0]._strTableName = strTableName;
-            arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 1;
-			arrSQLTerms[1] = new SQLTerm();
-            arrSQLTerms[1]._strTableName = strTableName;
-            arrSQLTerms[1]._strColumnName = "id";
-            arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = 2;
-			arrSQLTerms[2] = new SQLTerm();
-            arrSQLTerms[2]._strTableName = strTableName;
-            arrSQLTerms[2]._strColumnName = "id";
-            arrSQLTerms[2]._strOperator = "=";
-            arrSQLTerms[2]._objValue = 3;
-			arrSQLTerms[3] = new SQLTerm();
-            arrSQLTerms[3]._strTableName = strTableName;
-            arrSQLTerms[3]._strColumnName = "id";
-            arrSQLTerms[3]._strOperator = "=";
-            arrSQLTerms[3]._objValue = 4;
-			strarrOperators[0]="xor";
-			strarrOperators[1]="or";
-			strarrOperators[2]="and";
+			  arrSQLTerms[0] = new SQLTerm();
+			  arrSQLTerms[0]._strTableName = "Student";
+			  arrSQLTerms[0]._strColumnName = "id";
+			  arrSQLTerms[0]._strOperator = "=";
+			  arrSQLTerms[0]._objValue = 1;
+  
+			  strarrOperators[0] = "xor";
+  
+			  arrSQLTerms[1] = new SQLTerm();
+			  arrSQLTerms[1]._strTableName = "Student";
+			  arrSQLTerms[1]._strColumnName = "id";
+			  arrSQLTerms[1]._strOperator = "=";
+			  arrSQLTerms[1]._objValue = 2;
+  
+			  strarrOperators[1] = "or";
+  
+			  arrSQLTerms[2] = new SQLTerm();
+			  arrSQLTerms[2]._strTableName = "Student";
+			  arrSQLTerms[2]._strColumnName = "id";
+			  arrSQLTerms[2]._strOperator = "=";
+			  arrSQLTerms[2]._objValue = 3;
+  
+			  strarrOperators[2] = "and";
+  
+			  arrSQLTerms[3] = new SQLTerm();
+			  arrSQLTerms[3]._strTableName = "Student";
+			  arrSQLTerms[3]._strColumnName = "id";
+			  arrSQLTerms[3]._strOperator = "=";
+			  arrSQLTerms[3]._objValue = 4;
 			//System.out.println(dbApp.selectFromTable(arrSQLTerms, strarrOperators));
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 			
@@ -1858,10 +1884,13 @@ public class DBApp {
             //         assert !iterator.hasNext();
             //     }
             // }
+			int count =0; 
 			while(iterator.hasNext()){
 				Tuple tuple = (Tuple) iterator.next();
 				System.out.println(tuple);
+				count++;
 			}
+			System.out.println(count);
 		}catch(Exception e){
 			e.printStackTrace();
             
