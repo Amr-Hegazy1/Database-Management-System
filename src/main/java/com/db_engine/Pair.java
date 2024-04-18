@@ -1,4 +1,5 @@
 package com.db_engine;
+import java.io.Serializable;
 
 import java.io.Serializable;
 
@@ -39,12 +40,9 @@ public class Pair<K, V> implements Serializable, Comparable<Pair<K, V>>{
         return value != null ? value.equals(pair.value) : pair.value == null;
     }
 
+
+
     public int compareTo(Pair<K, V> o) {
         return ((Comparable<K>) key).compareTo(o.key);
     }
-
-    
-    
-
-
 }
