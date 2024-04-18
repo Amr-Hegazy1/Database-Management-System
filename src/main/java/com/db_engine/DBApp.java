@@ -51,7 +51,7 @@ public class DBApp {
 	}
 
 	/**
-	 * The `createTable` function creates one tabel only.
+	 * The `createTable` function creates one table only.
 	 * 
 	 * @param strTableName           The `strTableName` is the name of the table
 	 *                               needed be created.
@@ -62,21 +62,30 @@ public class DBApp {
 	 *                               column as well.
 	 *                               The data type of that column will be passed in
 	 *                               htblColNameType.
-	 * 
-	 * @param htblColNameValue       The `htblColNameValue` will have the column
+	 *
+	 * @param htblColNameType       The `htblColNameType` will have the column
 	 *                               name as key and
 	 *                               the data type as value.
 	 * 
 	 * @throws DBAppException The `DBAppException` will be thrown if there exists a
-	 *                        table with
-	 *                        the same name, or if it cannot create a folder for the
-	 *                        table.
+	 *                        table with the same name, it cannot create a folder
+	 *                        for the table, or the data types provided included
+	 *                        unsupported data types.
 	 * 
 	 */
 	public void createTable(String strTableName,
 			String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws DBAppException {
 
+		boolean boolValidTypes = true;
+		Vector<String> vecValidTypes = new Vector<>(Arrays.asList("java.lang.Integer"
+											,"java.lang.Double" , "java.lang.String"));
+		for(String strColumnName : htblColNameType.keySet()){
+			boolValidTypes &= vecValidTypes.contains(htblColNameType.get(strColumnName));
+		}
+		if(!boolValidTypes){
+			throw new DBAppException("Unsupported Data Types!");
+		}
 		metadata.addTable(strTableName, strClusteringKeyColumn, htblColNameType);
 		metadata.save();
 		Table tblTable = new Table(strTableName);
@@ -368,8 +377,7 @@ public class DBApp {
 	}
 
 	public void handleInsertOverflow(Table tblTable, Page pgFirstOverflowPage, int intMaxRowsPerPage,
-			String strClustKeyName)
-			throws DBAppException {
+			String strClustKeyName) throws DBAppException {
 
 		Vector<String> vecPages = tblTable.getPages(); // Vector of Page names in table
 		Page overflowPage = pgFirstOverflowPage; // page that caused first overflow
@@ -423,8 +431,8 @@ public class DBApp {
 	// htblColNameValue will not include clustering key as column name
 	// strClusteringKeyValue is the value to look for to find the row to update.
 	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
-		
-		if (!metadata.checkTableName(strTableName)) 
+
+		if (!metadata.checkTableName(strTableName))
 			throw new DBAppException("Table does not exist");
 
 		if (strClusteringKeyValue == null) {
@@ -468,7 +476,7 @@ public class DBApp {
 			Vector<Tuple> tuples = page.getVecTuples();
 			Tuple tuple = tuples.get(tupleIndex);
 			Tuple tupleOriginalTuple = tuple.clone();
-			
+
 			//Hashtable<String, Hashtable<String, String>> htblMetadata = metadata.getTableMetadata(strTableName);
 			List<String> metaCol = metadata.getColumnNames(strTableName);
 			HashSet<String> indexedonly = new HashSet<String>();
@@ -479,38 +487,38 @@ public class DBApp {
 				}
 
 			}
-			for (String columnName : indexedonly) {
-					Comparable temp = (Comparable)tuple.getColumnValue(columnName);
-					if(htblColNameValue.containsKey(columnName)){
-					temp = (Comparable)tuple.getColumnValue(columnName);
-					Comparable columnValue = (Comparable)htblColNameValue.get(columnName);
-					tuple.setColumnValue(columnName, columnValue);
-				
-					String indexName = metadata.getIndexName(strTableName, columnName);
-					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-					bptTree.remove(temp, (Comparable) tupleOriginalTuple);
-					bptTree.insert(columnValue, (Comparable) tuple);
-					bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");	
-					}
-					else{
-					String indexName = metadata.getIndexName(strTableName, columnName);
-					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-					bptTree.remove(temp, (Comparable) tupleOriginalTuple);
-					bptTree.insert(temp, (Comparable) tuple);
-					bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
-					}
-					
-
-				
-			}
+//			for (String columnName : indexedonly) {
+//					Comparable temp = (Comparable)tuple.getColumnValue(columnName);
+//					if(htblColNameValue.containsKey(columnName)){
+//					temp = (Comparable)tuple.getColumnValue(columnName);
+//					Comparable columnValue = (Comparable)htblColNameValue.get(columnName);
+//					tuple.setColumnValue(columnName, columnValue);
+//
+//					String indexName = metadata.getIndexName(strTableName, columnName);
+//					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
+//					bptTree.remove(temp, (Comparable) tupleOriginalTuple);
+//					bptTree.insert(columnValue, (Comparable) tuple);
+//					bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
+//					}
+//					else{
+//					String indexName = metadata.getIndexName(strTableName, columnName);
+//					BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
+//					bptTree.remove(temp, (Comparable) tupleOriginalTuple);
+//					bptTree.insert(temp, (Comparable) tuple);
+//					bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
+//					}
+//
+//
+//
+//			}
 			//System.out.println(tuples);
 		}
-		
+
 			page.serialize("tables/" + strTableName + "/" + page.getPageName() + ".class");
 			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-			
+
 	}
-	
+
 
 				
 		
@@ -848,10 +856,8 @@ public class DBApp {
 					
 				} else {
 					// get the intersection hashmap entries
-
 					htblTuples = getHashMapIntersection(htblTuples,
 							getTuplesFromIndex(strTableName, col, htblColNameValue));
-
 				}
 
 			}
