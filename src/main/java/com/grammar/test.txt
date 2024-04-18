@@ -1,1 +1,1 @@
-CREATE INDEX "idIndex" ON "Student" ("id");
+INSERT INTO "Student" ("id") VALUES (2,3,4);

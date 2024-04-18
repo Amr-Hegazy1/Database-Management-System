@@ -1578,21 +1578,21 @@ public class DBApp {
 			dbApp.init();
 
 			String strTableName = "Student";
-
-			 Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
-
-			 htblColNameType.put("id", "java.lang.Integer");
+//
+//			 Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+//
+//			 htblColNameType.put("id", "java.lang.Integer");
 
 //			 htblColNameType.put("name", "java.lang.String");
 //
 //			 htblColNameType.put("gpa", "java.lang.Double");
 
-			 dbApp.createTable(strTableName, "id", htblColNameType);
+//			 dbApp.createTable(strTableName, "id", htblColNameType);
 
 			// for (int i = 0; i < 21; i++) {
-			 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-			 htblColNameValue.put("id", 1);
-			 dbApp.insertIntoTable(strTableName, htblColNameValue);
+//			 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+//			 htblColNameValue.put("id", 1);
+//			 dbApp.insertIntoTable(strTableName, htblColNameValue);
 
 			 Page p = Page.deserialize("tables/Student/Student_0.class");
 			 Vector<Tuple> v= p.getTuples();

@@ -35,7 +35,9 @@ public class Main extends sql_gBaseVisitor {
     public Object visitAttributename(sql_gParser.AttributenameContext ctx) {
 
         for (int i = 0; i < ctx.getChildCount(); i++) {
-            colNames.add(ctx.getChild(i).getText());
+            String name = ctx.getChild(i).getText();
+            name = removeQuotations(name);
+            colNames.add(name);
         }
 
         return visitChildren(ctx);
@@ -47,7 +49,14 @@ public class Main extends sql_gBaseVisitor {
 
 
         for (int i = 0; i < ctx.getChildCount(); i++) {
-            colTypes.add(ctx.getChild(i).getText());
+            String datatype = ctx.getChild(i).getText();
+            if (datatype.equals("INT")) {
+                colTypes.add(i, "java.lang.Integer");
+            } else if (datatype.equals("STRING")) {
+                colTypes.add(i, "java.lang.String");
+            } else if (datatype.equals("DOUBLE")) {
+                colTypes.add(i, "java.lang.Double");
+            }
         }
 
         return visitChildren(ctx);
@@ -64,13 +73,7 @@ public class Main extends sql_gBaseVisitor {
             if (i == 0) {
                 strClusteringKeyColumn = colNames.get(i);
             }
-            if (colTypes.get(i).equals("INT")) {
-                colTypes.set(i, "java.lang.Integer");
-            } else if (colTypes.get(i).equals("STRING")) {
-                colTypes.set(i, "java.lang.String");
-            } else if (colTypes.get(i).equals("DOUBLE")) {
-                colTypes.set(i, "java.lang.Double");
-            }
+
             htblColNameValue.put(colNames.get(i), colTypes.get(i));
         }
 
@@ -127,7 +130,9 @@ public class Main extends sql_gBaseVisitor {
     public Object visitInsertColNames(sql_gParser.InsertColNamesContext ctx) {
 
         for (int i = 0; i < ctx.getChildCount(); i++) {
-            colNames.add(ctx.getChild(i).getText());
+            String name = ctx.getChild(i).getText();
+            name = removeQuotations(name);
+            colNames.add(name);
         }
         return visitChildren(ctx);
     }
@@ -137,7 +142,13 @@ public class Main extends sql_gBaseVisitor {
     public Object visitInsertColValues(sql_gParser.InsertColValuesContext ctx) {
 
         for (int i = 0; i < ctx.getChildCount(); i++) {
-            colValues.add((Object) ctx.getChild(i).getText());
+            Object value = ctx.getChild(i).getText();
+            if (tryParseInt((String) value) != null) {
+                value = tryParseInt((String) value);
+            } else if (tryParseDouble((String) value) != null) {
+                value = tryParseDouble((String) value);
+            }
+            colValues.add(value);
         }
 
         return visitChildren(ctx);
@@ -150,18 +161,11 @@ public class Main extends sql_gBaseVisitor {
 
 
         System.out.println("Table Name: " + strTableName);
+        System.out.println("Table Name: " + colNames.get(0));
         for (int i = 0; i < colNames.size(); i++) {
             Hashtable<String, Object> htblColNameValue = new Hashtable<>();
-            Object value = colValues.get(i);
-            if (tryParseInt((String) value) != null) {
-                value = tryParseInt((String) value);
-                System.out.print("INT");
-            } else if (tryParseDouble((String) value) != null) {
-                value = tryParseDouble((String) value);
-                System.out.print("DOUBLE");
-            }
             System.out.print("Column Value: " + colValues.get(0).getClass() + "\n");
-            htblColNameValue.put(colNames.get(i), value);
+            htblColNameValue.put(colNames.get(i), colValues.get(i));
             try {
                 DBApp db = new DBApp();
                 db.init();
