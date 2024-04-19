@@ -254,9 +254,9 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = 3.2;
+            arrSQLTerms[1]._objValue = 5.0;
 
-            assertThrows(DBAppException.class, () -> { // Select * from student where id=1 NOT gpa=3.2;
+            assertThrows(DBAppException.class, () -> { // Select * from student where id=1 NOT gpa=5.0;
                 dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
 
@@ -294,7 +294,7 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = 3.2;
+            arrSQLTerms[1]._objValue = 5.0;
 
             strarrOperators[1] = "NOT";
 
@@ -304,7 +304,7 @@ public class SelectTestCases {
             arrSQLTerms[2]._strOperator = "=";
             arrSQLTerms[2]._objValue = "Student1";
 
-            assertThrows(DBAppException.class, () -> { // Select * from student where id=1 AND gpa=3.2 NOT
+            assertThrows(DBAppException.class, () -> { // Select * from student where id=1 AND gpa=5.0 NOT
                                                        // name="Student1"
                 dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
@@ -341,7 +341,7 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = 3.2;
+            arrSQLTerms[1]._objValue = 5.0;
 
             arrSQLTerms[2] = new SQLTerm();
             arrSQLTerms[2]._strTableName = "Student";
@@ -349,7 +349,7 @@ public class SelectTestCases {
             arrSQLTerms[2]._strOperator = "=";
             arrSQLTerms[2]._objValue = "Student1";
 
-            assertThrows(DBAppException.class, () -> { // Select * from student where id =1 AND GPA = 3.2 ...name =
+            assertThrows(DBAppException.class, () -> { // Select * from student where id =1 AND GPA = 5.0 ...name =
                                                        // Student1;
                 dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
@@ -385,7 +385,7 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = 3.2;
+            arrSQLTerms[1]._objValue = 5.0;
 
             strarrOperators[1] = "AND";
 
@@ -397,7 +397,7 @@ public class SelectTestCases {
 
             strarrOperators[2] = "OR";
 
-            assertThrows(DBAppException.class, () -> { // Select * from student where id=1 AND gpa=3.2 AND
+            assertThrows(DBAppException.class, () -> { // Select * from student where id=1 AND gpa=5.0 AND
                                                        // name="Student1" OR;
                 dbApp.selectFromTable(arrSQLTerms, strarrOperators);
             });
@@ -493,7 +493,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "gpa";
             arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 3.6;
+            arrSQLTerms[0]._objValue = 9.0;
 
             Iterator iterator3 = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
@@ -631,13 +631,13 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "gpa";
             arrSQLTerms[0]._strOperator = "<";
-            arrSQLTerms[0]._objValue = 3.5;
+            arrSQLTerms[0]._objValue = 8.0;
 
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa < 3.5;
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa < 8.0;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert (double) tuple.getColumnValue("gpa") < 3.5;
+                assert (double) tuple.getColumnValue("gpa") < 8.0;
                 count++;
             }
 
@@ -652,7 +652,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "gpa";
             arrSQLTerms[0]._strOperator = "<";
-            arrSQLTerms[0]._objValue = 3.5;
+            arrSQLTerms[0]._objValue = 8.0;
 
             strarrOperators[0] = "OR";
 
@@ -660,15 +660,15 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = ">";
-            arrSQLTerms[1]._objValue = 3.9;
+            arrSQLTerms[1]._objValue = 12.0;
 
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa < 3.5 (4)
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa < 8.0 (4)
                                                                             // OR
-                                                                            // id > 3.9 (10) --> 4+10 = 14 tuples;
+                                                                            // id > 12.0 (10) --> 4+10 = 14 tuples;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert ((double) tuple.getColumnValue("gpa")) < 3.5 || (double) tuple.getColumnValue("gpa") > 3.9;
+                assert ((double) tuple.getColumnValue("gpa")) < 8.0 || (double) tuple.getColumnValue("gpa") > 12.0;
                 count++;
             }
 
@@ -683,7 +683,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "gpa";
             arrSQLTerms[0]._strOperator = "<=";
-            arrSQLTerms[0]._objValue = 3.5;
+            arrSQLTerms[0]._objValue = 8.0;
 
             strarrOperators[0] = "OR";
 
@@ -691,16 +691,16 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = ">=";
-            arrSQLTerms[1]._objValue = 3.9;
+            arrSQLTerms[1]._objValue = 12.0;
 
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa <= 3.5
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa <= 8.0
                                                                             // (5)
                                                                             // OR
-                                                                            // id >= 3.9 (11) --> 5+11 = 16 tuples;
+                                                                            // id >= 12.0 (11) --> 5+11 = 16 tuples;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert (double) tuple.getColumnValue("gpa") <= 3.5 || (double) tuple.getColumnValue("gpa") >= 3.9;
+                assert (double) tuple.getColumnValue("gpa") <= 8.0 || (double) tuple.getColumnValue("gpa") >= 12.0;
                 count++;
             }
 
@@ -715,7 +715,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "gpa";
             arrSQLTerms[0]._strOperator = "<=";
-            arrSQLTerms[0]._objValue = 3.5;
+            arrSQLTerms[0]._objValue = 8.0;
 
             strarrOperators[0] = "OR";
 
@@ -723,16 +723,16 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = ">";
-            arrSQLTerms[1]._objValue = 3.9;
+            arrSQLTerms[1]._objValue = 12.0;
 
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa <= 3.5
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa <= 8.0
                                                                             // (5)
                                                                             // OR
-                                                                            // id > 3.9 (10) --> 5+10 = 15 tuples;
+                                                                            // id > 12.0 (10) --> 5+10 = 15 tuples;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert (double) tuple.getColumnValue("gpa") <= 3.5 || (double) tuple.getColumnValue("gpa") > 3.9;
+                assert (double) tuple.getColumnValue("gpa") <= 8.0 || (double) tuple.getColumnValue("gpa") > 12.0;
                 count++;
             }
 
@@ -747,7 +747,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "gpa";
             arrSQLTerms[0]._strOperator = "<";
-            arrSQLTerms[0]._objValue = 3.5;
+            arrSQLTerms[0]._objValue = 8.0;
 
             strarrOperators[0] = "OR";
 
@@ -755,16 +755,16 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = ">=";
-            arrSQLTerms[1]._objValue = 3.9;
+            arrSQLTerms[1]._objValue = 12.0;
 
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa < 3.5
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa < 8.0
                                                                             // (4)
                                                                             // OR
-                                                                            // id >= 3.9 (11) --> 4+11 = 15 tuples;
+                                                                            // id >= 12.0 (11) --> 4+11 = 15 tuples;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert (double) tuple.getColumnValue("gpa") < 3.5 || (double) tuple.getColumnValue("gpa") >= 3.9;
+                assert (double) tuple.getColumnValue("gpa") < 8.0 || (double) tuple.getColumnValue("gpa") >= 12.0;
                 count++;
             }
 
@@ -1270,16 +1270,15 @@ public class SelectTestCases {
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
                                                                             // "Student1" XOR id = 2 OR id = 3 AND id =
-                                                                      // 4;
+            // 4;
             while (!iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
                 assert (int) tuple.getColumnValue("id") == 1
                         || (int) tuple.getColumnValue("id") == 2;
                 count++;
-            } 
+            }
             System.out.println(count);
-            assert count == 2; 
-            
+            assert count == 2;
 
         } finally {
             cleanUp();
@@ -1550,10 +1549,10 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "gpa";
             arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 3.6;
+            arrSQLTerms[0]._objValue = 9.0;
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
-                                                                                        // gpa = 3.6;
+                                                                                        // gpa = 9.0;
 
             dbApp.createIndex("Student", "gpa", "gpaIndex");
 
@@ -1561,13 +1560,13 @@ public class SelectTestCases {
 
             while (iteratorWithoutIndex.hasNext()) {
                 Tuple tuple = (Tuple) iteratorWithoutIndex.next();
-                assert (double) tuple.getColumnValue("gpa") == 3.6;
+                assert (double) tuple.getColumnValue("gpa") == 9.0;
                 noIndexCount++;
             }
 
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
-                assert (double) tuple.getColumnValue("gpa") == 3.6;
+                assert (double) tuple.getColumnValue("gpa") == 9.0;
                 indexCount++;
             }
 
@@ -1792,10 +1791,10 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "gpa";
             arrSQLTerms[0]._strOperator = ">";
-            arrSQLTerms[0]._objValue = 3.5;
+            arrSQLTerms[0]._objValue = 8.0;
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
-                                                                                        // gpa > 3.5;
+                                                                                        // gpa > 8.0;
 
             dbApp.createIndex("Student", "gpa", "gpaIndex");
 
@@ -1803,13 +1802,13 @@ public class SelectTestCases {
 
             while (iteratorWithoutIndex.hasNext()) {
                 Tuple tuple = (Tuple) iteratorWithoutIndex.next();
-                assert (double) tuple.getColumnValue("gpa") > 3.5;
+                assert (double) tuple.getColumnValue("gpa") > 8.0;
                 noIndexCount++;
             }
 
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
-                assert (double) tuple.getColumnValue("gpa") > 3.5;
+                assert (double) tuple.getColumnValue("gpa") > 8.0;
                 indexCount++;
             }
 
@@ -1839,10 +1838,10 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = "<=";
-            arrSQLTerms[1]._objValue = 3.5;
+            arrSQLTerms[1]._objValue = 8.0;
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
-                                                                                        // gpa > 3.0 AND gpa<=3.5;
+                                                                                        // gpa > 3.0 AND gpa<=8.0;
 
             dbApp.createIndex("Student", "gpa", "gpaIndex");
 
@@ -1850,13 +1849,13 @@ public class SelectTestCases {
 
             while (iteratorWithoutIndex.hasNext()) {
                 Tuple tuple = (Tuple) iteratorWithoutIndex.next();
-                assert (double) tuple.getColumnValue("gpa") > 3.0 && (double) tuple.getColumnValue("gpa") <= 3.5;
+                assert (double) tuple.getColumnValue("gpa") > 3.0 && (double) tuple.getColumnValue("gpa") <= 8.0;
                 noIndexCount++;
             }
 
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
-                assert (double) tuple.getColumnValue("gpa") > 3.0 && (double) tuple.getColumnValue("gpa") <= 3.5;
+                assert (double) tuple.getColumnValue("gpa") > 3.0 && (double) tuple.getColumnValue("gpa") <= 8.0;
                 indexCount++;
             }
 
@@ -2036,10 +2035,10 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = "<=";
-            arrSQLTerms[1]._objValue = 3.9;
+            arrSQLTerms[1]._objValue = 12.0;
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
-                                                                                        // id= 5 AND gpa = 3.0;
+                                                                                        // id= 5 AND gpa <= 12.0;
 
             dbApp.createIndex("Student", "id", "idIndex");
             dbApp.createIndex("Student", "gpa", "gpaIndex");
@@ -2048,13 +2047,13 @@ public class SelectTestCases {
 
             while (iteratorWithoutIndex.hasNext()) {
                 Tuple tuple = (Tuple) iteratorWithoutIndex.next();
-                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") <= 3.0;
+                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") <= 12.0;
                 noIndexCount++;
             }
 
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
-                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") <= 3.0;
+                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") <= 12.0;
             }
 
             assert noIndexCount == indexCount;
@@ -2136,13 +2135,13 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = "<=";
-            arrSQLTerms[1]._objValue = 3.9;
+            arrSQLTerms[1]._objValue = 12.0;
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from
                                                                                         // Student where name>
                                                                                         // "Student5"
                                                                                         // AND
-                                                                                        // gpa <= 3.9;
+                                                                                        // gpa <= 12.0;
 
             dbApp.createIndex("Student", "name", "nameIndex");
             dbApp.createIndex("Student", "gpa", "gpaIndex");
@@ -2152,14 +2151,14 @@ public class SelectTestCases {
             while (iteratorWithoutIndex.hasNext()) {
                 Tuple tuple = (Tuple) iteratorWithoutIndex.next();
                 assert ((String) tuple.getColumnValue("name")).compareTo("Student5") > 0
-                        && (double) tuple.getColumnValue("gpa") <= 3.9;
+                        && (double) tuple.getColumnValue("gpa") <= 12.0;
                 noIndexCount++;
             }
 
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
                 assert ((String) tuple.getColumnValue("name")).compareTo("Student5") > 0
-                        && (double) tuple.getColumnValue("gpa") <= 3.9;
+                        && (double) tuple.getColumnValue("gpa") <= 12.0;
                 indexCount++;
             }
 
@@ -2257,7 +2256,7 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = ">";
-            arrSQLTerms[1]._objValue = 3.6;
+            arrSQLTerms[1]._objValue = 9.0;
 
             strarrOperators[1] = "AND";
 
@@ -2270,7 +2269,7 @@ public class SelectTestCases {
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from
                                                                                         // Student where id> 5
                                                                                         // AND
-                                                                                        // gpa > 3.6
+                                                                                        // gpa > 9.0
                                                                                         // AND
                                                                                         // name <= "Student10";
 
@@ -2282,14 +2281,14 @@ public class SelectTestCases {
 
             while (iteratorWithoutIndex.hasNext()) {
                 Tuple tuple = (Tuple) iteratorWithoutIndex.next();
-                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") > 3.6
+                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") > 9.0
                         && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
                 noIndexCount++;
             }
 
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
-                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") > 3.6
+                assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") > 9.0
                         && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
                 indexCount++;
             }

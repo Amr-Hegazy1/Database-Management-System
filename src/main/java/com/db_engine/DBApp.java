@@ -183,6 +183,7 @@ public class DBApp {
 		Tuple tupleNewTuple = new Tuple(); // New Tuple to be filled with input data and added to Table.
 		String strClustKeyName = ""; // Name of Clustering Key Column
 		int intColCounter = 0;
+		boolean overflowOccured = false;
 		// TODO
 
 		// Checking Table Existence, Correct Col Names, Correct Col Data Types
@@ -273,7 +274,9 @@ public class DBApp {
 					tupleNewTuple.setPageName(pgFirstPage.getPageName());
 
 					if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
-						handleInsertOverflow(tblTable, pgFirstPage, intMaxSize, strClustKeyName, hsIndexedColumns);
+						handleInsertOverflow(tblTable, pgFirstPage, intMaxSize, strClustKeyName, hsIndexedColumns,
+								tupleNewTuple);
+						overflowOccured = true;
 					} else {
 
 						pgFirstPage.serialize("tables/" + strTableName + "/" + pgFirstPage.getPageName() + ".class");
@@ -288,7 +291,9 @@ public class DBApp {
 					tupleNewTuple.setPageName(pgLastPage.getPageName());
 
 					if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
-						handleInsertOverflow(tblTable, pgLastPage, intMaxSize, strClustKeyName, hsIndexedColumns);
+						handleInsertOverflow(tblTable, pgLastPage, intMaxSize, strClustKeyName, hsIndexedColumns,
+								tupleNewTuple);
+						overflowOccured = true;
 					} else {
 
 						pgLastPage.serialize("tables/" + strTableName + "/" + pgLastPage.getPageName() + ".class");
@@ -314,8 +319,9 @@ public class DBApp {
 				pgInsertPage.addTuple(index, tupleNewTuple);
 
 				if (pgInsertPage.getSize() > intMaxSize) { // check for overflow
-					handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName, hsIndexedColumns); // handle
-																													// overflow
+					handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName, hsIndexedColumns,
+							tupleNewTuple); // handle overflow
+					overflowOccured = true;
 				} else { // if no overflow, serialize page
 					pgInsertPage.serialize("tables/" + strTableName + "/" + pgInsertPage.getPageName() + ".class");
 				}
@@ -343,12 +349,13 @@ public class DBApp {
 																														// the
 																														// tree
 
-				// object
 				Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
 																								// Comparable
+
 				Pair pairIndexPair = new Pair(tupleNewTuple.getColumnValue(strClustKeyName),
 						tupleNewTuple.getPageName());
 
+				System.out.println("INSERTED IN INSERT" + colValue);
 				bptTree.insert(colValue, pairIndexPair); // inserting col value(key) and tuple
 															// object(value) into bTree
 
@@ -362,9 +369,10 @@ public class DBApp {
 	}
 
 	public void handleInsertOverflow(Table tblTable, Page pgFirstOverflowPage, int intMaxRowsPerPage,
-			String strClustKeyName, HashSet hsIndexedCols)
+			String strClustKeyName, HashSet hsIndexedCols, Tuple tupleNewTupleFromInsert)
 			throws DBAppException {
 
+		boolean adjustIndicies = true;
 		Vector<String> vecPages = tblTable.getPages(); // Vector of Page names in table
 		Page overflowPage = pgFirstOverflowPage; // page that caused first overflow
 		int intStartIndex = vecPages.indexOf(overflowPage.getPageName()); // get index of first overflowed page in the
@@ -374,8 +382,7 @@ public class DBApp {
 				(Comparable) overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in
 																							// overflow
 																							// page
-		// System.out.println("LAST TUPLE IN 1ST OVERFLOW PAGE:" +
-		// pgFirstOverflowPage.getLastTuple());
+
 		overflowPage.serialize("tables/" + tblTable.getTableName() + "/" + overflowPage.getPageName() + ".class"); // serialize
 																													// the
 																													// overflow
@@ -413,6 +420,7 @@ public class DBApp {
 			// if unique clustering key, insert in page and adjust page name in tuple object
 			// and in B+ Tree(if present)
 			page.addTuple(index, tupleLastTuple); // add tuple to new/next page
+			// TODO add same if statement here ? (duplicate index values)
 			if (hsIndexedCols.size() > 0) {
 				for (Object objColName : hsIndexedCols) {
 					String strColName = (String) objColName;
@@ -422,15 +430,18 @@ public class DBApp {
 																															// the
 																															// tree
 
-					Comparable colValue = (Comparable) tupleLastTuple.getColumnValue(strColName); // cast column value
-																									// to
+					Comparable colValue = (Comparable) tupleLastTuple.getColumnValue(strColName);
 
 					// Update Tree Page Name Value
 					Pair pairOldIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 							tupleLastTuple.getPageName());
+
 					Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 							page.getPageName());
 
+					System.out.println("INSERTED IN HANDLEOVERFLOW FORLOOP " + colValue);
+					System.out.println("page of pair to be removed" + " " + pairOldIndexPair.getValue());
+					System.out.println("page of pair to be added" + " " + pairNewIndexPair.getValue());
 					bptTree.remove(colValue, pairOldIndexPair);
 					bptTree.insert(colValue, pairNewIndexPair);
 
@@ -461,7 +472,15 @@ public class DBApp {
 																									// of new page
 		tblTable.setMax(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value
 																									// of new page
-		if (hsIndexedCols.size() > 0) { // adjusting indicies (if any)
+
+		// Adjust indicies only if there is any indexed columns *AND* newtuple being
+		// inserted from "insertIntoTable"
+		// method is not the same as the last tuple that was removed from the last page
+		// (Because if they are the same, we already handle indicies at the end of
+		// "insertIntoTable" method)
+		// (avoid duplicate pairs in index & improve performance because BPTree(s) are
+		// only deserialized once for the same one tuple)
+		if (hsIndexedCols.size() > 0 && !tupleNewTupleFromInsert.equals(tupleLastTuple)) {
 			for (Object objColName : hsIndexedCols) {
 				String strColName = (String) objColName;
 				String strTableName = tblTable.getTableName();
@@ -479,6 +498,9 @@ public class DBApp {
 				Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 						newPageName);
 
+				System.out.println("INSERTED IN HANDLEOVERFLOW, CREATING A NEW PAGE" + colValue);
+				System.out.println("page of pair to be removed" + " " + pairOldIndexPair.getValue());
+				System.out.println("page of pair to be added" + " " + pairNewIndexPair.getValue());
 				bptTree.remove(colValue, pairOldIndexPair);
 				bptTree.insert(colValue, pairNewIndexPair); // inserting col value[key] and Pair(clust key val, page
 															// name) [value] into bTree
@@ -487,7 +509,9 @@ public class DBApp {
 
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
 			}
-		} else {
+		} else {// TODO LastTuple == NewTuple from "InsertIntoTable" , so update the newTuple's
+				// value
+			// because we will adjust its indicies in InsertIntoTable method
 			tupleLastTuple.setPageName(newPageName); // adjusting page name in tuple obj
 		}
 		newPage.addTuple(0, tupleLastTuple); // inserting tuple in new object
@@ -1713,67 +1737,6 @@ public class DBApp {
 
 	}
 
-	private HashSet<String> getPage(SQLTerm sql) throws ClassNotFoundException, IOException, DBAppException {
-		HashSet<String> hstup = new HashSet<>();
-		if (sql._strOperator.equals("=")) {
-			BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
-					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
-			Vector<Pair> listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue,
-					(Comparable) sql._objValue);
-			for (Pair tup : listtmp) {
-				hstup.add((String) tup.getValue());
-			}
-			return hstup;
-		}
-
-		else if (sql._strOperator.equals(">=") || sql._strOperator.equals(">")) {
-			BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
-					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
-			Vector<Pair> listtmp;
-			if (sql._objValue instanceof Integer) {
-				listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE);
-				for (Pair tup : listtmp) {
-					hstup.add((String) tup.getValue());
-				}
-			} else if (sql._objValue instanceof Double) {
-				listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE);
-				for (Pair tup : listtmp) {
-					hstup.add((String) tup.getValue());
-				}
-			} else {
-				listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, "{");
-				for (Pair tup : listtmp) {
-					hstup.add((String) tup.getValue());
-				}
-			}
-			return hstup;
-
-		} else {
-			BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
-					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
-			Vector<Pair> listtmp;
-			if (sql._objValue instanceof Integer) {
-				listtmp = (Vector<Pair>) bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue);
-				for (Pair tup : listtmp) {
-					hstup.add((String) tup.getValue());
-				}
-			} else if (sql._objValue instanceof Double) {
-				listtmp = (Vector<Pair>) bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue);
-				for (Pair tup : listtmp) {
-					hstup.add((String) tup.getValue());
-				}
-			} else {
-				listtmp = (Vector<Pair>) bptmp.rangeQuery("", (Comparable) sql._objValue);
-				for (Pair tup : listtmp) {
-					hstup.add((String) tup.getValue());
-				}
-			}
-			return hstup;
-
-		}
-
-	}
-
 	private static int precedence(String operator) {
 		switch (operator) {
 
@@ -1839,9 +1802,11 @@ public class DBApp {
 		} catch (Exception e) {
 
 		}
+	}
+
+	public static void main(String[] args) throws IOException {
 
 		try {
-
 			DBApp dbApp = new DBApp();
 
 			dbApp.init();
@@ -1858,7 +1823,7 @@ public class DBApp {
 
 			dbApp.createTable(strTableName, "id", htblColNameType);
 
-			// insert 20 rows
+			// insert n rows
 
 			for (int i = 0; i < 20; i++) {
 				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
@@ -1867,65 +1832,22 @@ public class DBApp {
 				htblColNameValue.put("gpa", 3.0 + i);
 				dbApp.insertIntoTable(strTableName, htblColNameValue);
 			}
-			// select all row
-			// Testing XOR+OR+AND
-			SQLTerm[] arrSQLTerms = new SQLTerm[4];
-			String[] strarrOperators = new String[3];
 
-			arrSQLTerms[0] = new SQLTerm();
-			arrSQLTerms[0]._strTableName = "Student";
-			arrSQLTerms[0]._strColumnName = "id";
-			arrSQLTerms[0]._strOperator = "=";
-			arrSQLTerms[0]._objValue = 1;
+			Page p = Page.deserialize("tables/" + strTableName + "/" + "/Student_0.class");
 
-			strarrOperators[0] = "xor";
+			Vector v = p.getTuples();
 
-			arrSQLTerms[1] = new SQLTerm();
-			arrSQLTerms[1]._strTableName = "Student";
-			arrSQLTerms[1]._strColumnName = "id";
-			arrSQLTerms[1]._strOperator = "=";
-			arrSQLTerms[1]._objValue = 2;
-
-			strarrOperators[1] = "or";
-
-			arrSQLTerms[2] = new SQLTerm();
-			arrSQLTerms[2]._strTableName = "Student";
-			arrSQLTerms[2]._strColumnName = "id";
-			arrSQLTerms[2]._strOperator = "=";
-			arrSQLTerms[2]._objValue = 3;
-
-			strarrOperators[2] = "and";
-
-			arrSQLTerms[3] = new SQLTerm();
-			arrSQLTerms[3]._strTableName = "Student";
-			arrSQLTerms[3]._strColumnName = "id";
-			arrSQLTerms[3]._strOperator = "=";
-			arrSQLTerms[3]._objValue = 4;
-			// System.out.println(dbApp.selectFromTable(arrSQLTerms, strarrOperators));
-			Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-
-			// for(int i = 0; i < 20; i++){
-			// if(i == 5){
-			// assert iterator.hasNext();
-			// Tuple tuple = (Tuple) iterator.next();
-			// assert tuple.getColumnValue("id").equals(5);
-			// assert tuple.getColumnValue("name").equals("Student5");
-			// assert tuple.getColumnValue("gpa").equals(3.0 + 5);
-			// }else{
-			// assert !iterator.hasNext();
-			// }
-			// }
-			int count = 0;
-			while (iterator.hasNext()) {
-				Tuple tuple = (Tuple) iterator.next();
-				System.out.println(tuple);
-				count++;
+			for (int i = 0; i < v.size(); i++) {
+				Tuple t = (Tuple) v.get(i);
+				System.out.println(t);
 			}
-			System.out.println(count);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 
-		} finally {
+		}
+
+		finally {
 			cleanUp();
 		}
 	}
