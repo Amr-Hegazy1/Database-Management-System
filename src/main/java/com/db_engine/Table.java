@@ -280,6 +280,8 @@ public class Table implements Serializable {
      */
     public void removeMin(String pageName) {
         // remove the minimum value of a page
+        System.out.println(vecPages);
+        System.out.println(pageName);
         this.vecMin.remove(this.vecPages.indexOf(pageName));
     }
 
