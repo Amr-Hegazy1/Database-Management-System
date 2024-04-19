@@ -408,7 +408,7 @@ public class InsertTest {
             String pgName = tblTable.getPageAtIndex(1);
             // Page pgLastPage = Page.deserialize("tables/" + strTableName + "/" + pgName +
             // ".class");
-            assert pgName != null;
+            assert pgName.equals("Student_1");
         } finally {
             cleanUp();
         }
@@ -482,7 +482,7 @@ public class InsertTest {
 
             dbApp.createTable(strTableName, "id", htblColNameType);
 
-            // insert 20 rows
+            // insert 40 rows
 
             for (int i = 0; i < 40; i++) {
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
@@ -514,9 +514,10 @@ public class InsertTest {
             htblColNameValue.put("name", "Student0");
             htblColNameValue.put("gpa", 3.0);
             dbApp.insertIntoTable(strTableName, htblColNameValue);
+            tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 
-            String newPage = newPage = strTableName + "_" + 0;
-            ;
+            String newPage = strTableName + "_" + 0;
+            
             Page pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage + ".class");
             for (int i = 0; i < 41; i++) {
                 if (i % 20 == 0 && i > 0) {
@@ -530,16 +531,17 @@ public class InsertTest {
 
             Pair pairIndexPair = new Pair(0, newPage);
 
-            tree.insert("Student0", pairIndexPair);
+            // tree.insert("Student0", pairIndexPair);
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
 
             for (int i = 0; i < 41; i++) {
                 String strPageName = tblTable.getPageAtIndex(i / 20);
+                
 
                 // assert tree.query("Student" + i).size() == 1;
                 assert tree.query("Student" + i) != null
                         && ((Pair) tree.query("Student" + i).get(0)).getKey().equals(i)
-                        && ((Pair) tree.query("Student" + i).get(1)).getValue().equals(strPageName);
+                        && ((Pair) tree.query("Student" + i).get(0)).getValue().equals(strPageName);
 
             } // error was here
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
@@ -586,7 +588,7 @@ public class InsertTest {
 
             dbApp.createTable(strTableName, "id", htblColNameType);
 
-            // insert 20 rows
+            // insert 80 rows
 
             for (int i = 0; i < 80; i++) {
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
@@ -621,6 +623,7 @@ public class InsertTest {
             htblColNameValue.put("name", "Student0");
             htblColNameValue.put("gpa", 3.0);
             dbApp.insertIntoTable(strTableName, htblColNameValue);
+            tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 
             for (int i = 0; i < 81; i++) {
 

@@ -40,10 +40,13 @@ public class Table implements Serializable {
      *         added to the 'vecpages' Vector of the Table.
      */
     public String addPage() {
+        
         int newPageNum = vecPages.size();
         String newPage = strTableName + "_" + newPageNum;
 
         vecPages.add(newPage);
+
+        
         return newPage;
     }
 
@@ -143,6 +146,7 @@ public class Table implements Serializable {
      */
     public Comparable getMin(String pageName) {
         // get the minimum value of a page
+        
         return this.vecMin.get(this.vecPages.indexOf(pageName));
     }
 
@@ -280,6 +284,7 @@ public class Table implements Serializable {
      */
     public void removeMin(String pageName) {
         // remove the minimum value of a page
+        
         this.vecMin.remove(this.vecPages.indexOf(pageName));
     }
 
@@ -335,6 +340,7 @@ public class Table implements Serializable {
      *         `vecPages` vector.
      */
     public String getPageAtIndex(int i) {
+        System.out.println(vecPages);
         return vecPages.get(i);
     }
 
