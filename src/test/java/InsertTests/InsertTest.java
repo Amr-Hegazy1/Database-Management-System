@@ -516,7 +516,7 @@ public class InsertTest {
             dbApp.insertIntoTable(strTableName, htblColNameValue);
 
             String newPage = newPage = strTableName + "_" + 0;
-            ;
+            
             Page pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage + ".class");
             for (int i = 0; i < 41; i++) {
                 if (i % 20 == 0 && i > 0) {
@@ -535,6 +535,8 @@ public class InsertTest {
 
             for (int i = 0; i < 41; i++) {
                 String strPageName = tblTable.getPageAtIndex(i / 40);
+                System.out.println("WAEL PAGE: " + strPageName);
+                System.out.println("TUPLE PAGE: " + ((Pair) tree.query("Student" + i).get(0)).getValue());
 
                 assert tree.query("Student" + i).size() == 1;
                 assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
@@ -586,7 +588,7 @@ public class InsertTest {
 
             dbApp.createTable(strTableName, "id", htblColNameType);
 
-            // insert 20 rows
+            // insert 80 rows
 
             for (int i = 0; i < 80; i++) {
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();

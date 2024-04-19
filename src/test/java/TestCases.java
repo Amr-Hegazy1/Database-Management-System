@@ -1247,6 +1247,7 @@ public class TestCases {
 
             for (int i = 0; i < 20; i++) {
                 if (i == 0) {
+                    
                     assert tree.query(i).size() == 0;
                 } else {
                     assert tree.query(i) != null && tree.query(i).size() == 1;

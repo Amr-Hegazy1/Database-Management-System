@@ -778,9 +778,10 @@ public class DBApp {
 
 		if (pagePage.getSize() == 0) {
 			Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-			table.removePage(intTupleIndex);
+			
 			table.removeMin(intTupleIndex);
 			table.removeMax(intTupleIndex);
+			table.removePage(intTupleIndex);
 			
 		}else{
 			// set min and max values for the page
@@ -806,6 +807,8 @@ public class DBApp {
 						tupleTuple.getPageName());
 				bptTree.remove((Comparable) tupleTuple.getColumnValue(col), pair);
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
+
+				System.out.println("DELETED IN DELETE " + pair.hashCode());
 			}
 		}
 
@@ -968,9 +971,10 @@ public class DBApp {
 
 			if (pageCurrentPage.getSize() == 0) {
 				Page.deletePage("tables/" + strTableName + "/" + pageCurrentPageName + ".class");
-				table.removePage(pageCurrentPage.getPageName());
+				
 				table.removeMin(pageCurrentPageName);
 				table.removeMax(pageCurrentPageName);
+				table.removePage(pageCurrentPage.getPageName());
 
 			} else {
 				// set min and max values for the page
@@ -1051,9 +1055,10 @@ public class DBApp {
 
 				if (pagePage.getSize() == 0) {
 					Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-					table.removePage(pagePage.getPageName());
+					
 					table.removeMin(strPageName);
 					table.removeMax(strPageName);
+					table.removePage(pagePage.getPageName());
 
 				} else {
 
