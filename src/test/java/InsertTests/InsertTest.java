@@ -408,7 +408,7 @@ public class InsertTest {
             String pgName = tblTable.getPageAtIndex(1);
             // Page pgLastPage = Page.deserialize("tables/" + strTableName + "/" + pgName +
             // ".class");
-            assert pgName != null;
+            assert pgName.equals("Student_1");
         } finally {
             cleanUp();
         }
@@ -514,6 +514,7 @@ public class InsertTest {
             htblColNameValue.put("name", "Student0");
             htblColNameValue.put("gpa", 3.0);
             dbApp.insertIntoTable(strTableName, htblColNameValue);
+            tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 
             String newPage = strTableName + "_" + 0;
             
@@ -534,14 +535,13 @@ public class InsertTest {
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
 
             for (int i = 0; i < 41; i++) {
-                String strPageName = tblTable.getPageAtIndex(i / 40);
-                System.out.println("WAEL PAGE AT " + i + " : "  + strPageName);
-                System.out.println("TUPLE PAGE: " + ((Pair) tree.query("Student" + i).get(0)).getValue());
+                String strPageName = tblTable.getPageAtIndex(i / 20);
+                
 
                 // assert tree.query("Student" + i).size() == 1;
                 assert tree.query("Student" + i) != null
                         && ((Pair) tree.query("Student" + i).get(0)).getKey().equals(i)
-                        && ((Pair) tree.query("Student" + i).get(1)).getValue().equals(strPageName);
+                        && ((Pair) tree.query("Student" + i).get(0)).getValue().equals(strPageName);
 
             } // error was here
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
@@ -623,6 +623,7 @@ public class InsertTest {
             htblColNameValue.put("name", "Student0");
             htblColNameValue.put("gpa", 3.0);
             dbApp.insertIntoTable(strTableName, htblColNameValue);
+            tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 
             for (int i = 0; i < 81; i++) {
 
