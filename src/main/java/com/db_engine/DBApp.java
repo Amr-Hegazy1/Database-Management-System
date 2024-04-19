@@ -62,7 +62,7 @@ public class DBApp {
 	 *                               The data type of that column will be passed in
 	 *                               htblColNameType.
 	 * 
-	 * @param htblColNameValue       The `htblColNameValue` will have the column
+	 * @param htblColNameType       The `htblColNameType` will have the column
 	 *                               name as key and
 	 *                               the data type as value.
 	 * 
@@ -75,6 +75,16 @@ public class DBApp {
 	public void createTable(String strTableName,
 			String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws DBAppException {
+
+		boolean boolValidTypes = true;
+		Vector<String> vecValidTypes = new Vector<>(Arrays.asList("java.lang.Integer"
+				,"java.lang.Double" , "java.lang.String"));
+		for(String strColumnName : htblColNameType.keySet()){
+			boolValidTypes &= vecValidTypes.contains(htblColNameType.get(strColumnName));
+		}
+		if(!boolValidTypes){
+			throw new DBAppException("Unsupported Data Types!");
+		}
 
 		metadata.addTable(strTableName, strClusteringKeyColumn, htblColNameType);
 		metadata.save();
@@ -692,9 +702,7 @@ public class DBApp {
 
 			String strMiddlePage = table.getPageAtIndex(intMiddlePageIndex);
 
-			Page pageMiddlePage = Page.deserialize("tables/" + strTableName + "/" + strMiddlePage + ".class");
-
-			int intMiddlePageSize = pageMiddlePage.getSize();
+			
 
 			Comparable cmpPageMinValue = table.getMin(strMiddlePage);
 
@@ -709,6 +717,7 @@ public class DBApp {
 			if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) >= 0
 					&& cmpClusteringKeyValue
 							.compareTo(cmpPageMaxValue) <= 0) {
+				Page pageMiddlePage = Page.deserialize("tables/" + strTableName + "/" + strMiddlePage + ".class");
 				return pageMiddlePage;
 			} else if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) < 0) {
 				intBottomPageIndex = intMiddlePageIndex - 1;
@@ -755,6 +764,11 @@ public class DBApp {
 		}
 
 		int intTupleIndex = pagePage.searchTuplesByClusteringKey(strClusteringKey, objClusteringKeyValue);
+
+		if (intTupleIndex < 0) {
+			return;
+		}
+
 		Tuple tupleTuple = pagePage.getTupleWithIndex(intTupleIndex);
 		if (!tupleSatisfiesAndedConditions(tupleTuple, htblColNameValue)) {
 			return;
@@ -764,17 +778,17 @@ public class DBApp {
 
 		if (pagePage.getSize() == 0) {
 			Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-			table.removePage(pagePage.getPageName());
-			table.removeMin(pagePage.getPageName());
-			table.removeMax(pagePage.getPageName());
-
-		} else {
+			table.removePage(intTupleIndex);
+			table.removeMin(intTupleIndex);
+			table.removeMax(intTupleIndex);
+			
+		}else{
 			// set min and max values for the page
 			Comparable cmpMin = (Comparable) pagePage.getTupleWithIndex(0).getColumnValue(strClusteringKeyColName);
 			Comparable cmpMax = (Comparable) pagePage.getTupleWithIndex(pagePage.getSize() - 1)
 					.getColumnValue(strClusteringKeyColName);
-			table.setMin(pagePage.getPageName(), cmpMin);
-			table.setMax(pagePage.getPageName(), cmpMax);
+			table.setMin(intTupleIndex, cmpMin);
+			table.setMax(intTupleIndex, cmpMax);
 
 			pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 
@@ -853,6 +867,10 @@ public class DBApp {
 			Page pagePage = getPageByClusteringKey(strTableName, strClusteringKeyColName, cmpClusteringKeyValue, table);
 
 			int intTupleIndex = pagePage.searchTuplesByClusteringKey(strClusteringKeyColName, cmpClusteringKeyValue);
+
+			if (intTupleIndex < 0) {
+				continue;
+			}
 
 			Tuple tupleTuple = pagePage.getTupleWithIndex(intTupleIndex);
 
@@ -937,16 +955,9 @@ public class DBApp {
 			while (intCurrentPageIndex < intCurrentPageSize) {
 				Tuple tupleCurrentTuple = pageCurrentPage.getTupleWithIndex(intCurrentPageIndex);
 				boolean boolToBeDeletedTuple = false;
-				// AND all columns
-				for (String strCol : htblColNameValue.keySet()) {
-					boolToBeDeletedTuple = true;
-					if (!tupleCurrentTuple.getColumnValue(strCol).equals(htblColNameValue.get(strCol))) {
-						boolToBeDeletedTuple = false;
-						break;
-					}
-				}
+				
 
-				if (boolToBeDeletedTuple) {
+				if (tupleSatisfiesAndedConditions(tupleCurrentTuple, htblColNameValue)) {
 					pageCurrentPage.deleteTupleWithIndex(intCurrentPageIndex);
 				} else {
 					intCurrentPageIndex++;
@@ -1017,7 +1028,7 @@ public class DBApp {
 				} else {
 					// get the intersection hashmap entries
 
-					htblTuples = getHashMapIntersection(htblTuples,
+					htblTuples = getHashTableIntersection(htblTuples,
 							getTuplesFromIndex(strTableName, col, htblColNameValue, table));
 
 				}
@@ -1099,7 +1110,7 @@ public class DBApp {
 	 *         the intersection of keys
 	 *         between the two input Hashtables `htbl1` and `htbl2`.
 	 */
-	private Hashtable<Tuple, String> getHashMapIntersection(Hashtable<Tuple, String> htbl1,
+	private Hashtable<Tuple, String> getHashTableIntersection(Hashtable<Tuple, String> htbl1,
 			Hashtable<Tuple, String> htbl2) {
 		Hashtable<Tuple, String> htblIntersection = new Hashtable<>();
 
@@ -1132,15 +1143,24 @@ public class DBApp {
 			throw new DBAppException("Table does not exist");
 		}
 
-		if (htblColNameValue.isEmpty()) {
-			throw new DBAppException("No columns to delete");
-		}
+		
 
+		// check if the column names exist & if the column values are of the correct type
 		for (String strCol : htblColNameValue.keySet()) {
+
+			// check if the column name exists
 			if (!metadata.checkColumnName(strTableName, strCol)) {
 				throw new DBAppException("Column does not exist");
 			}
+			// check if the column value is of the correct type
+			String strColType = metadata.getColumnType(strTableName, strCol);
+			Object objValue = htblColNameValue.get(strCol);
+			if (!objValue.getClass().getName().equals(strColType)) {
+				throw new DBAppException("Data type mismatch");
+			}
 		}
+		
+		
 
 		Table table = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 		String strClusteringKey = metadata.getClusteringKey(strTableName);
@@ -1155,155 +1175,158 @@ public class DBApp {
 	}
 
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms,
-			String[] strarrOperators) throws DBAppException, ClassNotFoundException, IOException {
-		if (arrSQLTerms == null || strarrOperators == null) {
-			throw new DBAppException("Nothing to query on");
-		}
-		if (arrSQLTerms.length == 0) {
-			throw new DBAppException("Nothing to query on");
-		}
-		if (arrSQLTerms.length != strarrOperators.length + 1) {
-			throw new DBAppException("something wrong in the input");
-		}
-		HashSet<String> checkoperators = new HashSet<>();
-		checkoperators.add("=");
-		checkoperators.add("!=");
-		checkoperators.add(">=");
-		checkoperators.add("<=");
-		checkoperators.add(">");
-		;
-		checkoperators.add("<");
-		boolean indexhelp2 = false;
-		for (int i = 0; i < arrSQLTerms.length; i++) {
-			if (arrSQLTerms[i]._strTableName != null && metadata.checkTableName(arrSQLTerms[i]._strTableName)
-					&& arrSQLTerms[0]._strTableName.equals(arrSQLTerms[i]._strTableName)) {
-				if (arrSQLTerms[i]._strColumnName != null
-						&& metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)) {
-					if (!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)
-							.equals("null")) {
-						indexhelp2 = true;
-					}
-					String strType = metadata.getColumnType(arrSQLTerms[i]._strTableName,
-							arrSQLTerms[i]._strColumnName);
-					if (arrSQLTerms[i]._strOperator != null && checkoperators.contains(arrSQLTerms[i]._strOperator)) {
-						if (arrSQLTerms[i]._strOperator == null
-								|| !strType.equals(arrSQLTerms[i]._objValue.getClass().getName())) {
-							throw new DBAppException("Datatype doesn't match");
-						}
-					} else
-						throw new DBAppException("This Operator isn't supported");
-				} else
-					throw new DBAppException("Column doesn't exist");
-			} else
-				throw new DBAppException("Table doesn't exist or inconsistent");
-		}
-		boolean indexhelp = true;
-		for (int i = 0; i < strarrOperators.length; i++) {
-			if (Objects.isNull(strarrOperators[i])) {
-				throw new DBAppException("null in operator");
-			}
-			if ((!strarrOperators[i].toLowerCase().equals("and")) && (!strarrOperators[i].toLowerCase().equals("or"))
-					&& (!strarrOperators[i].toLowerCase().equals("xor")))
-				throw new DBAppException("Undefined operator is being used");
-			if (!(strarrOperators[i].toLowerCase().equals("and")))
-				indexhelp = false;
-		}
-		// el hashes at end of if statements are stand by
-		if (strarrOperators.length == 0) {
-			HashSet<Tuple> tut = getTuple(arrSQLTerms[0]);
-			System.out.println(tut.size());
-			return tut.iterator();
-		}
-		if (indexhelp && indexhelp2) {
-			boolean firstornot = true;
-			HashSet<String> hmpage = new HashSet<>();
-			Vector<SQLTerm> indexsql = new Vector<>();
-			for (int i = 0; i < arrSQLTerms.length; i++) {
-				if (!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)
-						.equals("null")) {
-					if (firstornot) {
-						hmpage = getPage(arrSQLTerms[i]);
-						firstornot = false;
-					} else {
-						hmpage = and2bp(hmpage, getPage(arrSQLTerms[i]));
-					}
-					indexsql.add(arrSQLTerms[i]);
-				}
-			}
-			HashSet<Tuple> hmtup = new HashSet<>();
-			hmtup = pagestotuples(hmpage, indexsql);
-			for (int i = 0; i < arrSQLTerms.length; i++) {
-				if (metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")) {
-					hmtup = and1bp(hmtup, arrSQLTerms[i]);
-				}
-			}
-			return hmtup.iterator();
-		}
+			String[] strarrOperators) throws DBAppException{
 
-		Stack<Object> stack = new Stack<>();
-		Stack<String> stack2 = new Stack<>();
-		Vector<Object> vec = new Vector<>();
-		vec.add(arrSQLTerms[0]);
-		for (int i = 0; i < strarrOperators.length; i++) {
-			if (stack2.isEmpty()) {
-				stack2.push(strarrOperators[i]);
-				vec.add(arrSQLTerms[i + 1]);
-			} else if (precedence(strarrOperators[i].toLowerCase()) >= precedence(stack2.peek().toLowerCase())) {
-				stack2.push(strarrOperators[i]);
-				vec.add(arrSQLTerms[i + 1]);
-			} else {
-				while (!stack2.isEmpty()
-						&& precedence(strarrOperators[i].toLowerCase()) < precedence(stack2.peek().toLowerCase())) {
+				try{
+					if(arrSQLTerms == null || strarrOperators == null){
+						throw new DBAppException("Nothing to query on");
+					}
+					if(arrSQLTerms.length==0){
+						throw new DBAppException("Nothing to query on");
+					}
+					if(arrSQLTerms.length!= strarrOperators.length+1){
+						throw new DBAppException("something wrong in the input");
+					}
+					HashSet<String> checkoperators = new HashSet<>();
+					checkoperators.add("=");checkoperators.add("!=");checkoperators.add(">=");checkoperators.add("<=");checkoperators.add(">");;checkoperators.add("<");
+					boolean indexhelp2 = false;
+					for(int i=0;i<arrSQLTerms.length;i++){
+					if(arrSQLTerms[i]._strTableName!=null&&metadata.checkTableName(arrSQLTerms[i]._strTableName)&&arrSQLTerms[0]._strTableName.equals(arrSQLTerms[i]._strTableName)){
+						if(arrSQLTerms[i]._strColumnName!=null&&metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)){
+							if(!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
+								indexhelp2=true;
+							}
+							String strType= metadata.getColumnType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName);
+							if(arrSQLTerms[i]._strOperator!=null&& checkoperators.contains(arrSQLTerms[i]._strOperator)){	
+								if(arrSQLTerms[i]._strOperator==null||!strType.equals(arrSQLTerms[i]._objValue.getClass().getName())){
+									throw new DBAppException("Datatype doesn't match");
+								}
+							}
+							else 
+							throw new DBAppException("This Operator isn't supported");
+					} else
+						throw new DBAppException("Column doesn't exist");
+				} else
+					throw new DBAppException("Table doesn't exist or inconsistent");
+				}
+				boolean indexhelp=true;
+				for(int i=0;i<strarrOperators.length;i++){
+					if(Objects.isNull(strarrOperators[i])){
+						throw new DBAppException("null in operator");
+					}
+					if((!strarrOperators[i].toLowerCase().equals("and"))&&(!strarrOperators[i].toLowerCase().equals("or"))&&(!strarrOperators[i].toLowerCase().equals("xor")))
+					throw new DBAppException("Undefined operator is being used");
+					if(!(strarrOperators[i].toLowerCase().equals("and")))
+					indexhelp=false;
+				}
+					// el hashes at end of if statements are stand by
+					if(strarrOperators.length==0){
+						HashSet <Tuple> tut=getTuple(arrSQLTerms[0]);
+						System.out.println(tut.size());
+						return tut.iterator();
+				}
+				if(indexhelp&&indexhelp2){
+					boolean firstornot=true;
+					HashSet<String> hmpage= new HashSet<>();
+					Vector<SQLTerm> indexsql= new Vector<>();
+					for(int i=0; i<arrSQLTerms.length;i++){
+						if(!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
+							if(firstornot){
+								hmpage=getPage(arrSQLTerms[i]);
+								firstornot= false;
+							}   
+							else{
+								hmpage=and2bp(hmpage,getPage(arrSQLTerms[i]));
+							}
+						indexsql.add(arrSQLTerms[i]);
+						} 
+					}
+					HashSet<Tuple> hmtup= new HashSet<>();
+					hmtup=pagestotuples(hmpage, indexsql);
+					for(int i=0; i<arrSQLTerms.length;i++){
+						if(metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
+							hmtup=and1bp(hmtup,arrSQLTerms[i]);
+						}
+					}
+					return hmtup.iterator();
+				}
+				
+				Stack<Object> stack = new Stack<>();
+				Stack<String> stack2 = new Stack<>();
+				Vector <Object> vec = new Vector<>();
+				vec.add(arrSQLTerms[0]);
+				for (int i=0;i<strarrOperators.length;i++) {
+					if (stack2.isEmpty()) {
+						stack2.push(strarrOperators[i]);
+						vec.add(arrSQLTerms[i+1]);
+					} else if (precedence(strarrOperators[i].toLowerCase()) >= precedence(stack2.peek().toLowerCase())) {
+						stack2.push(strarrOperators[i]);
+						vec.add(arrSQLTerms[i+1]);
+						}
+					else{	
+						while (!stack2.isEmpty() && precedence(strarrOperators[i].toLowerCase()) < precedence(stack2.peek().toLowerCase())) {
+							vec.add(stack2.pop());
+						}
+						stack2.push(strarrOperators[i]);
+						vec.add(arrSQLTerms[i+1]);
+					}
+				}
+				while(!stack2.isEmpty()){
 					vec.add(stack2.pop());
 				}
-				stack2.push(strarrOperators[i]);
-				vec.add(arrSQLTerms[i + 1]);
-			}
-		}
-		while (!stack2.isEmpty()) {
-			vec.add(stack2.pop());
-		}
-		System.out.println(vec.size());
-		for (int i = 0; i < vec.size(); i++) {
-			if (vec.get(i) instanceof SQLTerm) {
-				stack.push((SQLTerm) vec.get(i));
-			} else {
-				HashSet<Tuple> tm = null;
-				HashSet<Tuple> tm2 = null;
-				System.out.println(i);
-				if (stack.peek() instanceof SQLTerm) {
-					tm = getTuple((SQLTerm) stack.pop());
-					if (stack.peek() instanceof SQLTerm) {
-						tm2 = getTuple((SQLTerm) stack.pop());
-					} else {
-						tm2 = (HashSet<Tuple>) stack.pop();
+				System.out.println(vec.size());
+				for(int i=0;i<vec.size();i++){
+					if(vec.get(i) instanceof SQLTerm){
+						stack.push((SQLTerm) vec.get(i));
 					}
-				} else {
-					tm = (HashSet<Tuple>) stack.pop();
-					if (stack.peek() instanceof SQLTerm) {
-						tm2 = getTuple((SQLTerm) stack.pop());
-					} else {
-						tm2 = (HashSet<Tuple>) stack.pop();
+					else{
+						HashSet <Tuple> tm= null;
+						HashSet <Tuple> tm2= null;
+						System.out.println(i);
+						if(stack.peek() instanceof SQLTerm){
+							tm=getTuple((SQLTerm) stack.pop());
+							if(stack.peek() instanceof SQLTerm){
+								tm2=getTuple((SQLTerm) stack.pop());
+							}
+							else{
+								tm2= (HashSet<Tuple>) stack.pop();
+							}
+						}
+						else{
+							tm= (HashSet<Tuple>) stack.pop();
+							if(stack.peek() instanceof SQLTerm){
+								tm2=getTuple((SQLTerm) stack.pop());
+							}
+							else{
+								tm2= (HashSet<Tuple>) stack.pop();
+							}
+						}
+						if(((String) vec.get(i)).toLowerCase().equals("and")){
+							
+							stack.add(and2hs(tm, tm2));
+						}
+						else if(((String) vec.get(i)).toLowerCase().equals("or")){
+							stack.add(or2hs(tm, tm2));
+						}
+						else{
+							System.out.println("and");
+							stack.add(xor2hs(tm, tm2));
+						}
+			
 					}
 				}
-				if (((String) vec.get(i)).toLowerCase().equals("and")) {
-
-					stack.add(and2hs(tm, tm2));
-				} else if (((String) vec.get(i)).toLowerCase().equals("or")) {
-					stack.add(or2hs(tm, tm2));
-				} else {
-					System.out.println("and");
-					stack.add(xor2hs(tm, tm2));
-				}
-
+				HashSet<Tuple> tm= (HashSet<Tuple>) stack.pop();
+				
+				return tm.iterator();
+			}
+			catch(ClassNotFoundException | IOException e){
+				throw new DBAppException("Something went wrong");
 			}
 		}
-		HashSet<Tuple> tm = (HashSet<Tuple>) stack.pop();
-
-		return tm.iterator();
-	}
-
-	public static int findIndex(SQLTerm arr[], SQLTerm t) {
+		
+		public static int findIndex(SQLTerm arr[], SQLTerm t) 
+			{ 
+		  
 
 		if (arr == null) {
 			return -1;
