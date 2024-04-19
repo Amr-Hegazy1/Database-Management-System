@@ -157,7 +157,7 @@ public class UpdateTests {
 
             for(File page : pages){
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 
@@ -305,7 +305,7 @@ public class UpdateTests {
 
             for(File page : pages){
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 
@@ -371,7 +371,7 @@ public class UpdateTests {
 
             for(File page : pages){
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 
@@ -495,7 +495,7 @@ public class UpdateTests {
 
             for(File page : pages){
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 
@@ -563,7 +563,7 @@ public class UpdateTests {
 
             for(File page : pages){
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 
@@ -705,7 +705,7 @@ public class UpdateTests {
 
             for(File page : pages){
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("page_\\d+\\.class")){
+                if(!page.getName().matches("Student_\\d+\\.class")){
                     continue;
                 }
                 

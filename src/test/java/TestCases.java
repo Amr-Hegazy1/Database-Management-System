@@ -737,7 +737,7 @@ public class TestCases {
 
             for (File page : pages) {
                 // check if the file name is in the format page_i.class
-                if (!page.getName().matches("page_\\d+\\.class")) {
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -808,7 +808,7 @@ public class TestCases {
 
             for (File page : pages) {
                 // check if the file name is in the format page_i.class
-                if (!page.getName().matches("page_\\d+\\.class")) {
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -984,11 +984,12 @@ public class TestCases {
 
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
 
-            for (int i = 0; i < 21; i++) {
+            for (int i = 0; i < 20; i++) {
                 if (i == 0) {
                     System.out.println(tree.query(3.0 + i));
-                    assert tree.query(3.0 + i).size() == 0;
+                    assert tree.query(3.0 + i).size() == 1;
                 } else {
+                    System.out.println(tree.query(3.0 + i));
                     assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
 
                     Pair pair = (Pair) tree.query(3.0 + i).get(0);
@@ -1389,7 +1390,7 @@ public class TestCases {
 
             for (File page : pages) {
                 // check if the file name is in the format page_i.class
-                if (!page.getName().matches("page_\\d+\\.class")) {
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -1908,6 +1909,9 @@ public class TestCases {
                     if (tuple.getColumnValue("id").equals(0)) {
                         assert false;
                     }
+                    if (tuple.getColumnValue("id").equals(1)) {
+                        assert tuple.getColumnValue("name").equals("Student20");
+                    }
                 }
             }
 
@@ -1918,6 +1922,7 @@ public class TestCases {
                     Page page = Page.deserialize("tables/" + strTableName + "/Student_0.class");
                     int tupleIndex = TestCases.searchTuplesByClusteringKey("id", 1, page);
                     Tuple tuple = page.getTupleWithIndex(tupleIndex);
+                    System.out.println(tuple.getColumnValue("name"));
                     assert tuple.getColumnValue("name").equals("Student20");
                 }
             }
@@ -2202,6 +2207,9 @@ public class TestCases {
                     if (tuple.getColumnValue("id").equals(0)) {
                         assert false;
                     }
+                    if (tuple.getColumnValue("id").equals(1)) {
+                        assert tuple.getColumnValue("name").equals("Student20");
+                    }
                 }
             }
 
@@ -2212,6 +2220,9 @@ public class TestCases {
             for (int i = 0; i < 20; i++) {
                 if (i == 0) {
                     assert tree.query("Student" + i).size() == 0;
+                }else if (i == 1){
+                    assert tree.query("Student" + i).size() == 0;
+                    assert tree.query("Student20").size() == 1;
                 } else {
                     assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
 

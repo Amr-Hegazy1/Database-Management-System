@@ -144,6 +144,7 @@ public class DBApp {
 			throw new DBAppException("An index for this column already exists");
 
 		} else {
+			if (strIndexName.equals(strTableName)) strIndexName += "Index";
 
 			String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
 
@@ -638,18 +639,28 @@ public class DBApp {
 				hashsetIndexedonly.add(strName);
 			}
 		}
-		for (String strColumnName : hashsetIndexedonly) {
-			Comparable cmpTemp = (Comparable) tplTuple.getColumnValue(strColumnName);
 
+		for (String strColumnName : htblColNameValue.keySet()) {
+			Comparable cmpColumnValue = (Comparable) htblColNameValue.get(strColumnName);
+			tplTuple.setColumnValue(strColumnName, cmpColumnValue);
+
+		}
+
+		
+		
+		
+		for (String strColumnName : hashsetIndexedonly) {
+			Comparable cmpTemp = (Comparable) tupleOriginalTuple.getColumnValue(strColumnName);
+			
 			if (htblColNameValue.containsKey(strColumnName)) {
-				cmpTemp = (Comparable) tplTuple.getColumnValue(strColumnName);
+				cmpTemp = (Comparable) tupleOriginalTuple.getColumnValue(strColumnName);
 				Comparable cmpColumnValue = (Comparable) htblColNameValue.get(strColumnName);
 				tplTuple.setColumnValue(strColumnName, cmpColumnValue);
 
 				String indexName = metadata.getIndexName(strTableName, strColumnName);
 				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-				// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
-				// bptTree.insert(cmpColumnValue, (Comparable) tplTuple);
+				
+
 				Pair<Object, String> keyPair = new Pair<>(tplTuple.getColumnValue(strClusteringKey),
 											tplTuple.getPageName());
 				bptTree.remove(cmpTemp, keyPair);
@@ -661,8 +672,8 @@ public class DBApp {
 			} else {
 				String strIndexName = metadata.getIndexName(strTableName, strColumnName);
 				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-				// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
-				// bptTree.insert(cmpTemp, (Comparable) tplTuple);
+				
+				
 				Pair<Object, String> keyPair = new Pair<>(tplTuple.getColumnValue(strClusteringKey), tplTuple.getPageName());
 				bptTree.remove(cmpTemp, keyPair);
 				bptTree.insert(cmpTemp, keyPair);
