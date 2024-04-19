@@ -187,6 +187,30 @@ public class Table implements Serializable {
     }
 
     /**
+     * The setMin function updates the minimum value of a page at a specified index in a vector, either
+     * by replacing the existing value if the index is within the vector's size or by adding the value
+     * to the vector if the index is greater.
+     * 
+     * @param index The `index` parameter represents the position at which you want to set the minimum
+     * value in the vector `vecMin`. If the index is within the current size of the vector, the
+     * existing value at that index will be replaced with the new minimum value. If the index is
+     * greater than the current size
+     * @param min The `min` parameter in the `setMin` method represents the minimum value that you want
+     * to set for a specific index in a vector or list. It is of type `Comparable`, which means it can
+     * hold any object that implements the `Comparable` interface, allowing for comparison between
+     * objects.
+     */
+    public void setMin (int index, Comparable min) {
+        // set the minimum value of a page
+        if (index < vecMin.size()) { // If the index is less than the size of the vector, replace the existing value
+            this.vecMin.set(index, min);
+        } else { // If the index is greater than the size of the vector, add the value to the
+                 // vector
+            this.vecMin.add(min);
+        }
+    }
+
+    /**
      * The function `setMax` sets the maximum value associated with a given page
      * name.
      * 
@@ -201,6 +225,28 @@ public class Table implements Serializable {
     public void setMax(String pageName, Comparable max) {
         // set the maximum value of a page
         int index = this.vecPages.indexOf(pageName);
+        if (index < vecMax.size()) { // If the index is less than the size of the vector, replace the existing value
+            this.vecMax.set(index, max);
+        } else { // If the index is greater than the size of the vector, add the value to the
+                 // vector
+            this.vecMax.add(max);
+        }
+    }
+
+    /**
+     * The `setMax` function in Java sets the maximum value of a page at a specified index in a vector,
+     * replacing the existing value if the index is within the vector's size or adding the value to the
+     * vector if the index is greater.
+     * 
+     * @param index Index is the position at which the maximum value needs to be set or updated in the
+     * vector.
+     * @param max The `max` parameter in the `setMax` method represents the maximum value that you want
+     * to set for a specific index in a vector or list. It is of type `Comparable`, which means it can
+     * be any object that implements the `Comparable` interface, allowing for comparison with other
+     * objects of the
+     */
+    public void setMax(int index, Comparable max) {
+        // set the maximum value of a page
         if (index < vecMax.size()) { // If the index is less than the size of the vector, replace the existing value
             this.vecMax.set(index, max);
         } else { // If the index is greater than the size of the vector, add the value to the
