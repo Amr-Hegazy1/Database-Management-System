@@ -1763,6 +1763,7 @@ public class TestCases {
         }
     }
 
+    @Test
     public void deleteAndUpdateWithIndex() throws DBAppException, IOException, ClassNotFoundException {
         try {
             DBApp dbApp = new DBApp();
