@@ -361,13 +361,21 @@ public class DBApp {
 
 				Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
 																								// Comparable
-
 				Pair pairIndexPair = new Pair(tupleNewTuple.getColumnValue(strClustKeyName),
 						tupleNewTuple.getPageName());
 
+				if (bptTree.query(colValue).size() > 0) {
+					Pair PairOldPair = ((Pair) bptTree.query(colValue).get(0));
+					bptTree.remove(colValue, PairOldPair);
+					bptTree.insert(colValue, pairIndexPair);
+				} else {
+					bptTree.insert(colValue, pairIndexPair);
+				}
+
 				System.out.println("INSERTED IN INSERT" + colValue);
-				bptTree.insert(colValue, pairIndexPair); // inserting col value(key) and tuple
-															// object(value) into bTree
+				// bptTree.insert(colValue, pairIndexPair); // inserting col value(key) and
+				// tuple
+				// // object(value) into bTree
 
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
 			}
@@ -384,19 +392,25 @@ public class DBApp {
 
 		boolean adjustIndicies = true;
 		Vector<String> vecPages = tblTable.getPages(); // Vector of Page names in table
-		Page overflowPage = pgFirstOverflowPage; // page that caused first overflow
-		int intStartIndex = vecPages.indexOf(overflowPage.getPageName()); // get index of first overflowed page in the
-																			// vecPages Vector
-		Tuple tupleLastTuple = overflowPage.removeLastTuple(); // last tuple in overflow page
-		tblTable.setMax(overflowPage.getPageName(),
-				(Comparable) overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in
-																							// overflow
-																							// page
+		// Page pgFirstOverflowPage = pgFirstpgFirstOverflowPage; // page that caused
+		// first overflow
+		int intStartIndex = vecPages.indexOf(pgFirstOverflowPage.getPageName()); // get index of first overflowed page
+																					// in the
+		// vecPages Vector
+		Tuple tupleLastTuple = pgFirstOverflowPage.removeLastTuple(); // last tuple in overflow page
+		System.out.println("removed tuple" + tupleLastTuple);
+		System.out.println("new last tuple " + pgFirstOverflowPage.getLastTuple());
+		tblTable.setMax(pgFirstOverflowPage.getPageName(),
+				(Comparable) pgFirstOverflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value
+																									// in
+		// overflow
+		// page
 
-		overflowPage.serialize("tables/" + tblTable.getTableName() + "/" + overflowPage.getPageName() + ".class"); // serialize
-																													// the
-																													// overflow
-																													// page
+		pgFirstOverflowPage
+				.serialize("tables/" + tblTable.getTableName() + "/" + pgFirstOverflowPage.getPageName() + ".class"); // serialize
+		// the
+		// overflow
+		// page
 
 		// Loop through the rest of the pages to handle the overflow
 		for (int i = intStartIndex + 1; i < vecPages.size(); i++) {
@@ -467,6 +481,10 @@ public class DBApp {
 			if (page.getSize() > intMaxRowsPerPage) { // if overflowed, remove last tuple, adjust max value and
 														// serialize current page
 				tupleLastTuple = page.removeLastTuple();
+				tblTable.setMax(page.getPageName(),
+						(Comparable) page.getLastTuple().getColumnValue(strClustKeyName)); // adjust max value in page
+				System.out.println("LAST TUPLE REMOVED" + " " + tupleLastTuple);
+				System.out.println("NEW LAST TUPLE " + " " + page.getLastTuple());
 				page.serialize("tables/" + tblTable.getTableName() + "/" + page.getPageName() + ".class");
 			} else { // if no overflow, serialize page and break the loop
 				page.serialize("tables/" + tblTable.getTableName() + "/" + page.getPageName() + ".class");
@@ -490,7 +508,7 @@ public class DBApp {
 		// "insertIntoTable" method)
 		// (avoid duplicate pairs in index & improve performance because BPTree(s) are
 		// only deserialized once for the same one tuple)
-		if (hsIndexedCols.size() > 0 && !tupleNewTupleFromInsert.equals(tupleLastTuple)) {
+		if (hsIndexedCols.size() > 0) {
 			for (Object objColName : hsIndexedCols) {
 				String strColName = (String) objColName;
 				String strTableName = tblTable.getTableName();
@@ -1835,6 +1853,7 @@ public class DBApp {
 	public static void main(String[] args) throws IOException {
 
 		try {
+
 			DBApp dbApp = new DBApp();
 
 			dbApp.init();
@@ -1851,24 +1870,183 @@ public class DBApp {
 
 			dbApp.createTable(strTableName, "id", htblColNameType);
 
-			// insert n rows
+			// insert 20 rows
 
-			for (int i = 0; i < 20; i++) {
+			for (int i = 0; i < 80; i++) {
 				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-				htblColNameValue.put("id", i);
-				htblColNameValue.put("name", "Student" + i);
-				htblColNameValue.put("gpa", 3.0 + i);
+				htblColNameValue.put("id", i + 1);
+				htblColNameValue.put("name", "Student" + (i + 1));
+				htblColNameValue.put("gpa", 3.0 + i + 1);
 				dbApp.insertIntoTable(strTableName, htblColNameValue);
 			}
+			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 
-			Page p = Page.deserialize("tables/" + strTableName + "/" + "/Student_0.class");
+			String newPage = "Student_0";
+			Page pgPage = null;
+			int max;
+			int min;
+			// for (int i = 0; i < 80; i++) {
 
-			Vector v = p.getTuples();
+			// if (i % 20 == 0) {
+			// newPage = strTableName + "_" + (i / 20);
+			// pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage +
+			// ".class");
+			// min = (int) pgPage.getFirstTuple().getColumnValue("id");
+			// max = (int) pgPage.getLastTuple().getColumnValue("id");
 
-			for (int i = 0; i < v.size(); i++) {
-				Tuple t = (Tuple) v.get(i);
-				System.out.println(t);
+			// System.out.println("index: "+ index + " " + v.get(index));
+
+			// assert min == (int) tblTable.getMin(newPage) && max == (int)
+			// tblTable.getMax(newPage);
+			// }
+			// // if (pgPage.getTupleWithIndex(i).getColumnValue("id").equals(0)) {
+			// // assert false;
+			// // }
+			// }
+			int index = tblTable.getMaxIndex(newPage);
+			Vector<Comparable> v = tblTable.getMaxVec(newPage);
+
+			Vector<Comparable> v2 = tblTable.getMinVec(newPage);
+
+			for (Comparable c : v) {
+				System.out.println("comparable max" + " " + c);
 			}
+
+			for (Comparable c : v2) {
+				System.out.println("comparable min" + " " + c);
+			}
+
+			System.out.println("index :" + index);
+
+			Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			htblColNameValue.put("id", 0);
+			htblColNameValue.put("name", "Student0");
+			htblColNameValue.put("gpa", 3.0);
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			for (Comparable c : v) {
+				System.out.println("comparable MAX AFTER INSERT" + " " + c);
+			}
+
+			for (Comparable c : v2) {
+				System.out.println("comparable MIN AFTER INSERT" + " " + c);
+			}
+
+			for (int i = 0; i < 81; i++) {
+
+				if (i % 20 == 0) {
+					newPage = strTableName + "_" + (i / 20);
+					pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage + ".class");
+					min = (int) pgPage.getFirstTuple().getColumnValue("id");
+					max = (int) pgPage.getLastTuple().getColumnValue("id");
+
+					System.out.println("table min :" + tblTable.getMin(newPage) + " page min :" + min);
+					System.out.println("table max :" + tblTable.getMax(newPage) + " page max :" + max);
+
+					assert min == (int) tblTable.getMin(newPage) && max == (int) tblTable.getMax(newPage);
+				}
+
+			}
+			// DBApp dbApp = new DBApp();
+
+			// dbApp.init();
+
+			// String strTableName = "Student";
+
+			// Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+			// htblColNameType.put("id", "java.lang.Integer");
+
+			// htblColNameType.put("name", "java.lang.String");
+
+			// htblColNameType.put("gpa", "java.lang.Double");
+
+			// dbApp.createTable(strTableName, "id", htblColNameType);
+
+			// // insert 20 rows
+
+			// for (int i = 0; i < 40; i++) {
+			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			// htblColNameValue.put("id", i + 1);
+			// htblColNameValue.put("name", "Student" + (i + 1));
+			// htblColNameValue.put("gpa", 3.0 + i + 1);
+			// dbApp.insertIntoTable(strTableName, htblColNameValue);
+			// }
+
+			// dbApp.createIndex(strTableName, "name", "nameIndex");
+
+			// dbApp.createIndex(strTableName, "gpa", "gpaIndex");
+
+			// // check that index contains correct values
+
+			// BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" +
+			// "nameIndex.class");
+			// Table tblTable = Table.deserialize("tables/" + strTableName + "/" +
+			// strTableName + ".class");
+
+			// for (int i = 0; i < 40; i++) {
+			// String strPageName = tblTable.getPageAtIndex(i / 20);
+			// assert tree.query("Student" + (i + 1)) != null && tree.query("Student" + (i +
+			// 1)).size() == 1
+			// && ((Pair) tree.query("Student" + (i + 1)).get(0)).getKey().equals((i + 1))
+			// && ((Pair) tree.query("Student" + (i +
+			// 1)).get(0)).getValue().equals(strPageName);
+			// }
+			// // insert a new row
+
+			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			// htblColNameValue.put("id", 0);
+			// htblColNameValue.put("name", "Student0");
+			// htblColNameValue.put("gpa", 3.0);
+			// dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			// String newPage = newPage = strTableName + "_" + 0;
+			// ;
+			// Page pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage +
+			// ".class");
+			// for (int i = 0; i < 41; i++) {
+			// if (i % 20 == 0 && i > 0) {
+			// newPage = strTableName + "_" + (i / 20);
+			// pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage +
+			// ".class");
+			// }
+			// if (pgPage.getTupleWithIndex(i).getColumnValue("id").equals(0)) {
+			// break;
+			// }
+			// }
+
+			// Pair pairIndexPair = new Pair(0, newPage);
+
+			// // tree.insert("Student0", pairIndexPair);
+			// tree = BPlusTree.deserialize("tables/" + strTableName + "/" +
+			// "nameIndex.class");
+
+			// for (int i = 0; i < 41; i++) {
+			// String strPageName = tblTable.getPageAtIndex(i / 20);
+			// System.out.println(strPageName);
+			// System.out.println(tree.query("Student" + i) + "boolean :" + " "
+			// + (tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
+			// && ((Pair) tree.query("Student" + i).get(0)).getKey().equals(i)
+			// && ((Pair) tree.query("Student" +
+			// i).get(0)).getValue().equals(strPageName)));
+			// // assert tree.query("Student" + i).size() == 1;
+			// // assert tree.query("Student" + i) != null && tree.query("Student" +
+			// // i).size()
+			// // == 1
+			// // && ((Pair) tree.query("Student" + i).get(0)).getKey().equals(i)
+			// // && ((Pair) tree.query("Student" +
+			// // i).get(0)).getValue().equals(strPageName);
+
+			// } // error was here
+
+			// Page p = Page.deserialize("tables/" + strTableName + "/" + strTableName +
+			// "_2.class");
+			// Vector<Tuple> tuples = p.getTuples();
+			// for (Tuple t : tuples) {
+			// System.out.println("tuples" + " " + t);
+			// }
+			// tree = BPlusTree.deserialize("tables/" + strTableName + "/" +
+			// "gpaIndex.class");
 
 		} catch (Exception e) {
 			e.printStackTrace();
