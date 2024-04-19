@@ -494,12 +494,15 @@ public class DBApp {
 
 		// if we reach this point, this means that we overflowed in all pages until no
 		// pages were left, therefore a new page is needed
+
 		String newPageName = tblTable.addPage(); // creating new page
 		Page newPage = new Page(newPageName); // creating new page object with new page name
+		
 		tblTable.setMin(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value
 																									// of new page
 		tblTable.setMax(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value
-																									// of new page
+																										// of new page
+		
 
 		// Adjust indicies only if there is any indexed columns *AND* newtuple being
 		// inserted from "insertIntoTable"
@@ -647,8 +650,8 @@ public class DBApp {
 				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
 				// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
 				// bptTree.insert(cmpColumnValue, (Comparable) tplTuple);
-				Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(),
-						tplTuple.getColumnValue(strClusteringKey));
+				Pair<Object, String> keyPair = new Pair<>(tplTuple.getColumnValue(strClusteringKey),
+											tplTuple.getPageName());
 				bptTree.remove(cmpTemp, keyPair);
 				bptTree.insert(cmpColumnValue, keyPair);
 				bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
@@ -660,8 +663,7 @@ public class DBApp {
 				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
 				// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
 				// bptTree.insert(cmpTemp, (Comparable) tplTuple);
-				Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(),
-						tplTuple.getColumnValue(strClusteringKey));
+				Pair<Object, String> keyPair = new Pair<>(tplTuple.getColumnValue(strClusteringKey), tplTuple.getPageName());
 				bptTree.remove(cmpTemp, keyPair);
 				bptTree.insert(cmpTemp, keyPair);
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
@@ -1881,6 +1883,10 @@ public class DBApp {
 			}
 			Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 
+			
+
+
+
 			String newPage = "Student_0";
 			Page pgPage = null;
 			int max;
@@ -1923,6 +1929,11 @@ public class DBApp {
 			htblColNameValue.put("name", "Student0");
 			htblColNameValue.put("gpa", 3.0);
 			dbApp.insertIntoTable(strTableName, htblColNameValue);
+			tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
+
+			Vector<String> v3 = tblTable.getPages();
+
+			System.out.println("pages after insert" + " " + v3);
 
 			for (Comparable c : v) {
 				System.out.println("comparable MAX AFTER INSERT" + " " + c);
