@@ -2744,7 +2744,7 @@ public class TestCases {
      *                              tuples. It is used to identify the specific
      *                              attribute or column in the tuple that serves as
      *                              the clustering key for the data structure.
-     * @param strClusteringKeyValue The `strClusteringKeyValue` parameter represents
+     * @param objClusteringKeyValue The `objClusteringKeyValue` parameter represents
      *                              the value of the
      *                              clustering key that you are searching for within
      *                              the list of tuples. The method
