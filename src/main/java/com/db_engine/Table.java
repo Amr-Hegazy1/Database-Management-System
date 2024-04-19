@@ -164,6 +164,16 @@ public class Table implements Serializable {
         return this.vecMax.get(this.vecPages.indexOf(pageName));
     }
 
+    public Vector<Comparable> getMaxVec(String pageName) {
+        // get the maximum value of a page
+        return this.vecMax;
+    }
+
+    public int getMaxIndex(String pageName) {
+        // get the maximum value of a page
+        return this.vecPages.indexOf(pageName);
+    }
+
     /**
      * The function `setMin` sets the minimum value associated with a given page
      * name.
@@ -184,6 +194,11 @@ public class Table implements Serializable {
                  // vector
             this.vecMin.add(min);
         }
+    }
+
+    public Vector<Comparable> getMinVec(String pageName) {
+        // get the maximum value of a page
+        return this.vecMin;
     }
 
     /**

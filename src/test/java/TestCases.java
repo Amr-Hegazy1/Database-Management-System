@@ -198,9 +198,6 @@ public class TestCases {
 
                 assert tuple.getColumnValue("id").equals(i);
 
-
-
-                
             }
 
         } finally {
@@ -211,7 +208,7 @@ public class TestCases {
 
     @Test
     public void createIndexOnEmptyTable() throws DBAppException, IOException {
-        try{
+        try {
             DBApp dbApp = new DBApp();
 
             dbApp.init();
@@ -236,14 +233,14 @@ public class TestCases {
 
             assert tree.getRoot() == null;
 
-        }finally{
+        } finally {
             cleanUp();
         }
     }
 
     @Test
     public void createIndexOnMultiplePages() throws DBAppException, IOException {
-        try{
+        try {
             DBApp dbApp = new DBApp();
 
             dbApp.init();
@@ -257,7 +254,7 @@ public class TestCases {
 
             dbApp.createTable(strTableName, "id", htblColNameType);
 
-            for(int i = 0; i < 1000; i++){
+            for (int i = 0; i < 1000; i++) {
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);
                 htblColNameValue.put("name", "Student" + i);
@@ -271,7 +268,7 @@ public class TestCases {
 
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
 
-            for(int i = 0; i < 1000; i++){
+            for (int i = 0; i < 1000; i++) {
                 assert tree.query(i) != null && tree.query(i).size() == 1;
 
                 Pair pair = (Pair) tree.query(i).get(0);
@@ -290,18 +287,16 @@ public class TestCases {
 
                 assert tuple.getColumnValue("id").equals(i);
 
-                
             }
 
-        }finally{
+        } finally {
             cleanUp();
         }
     }
 
-
     @Test
     public void createIndexWithDuplicates() throws DBAppException, IOException {
-        try{
+        try {
             DBApp dbApp = new DBApp();
 
             dbApp.init();
@@ -315,7 +310,7 @@ public class TestCases {
 
             dbApp.createTable(strTableName, "id", htblColNameType);
 
-            for(int i = 0; i < 1000; i++){
+            for (int i = 0; i < 1000; i++) {
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);
                 htblColNameValue.put("name", "Student");
@@ -331,11 +326,7 @@ public class TestCases {
 
             assert tree.query("Student") != null && tree.query("Student").size() == 1000;
 
-            
-
-
-
-        }finally{
+        } finally {
             cleanUp();
         }
     }
@@ -381,7 +372,7 @@ public class TestCases {
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
 
             for (int i = 0; i < 20; i++) {
-                
+
                 assert tree.query(i) != null && tree.query(i).size() == 1;
 
                 assert ((Pair) tree.query(i).get(0)).getKey().equals(i);
@@ -400,7 +391,7 @@ public class TestCases {
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "idIndex.class");
 
             for (int i = 0; i < 21; i++) {
-
+                assert tree.query(i).size() == 1;
                 assert tree.query(i) != null && tree.query(i).size() == 1
                         && ((Pair) tree.query(i).get(0)).getKey().equals(i);
             }
@@ -465,7 +456,6 @@ public class TestCases {
                 assert tupleIndex != -1;
 
                 Tuple tuple = page.getTupleWithIndex(tupleIndex);
-                
 
                 assert tuple.getColumnValue("name").equals("Student" + i);
             }
@@ -500,7 +490,6 @@ public class TestCases {
                 Tuple tuple = page.getTupleWithIndex(tupleIndex);
 
                 assert tuple.getColumnValue("name").equals("Student" + i);
-
 
             }
 
@@ -570,14 +559,6 @@ public class TestCases {
 
                 assert tuple.getColumnValue("name").equals("Student" + i);
 
-                
-
-
-            
-            
-            
-            
-            
             }
 
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
@@ -600,7 +581,6 @@ public class TestCases {
                 Tuple tuple = page.getTupleWithIndex(tupleIndex);
 
                 assert tuple.getColumnValue("gpa").equals(3.0 + i);
-
 
             }
 
@@ -635,7 +615,6 @@ public class TestCases {
 
                 assert tuple.getColumnValue("name").equals("Student" + i);
 
-
             }
 
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
@@ -658,7 +637,6 @@ public class TestCases {
                 Tuple tuple = page.getTupleWithIndex(tupleIndex);
 
                 assert tuple.getColumnValue("gpa").equals(3.0 + i);
-
 
             }
 
@@ -693,9 +671,7 @@ public class TestCases {
 
             dbApp.createTable(strTableName, "id", htblColNameType);
 
-            
-
-            for(int i = 0; i < 1e5; i++){
+            for (int i = 0; i < 1e5; i++) {
                 System.out.println(i);
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);
@@ -703,8 +679,6 @@ public class TestCases {
                 htblColNameValue.put("gpa", 3.0 + i);
                 dbApp.insertIntoTable(strTableName, htblColNameValue);
             }
-
-            
 
         } finally {
             cleanUp();
@@ -901,8 +875,8 @@ public class TestCases {
 
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
 
-            for(int i = 0; i < 21; i++){
-                if(i == 0){
+            for (int i = 0; i < 21; i++) {
+                if (i == 0) {
                     assert tree.query("Student" + i).size() == 0;
                 } else {
                     assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
@@ -923,9 +897,8 @@ public class TestCases {
 
                     assert tuple.getColumnValue("name").equals("Student" + i);
 
-
                 }
-                
+
             }
 
         } finally {
@@ -984,8 +957,8 @@ public class TestCases {
 
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
 
-            for(int i = 0; i < 21; i++){
-                if(i == 0){ 
+            for (int i = 0; i < 21; i++) {
+                if (i == 0) {
                     assert tree.query("Student" + i).size() == 0;
                 } else {
                     assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
@@ -1005,7 +978,6 @@ public class TestCases {
                     Tuple tuple = page.getTupleWithIndex(tupleIndex);
 
                     assert tuple.getColumnValue("name").equals("Student" + i);
-
 
                 }
             }
@@ -1034,7 +1006,6 @@ public class TestCases {
                     Tuple tuple = page.getTupleWithIndex(tupleIndex);
 
                     assert tuple.getColumnValue("gpa").equals(3.0 + i);
-
 
                 }
                 System.out.println(tree.query(3.0 + i));
@@ -1097,7 +1068,7 @@ public class TestCases {
 
             for (File page : pages) {
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("Student_\\d+\\.class")){
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -1134,16 +1105,14 @@ public class TestCases {
             dbApp.createTable(strTableName, "id", htblColNameType);
 
             // insert 2000 rows
-            
-            for(int i = 0; i < 2000; i++){
+
+            for (int i = 0; i < 2000; i++) {
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);
                 htblColNameValue.put("name", "Student");
                 htblColNameValue.put("gpa", 3.0 + i);
                 dbApp.insertIntoTable(strTableName, htblColNameValue);
             }
-
-            
 
             // delete a row
 
@@ -1163,7 +1132,7 @@ public class TestCases {
 
             for (File page : pages) {
                 // check if the file name is in the format page_i.class
-                if(!page.getName().matches("Student_\\d+\\.class")){
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -1227,9 +1196,9 @@ public class TestCases {
 
             File[] pages = pagesDir.listFiles();
 
-            for(File page : pages){
+            for (File page : pages) {
                 // check if the file name is in the format Student_i.class
-                if(!page.getName().matches("Student_\\d+\\.class")){
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -1266,7 +1235,6 @@ public class TestCases {
                     Tuple tuple = page.getTupleWithIndex(tupleIndex);
 
                     assert tuple.getColumnValue("id").equals(i);
-
 
                 }
             }
@@ -1322,9 +1290,9 @@ public class TestCases {
 
             File[] pages = pagesDir.listFiles();
 
-            for(File page : pages){
+            for (File page : pages) {
                 // check if the file name is in the format Student_i.class
-                if(!page.getName().matches("Student_\\d+\\.class")){
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -1361,8 +1329,6 @@ public class TestCases {
                     Tuple tuple = page.getTupleWithIndex(tupleIndex);
 
                     assert tuple.getColumnValue("name").equals("Student" + i);
-
-
 
                 }
             }
@@ -1460,8 +1426,6 @@ public class TestCases {
 
                     assert tuple.getColumnValue("name").equals("Student" + i);
 
-
-
                 }
             }
 
@@ -1486,16 +1450,15 @@ public class TestCases {
 
                 assert tuple.getColumnValue("gpa").equals(3.0 + i);
 
-
             }
         } finally {
             cleanUp();
         }
     }
-    
+
     @Test
-    public void deleteWithIndexedAndNonIndexedColumns() throws DBAppException, IOException{
-        try{
+    public void deleteWithIndexedAndNonIndexedColumns() throws DBAppException, IOException {
+        try {
             DBApp dbApp = new DBApp();
 
             dbApp.init();
@@ -1510,7 +1473,7 @@ public class TestCases {
             dbApp.createTable(strTableName, "id", htblColNameType);
 
             // insert 20 rows
-            for(int i = 0; i < 20; i++){
+            for (int i = 0; i < 20; i++) {
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);
                 htblColNameValue.put("name", "Student0");
@@ -1532,15 +1495,15 @@ public class TestCases {
             File pagesDir = new File(pagesPath);
             File[] pages = pagesDir.listFiles();
 
-            for(File page : pages){
+            for (File page : pages) {
                 // check if the file name is in the format Student_i.class
-                if(!page.getName().matches("Student_\\d+\\.class")){
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
-                
+
                 Page p = Page.deserialize(page.getPath());
-                for(Tuple tuple : p.getTuples()){
-                    if(tuple.getColumnValue("name").equals("Student0") && tuple.getColumnValue("gpa").equals(3.0)){
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("name").equals("Student0") && tuple.getColumnValue("gpa").equals(3.0)) {
                         System.out.println(tuple);
                         assert false;
                     }
@@ -1552,18 +1515,14 @@ public class TestCases {
             System.out.println(tree.query("Student0").size());
             assert tree.query("Student0").size() == 19;
 
-
-        }finally{
+        } finally {
             cleanUp();
         }
     }
 
-    
-
-
     @Test
-    public void selectWithoutIndexWithId() throws DBAppException, IOException, ClassNotFoundException{
-        try{
+    public void selectWithoutIndexWithId() throws DBAppException, IOException, ClassNotFoundException {
+        try {
             DBApp dbApp = new DBApp();
 
             dbApp.init();
@@ -1582,7 +1541,7 @@ public class TestCases {
 
             // insert 20 rows
 
-            for(int i = 0; i < 20; i++){
+            for (int i = 0; i < 20; i++) {
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);
                 htblColNameValue.put("name", "Student" + i);
@@ -1603,20 +1562,19 @@ public class TestCases {
 
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
-            for(int i = 0; i < 20; i++){
-                if(i == 5){
+            for (int i = 0; i < 20; i++) {
+                if (i == 5) {
                     assert iterator.hasNext();
                     Tuple tuple = (Tuple) iterator.next();
                     assert tuple.getColumnValue("id").equals(5);
                     assert tuple.getColumnValue("name").equals("Student5");
                     assert tuple.getColumnValue("gpa").equals(3.0 + 5);
-                }else{
+                } else {
                     assert !iterator.hasNext();
                 }
             }
 
-            
-        }finally{
+        } finally {
             cleanUp();
         }
     }
@@ -1648,9 +1606,8 @@ public class TestCases {
      *         `DBAppException` with the
      *         message "Column Value doesn't exist".
      */
-    public static int searchTuplesByClusteringKey(String strClusteringKeyName, Object objClusteringKeyValue, Page page) throws DBAppException{
-
-        
+    public static int searchTuplesByClusteringKey(String strClusteringKeyName, Object objClusteringKeyValue, Page page)
+            throws DBAppException {
 
         Vector<Tuple> vecTuples = page.getTuples();
 
@@ -1679,10 +1636,8 @@ public class TestCases {
 
     }
 
-    
-
-    protected void cleanUp() throws IOException{
-        try{
+    protected void cleanUp() throws IOException {
+        try {
             // delete tables directory
 
             String tablesPath = "tables/";
