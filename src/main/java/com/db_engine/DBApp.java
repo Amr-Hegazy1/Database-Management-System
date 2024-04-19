@@ -1258,7 +1258,7 @@ public class DBApp {
 								firstornot= false;
 							}   
 							else{
-								hmpage=and2bp(hmpage,getPage(arrSQLTerms[i]));
+								hmpage=and2hs(hmpage,getPage(arrSQLTerms[i]));
 							}
 						indexsql.add(arrSQLTerms[i]);
 						} 
@@ -1346,84 +1346,77 @@ public class DBApp {
 			}
 		}
 		
-		public static int findIndex(SQLTerm arr[], SQLTerm t) 
-			{ 
-		  
+	public static int findIndex(SQLTerm arr[], SQLTerm t) {
 
-		if (arr == null) {
-			return -1;
-		}
 
-		int len = arr.length;
-		int i = 0;
-
-		while (i < len) {
-
-			if (arr[i]._strTableName.equals(t._strTableName) && arr[i]._strColumnName.equals(t._strColumnName)
-					&& arr[i]._strOperator.equals(t._strOperator)) {
-				if (t._objValue instanceof Integer) {
-					Integer te = (Integer) t._objValue;
-					if (te == ((Integer) arr[i]._objValue))
-						return i;
-					else
-						i++;
-				} else if (t._objValue instanceof Double) {
-					Double te = (Double) t._objValue;
-					if (te == ((Double) arr[i]._objValue))
-						return i;
-					else
-						i++;
-				} else {
-					String te = (String) t._objValue;
-					if (te.compareTo(((String) arr[i]._objValue)) == 0)
-						return i;
-					else
-						i++;
-				}
-			} else {
-				i = i + 1;
-			}
-		}
+	if (arr == null) {
 		return -1;
 	}
 
-	private static HashSet<Tuple> and2hs(HashSet<Tuple> hs1, HashSet<Tuple> hs2) {
-		HashSet<Tuple> temp = new HashSet<>();
-		for (Tuple tm : hs1) {
-			if (!hs2.contains(tm)) {
-				temp.add(tm);
-			}
-		}
-		for (Tuple tm : temp) {
-			hs1.remove(tm);
-		}
-		return hs1;
-	}
+	int len = arr.length;
+	int i = 0;
 
-	private static HashSet<String> and2bp(HashSet<String> hs1, HashSet<String> hs2) {
-		HashSet<String> temp = new HashSet<>();
-		for (String tm : hs1) {
-			if (!hs2.contains(tm)) {
-				temp.add(tm);
+	while (i < len) {
+
+		if (arr[i]._strTableName.equals(t._strTableName) && arr[i]._strColumnName.equals(t._strColumnName)
+				&& arr[i]._strOperator.equals(t._strOperator)) {
+			if (t._objValue instanceof Integer) {
+				Integer te = (Integer) t._objValue;
+				if (te == ((Integer) arr[i]._objValue))
+					return i;
+				else
+					i++;
+			} else if (t._objValue instanceof Double) {
+				Double te = (Double) t._objValue;
+				if (te == ((Double) arr[i]._objValue))
+					return i;
+				else
+					i++;
+			} else {
+				String te = (String) t._objValue;
+				if (te.compareTo(((String) arr[i]._objValue)) == 0)
+					return i;
+				else
+					i++;
 			}
+		} else {
+			i = i + 1;
 		}
-		for (String tm : temp) {
-			hs1.remove(tm);
+	}
+	return -1;
+}
+
+	private static <T> HashSet<T> and2hs (HashSet<T> hs1 , HashSet<T> hs2){
+		HashSet<T> hsResult = new HashSet<>() , hsToBeLoopedOver = null , hsAnotherHashSet = null;
+		if(hs1.size() > hs2.size()){
+			hsToBeLoopedOver = hs2;
+			hsAnotherHashSet = hs1;
+		}else{
+			hsToBeLoopedOver = hs1;
+			hsAnotherHashSet = hs2;
 		}
-		return hs1;
+		for(T element : hsToBeLoopedOver){
+			if(hsAnotherHashSet.contains(element))
+				hsResult.add(element);
+		}
+		return hsResult;
 	}
 
 	private static HashSet<Tuple> or2hs(HashSet<Tuple> hs1, HashSet<Tuple> hs2) {
+		if(hs1.size() < hs2.size()){
+			HashSet<Tuple> hsTemp = hs1;
+			hs1 = hs2;
+			hs2 = hsTemp;
+		}
 		hs1.addAll(hs2);
 		return hs1;
 	}
 
 	private static HashSet<Tuple> xor2hs(HashSet<Tuple> hs1, HashSet<Tuple> hs2) {
-		if (hs1.size() == 0) {
-			return hs2;
-		}
-		if (hs2.size() == 0) {
-			return hs1;
+		if (hs1.size() > hs2.size()){
+			HashSet<Tuple> hsTemp = hs1;
+			hs1 = hs2;
+			hs2 = hsTemp;
 		}
 		for (Tuple tm : hs1) {
 			if (hs2.contains(tm)) {
