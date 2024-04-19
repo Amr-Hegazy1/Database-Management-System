@@ -998,7 +998,6 @@ public class DBApp {
 		Hashtable<Tuple, String> htblTuples = null;
 		for (String col : htblColNameValue.keySet()) {
 			if (metadata.isColumnIndexed(strTableName, col)) {
-				System.out.println("Indexed column: " + col + " found.");
 				if (htblTuples == null) {
 					htblTuples = getTuplesFromIndex(strTableName, col, htblColNameValue, table);
 					
@@ -1135,7 +1134,7 @@ public class DBApp {
 		if (htblColNameValue.containsKey(strClusteringKey)) {
 			deleteWithClusteringKey(strTableName, strClusteringKey, htblColNameValue, table);
 		} else {
-			
+
 			deleteWithoutClusteringKey(strTableName, htblColNameValue, table);
 		}
 
@@ -1317,7 +1316,8 @@ public class DBApp {
 					} 
 				} 
 				return -1; 
-			} 
+			}
+
 		private static HashSet<Tuple> and2hs(HashSet<Tuple> hs1,HashSet<Tuple> hs2){
 			System.out.println(hs1.size());
 			System.out.println(hs2.size());
