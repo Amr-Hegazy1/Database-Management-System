@@ -255,7 +255,7 @@ public class DBApp {
 		Page pgInsertPage; // page i will insert in
 
 		if (intpageNum != 0) {// if table already has pages, binary search on correct page to insert into
-			pgInsertPage = getPageByClusteringKey(strTableName, strClustKeyName,
+			pgInsertPage = Page.getPageByClusteringKey(strTableName,
 					htblColNameValue.get(strClustKeyName), tblTable); // get the page that the tuple will be inserted
 																		// into
 			if (pgInsertPage == null) {// if tuple is out of range, check first and last page
@@ -604,7 +604,7 @@ public class DBApp {
 		Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 		String strKey = metadata.getClusteringkey(strTableName);
 
-		Page pagePage = getPageByClusteringKey(strTableName, strKey, cmpClusteringKeyValue, tblTable);
+		Page pagePage = Page.getPageByClusteringKey(strTableName, cmpClusteringKeyValue, tblTable);
 		if (pagePage == null) {
 			System.out.println("Page for clustering key value not found.");
 			return;
@@ -675,80 +675,6 @@ public class DBApp {
 	}
 
 	/**
-	 * The function `getPageByClusteringKey` searches for a specific page in a table
-	 * based on a given
-	 * clustering key value.
-	 * 
-	 * @param strTableName          It seems like you were about to provide some
-	 *                              information about the parameters,
-	 *                              but the message got cut off. Could you please
-	 *                              provide more details about the parameters
-	 *                              `strTableName`, `strClusteringKey`, and
-	 *                              `objClusteringKeyValue` so that I can assist you
-	 *                              further
-	 *                              with the `getPageByCl
-	 * @param strClusteringKey      It seems like you were about to provide some
-	 *                              information about the
-	 *                              parameter `strClusteringKey` but the message got
-	 *                              cut off. How can I assist you further with this
-	 *                              parameter?
-	 * @param objClusteringKeyValue It seems like the method
-	 *                              `getPageByClusteringKey` is trying to find a
-	 *                              specific page in a table based on a clustering
-	 *                              key value. The method uses binary search to
-	 *                              locate
-	 *                              the page efficiently.
-	 * @return The method `getPageByClusteringKey` is returning a `Page` object. If
-	 *         the clustering key
-	 *         value is found within the specified range in the page, then that page
-	 *         is returned. If the key is
-	 *         not found within the range, the method will continue searching
-	 *         through the pages until it either
-	 *         finds the key or exhausts all pages, in which case it will return
-	 *         `null`.
-	 */
-	private Page getPageByClusteringKey(String strTableName, String strClusteringKey, Object objClusteringKeyValue,
-			Table table) throws DBAppException {
-
-		int intTableSize = table.getNumberOfPages();
-		int intTopPageIndex = 0;
-		int intBottomPageIndex = intTableSize - 1;
-
-		while (intTopPageIndex <= intBottomPageIndex) {
-
-			int intMiddlePageIndex = intTopPageIndex + (intBottomPageIndex - intTopPageIndex) / 2;
-
-			String strMiddlePage = table.getPageAtIndex(intMiddlePageIndex);
-
-			
-
-			Comparable cmpPageMinValue = table.getMin(strMiddlePage);
-
-			Comparable cmpPageMaxValue = table.getMax(strMiddlePage);
-
-			// convert the object to comparable to compare it with the clustering key
-
-			Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
-
-			// check if the clustering key is in the page by checking if the value is
-			// between the top and bottom tuple
-			if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) >= 0
-					&& cmpClusteringKeyValue
-							.compareTo(cmpPageMaxValue) <= 0) {
-				Page pageMiddlePage = Page.deserialize("tables/" + strTableName + "/" + strMiddlePage + ".class");
-				return pageMiddlePage;
-			} else if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) < 0) {
-				intBottomPageIndex = intMiddlePageIndex - 1;
-			} else {
-				intTopPageIndex = intMiddlePageIndex + 1;
-			}
-		}
-
-		return null;
-
-	}
-
-	/**
 	 * This Java function deletes a tuple with a specified clustering key from a
 	 * table and handles page
 	 * deletion if necessary.
@@ -774,7 +700,7 @@ public class DBApp {
 		String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
 
 		Object objClusteringKeyValue = htblColNameValue.get(strClusteringKey);
-		Page pagePage = getPageByClusteringKey(strTableName, strClusteringKey, objClusteringKeyValue, table);
+		Page pagePage = Page.getPageByClusteringKey(strTableName, objClusteringKeyValue, table);
 
 		// if the page is null, then the tuple does not exist
 		if (pagePage == null) {
@@ -885,7 +811,7 @@ public class DBApp {
 
 			Comparable cmpClusteringKeyValue = (Comparable) pairPair.getKey();
 
-			Page pagePage = getPageByClusteringKey(strTableName, strClusteringKeyColName, cmpClusteringKeyValue, table);
+			Page pagePage = Page.getPageByClusteringKey(strTableName, cmpClusteringKeyValue, table);
 
 			int intTupleIndex = pagePage.searchTuplesByClusteringKey(strClusteringKeyColName, cmpClusteringKeyValue);
 
@@ -1564,8 +1490,7 @@ public class DBApp {
 			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
 				BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
 						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
-				Vector<Pair> listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue,
-						(Comparable) sql._objValue);
+				Vector<Pair> listtmp = new Vector<>(bptmp.query((Comparable) sql._objValue));
 				HashSet<String> hspage = new HashSet<>();
 				for (Pair tup : listtmp) {
 					hspage.add((String) tup.getValue());
@@ -1592,11 +1517,13 @@ public class DBApp {
 						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
 				Vector<Pair> listtmp;
 				if (sql._objValue instanceof Integer) {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE);
+					listtmp = new Vector<>(bptmp.rangeQuery((Integer) sql._objValue,
+							Integer.MAX_VALUE));
 				} else if (sql._objValue instanceof Double) {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE);
+					listtmp = new Vector<>(bptmp.rangeQuery((Comparable) sql._objValue,
+							Double.MAX_VALUE));
 				} else {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, "{");
+					listtmp = new Vector<>(bptmp.rangeQuery((Comparable) sql._objValue, "{"));
 				}
 				HashSet<String> hspage = new HashSet<>();
 				for (Pair tup : listtmp) {
@@ -1623,11 +1550,13 @@ public class DBApp {
 						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
 				Vector<Pair> listtmp;
 				if (sql._objValue instanceof Integer) {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE);
+					listtmp = new Vector<>(bptmp.rangeQuery((Comparable) sql._objValue,
+							Integer.MAX_VALUE));
 				} else if (sql._objValue instanceof Double) {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE);
+					listtmp = new Vector<>(bptmp.rangeQuery((Comparable) sql._objValue,
+							Double.MAX_VALUE));
 				} else {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, "{");
+					listtmp = new Vector<>(bptmp.rangeQuery((Comparable) sql._objValue, "{"));
 				}
 				HashSet<String> hspage = new HashSet<>();
 				for (Pair tup : listtmp) {
@@ -1653,11 +1582,13 @@ public class DBApp {
 						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
 				Vector<Pair> listtmp;
 				if (sql._objValue instanceof Integer) {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue);
+					listtmp = new Vector<>(bptmp.rangeQuery(Integer.MIN_VALUE,
+							(Comparable) sql._objValue));
 				} else if (sql._objValue instanceof Double) {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue);
+					listtmp = new Vector<>(bptmp.rangeQuery(Double.MIN_VALUE,
+							(Comparable) sql._objValue));
 				} else {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery("", (Comparable) sql._objValue);
+					listtmp = new Vector<>(bptmp.rangeQuery("", (Comparable) sql._objValue));
 				}
 				HashSet<String> hspage = new HashSet<>();
 				for (Pair tup : listtmp) {
@@ -1683,11 +1614,16 @@ public class DBApp {
 						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
 				Vector<Pair> listtmp;
 				if (sql._objValue instanceof Integer) {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue);
+					listtmp = new Vector<>(bptmp.rangeQuery(Integer.MIN_VALUE,
+							(Comparable) sql._objValue));
+					listtmp.addAll(bptmp.query((Integer) sql._objValue));
 				} else if (sql._objValue instanceof Double) {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue);
+					listtmp = new Vector<>(bptmp.rangeQuery(Double.MIN_VALUE,
+							(Comparable) sql._objValue));
+					listtmp.addAll(bptmp.query((Double) sql._objValue));
 				} else {
-					listtmp = (Vector<Pair>) bptmp.rangeQuery("", (Comparable) sql._objValue);
+					listtmp = new Vector<>(bptmp.rangeQuery("", (Comparable) sql._objValue));
+					listtmp.addAll(bptmp.query((String) sql._objValue));
 				}
 				HashSet<String> hspage = new HashSet<>();
 				for (Pair tup : listtmp) {
@@ -1697,7 +1633,8 @@ public class DBApp {
 				vec.add(sql);
 				return pagestotuples(hspage, vec);
 			} else {
-				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" +
+						sql._strTableName + ".class");
 				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
 					hstup = table.lesserthannceq(sql._strColumnName, sql._objValue);
 					return hstup;
@@ -1707,7 +1644,8 @@ public class DBApp {
 				}
 			}
 		} else {
-			Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
+			Table table = Table.deserialize("tables/" + sql._strTableName + "/" +
+					sql._strTableName + ".class");
 			hstup = table.noteqsearch(sql._strColumnName, sql._objValue);
 			return hstup;
 		}
