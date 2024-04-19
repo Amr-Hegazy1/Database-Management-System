@@ -1,6 +1,6 @@
 package com.db_engine;
 import java.io.Serializable;
-
+import java.util.Objects;
 import java.io.Serializable;
 
 public class Pair<K, V> implements Serializable, Comparable<Pair<K, V>>{
@@ -32,17 +32,30 @@ public class Pair<K, V> implements Serializable, Comparable<Pair<K, V>>{
         return key + "=" + value;
     }
 
-    public boolean equals(Object o) {
+    public boolean equals(Object o){
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Pair<?, ?> pair = (Pair<?, ?>) o;
-        if (key != null ? !key.equals(pair.key) : pair.key != null) return false;
-        return value != null ? value.equals(pair.value) : pair.value == null;
+        if (o instanceof Pair) {
+            Pair pair = (Pair) o;
+            if (key != null ? !key.equals(pair.key) : pair.key != null) return false;
+            if (value != null ? !value.equals(pair.value) : pair.value != null) return false;
+            return true;
+        }
+        return false;
     }
+    
 
 
 
     public int compareTo(Pair<K, V> o) {
+        System.out.println("Comparing " + key + " with " + o.key);
         return ((Comparable<K>) key).compareTo(o.key);
+    }
+
+    public int hashCode() {
+        
+        int hash = 7;
+        hash = 31 * hash + (key != null ? key.hashCode() : 0);
+        hash = 31 * hash + (value != null ? value.hashCode() : 0);
+        return hash;
     }
 }
