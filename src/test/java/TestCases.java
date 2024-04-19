@@ -1521,7 +1521,167 @@ public class TestCases {
     }
 
     @Test
+    public void deleteWrongDataTypes() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student0");
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            htblColNameValue.put("name", 0);
+
+            assertThrows(DBAppException.class, () -> {
+                dbApp.deleteFromTable(strTableName, htblColNameValue);
+            });
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deleteAllRows() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student0");
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete all rows
+            dbApp.deleteFromTable(strTableName, new Hashtable<String, Object>());
+
+            // check that all rows are deleted
+            String pagesPath = "tables/" + strTableName;
+            File pagesDir = new File(pagesPath);
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format Student_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                assert p.getTuples().size() == 0;
+            }
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
     public void selectWithoutIndexWithId() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            dbApp.createIndex(strTableName, "gpa", "gpaIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "0", htblColNameValue);
+
+            // check that the indexes are updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 21; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deleteAndUpdateWithoutIndex() throws DBAppException, IOException, ClassNotFoundException {
         try {
             DBApp dbApp = new DBApp();
 
@@ -1548,6 +1708,542 @@ public class TestCases {
                 htblColNameValue.put("gpa", 3.0 + i);
                 dbApp.insertIntoTable(strTableName, htblColNameValue);
             }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the row is updated
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 1) {
+                    Page page = Page.deserialize("tables/" + strTableName + "/Student_0.class");
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", 1, page);
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+                    assert tuple.getColumnValue("name").equals("Student20");
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    public void deleteAndUpdateWithIndex() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the row is updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deletAndUpdateWithIndexAndNonIndexedColumns()
+            throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the row is updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void deleteAndUpdateWithMultipleIndexes() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            dbApp.createIndex(strTableName, "gpa", "gpaIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the indexes are updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query(3.0 + i).size() == 0;
+                } else {
+                    assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query(3.0 + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("gpa").equals(3.0 + i);
+
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void deleteAndUpdateWithIndexedAndNonIndexedColumns()
+            throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the indexes are updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void deleteAndSelectWithoutIndex() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
 
             // select all rows
 
@@ -1577,6 +2273,1037 @@ public class TestCases {
         } finally {
             cleanUp();
         }
+    }
+
+    // INTEGRATION TESTS
+
+    @Test
+    public void insertAndUpdateWithIndex() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "0", htblColNameValue);
+
+            // check that the index is updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 21; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void insertAndUpdateWithMultipleIndexes() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            dbApp.createIndex(strTableName, "gpa", "gpaIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "0", htblColNameValue);
+
+            // check that the indexes are updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 21; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deleteAndUpdateWithoutIndex() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the row is updated
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 1) {
+                    Page page = Page.deserialize("tables/" + strTableName + "/Student_0.class");
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", 1, page);
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+                    assert tuple.getColumnValue("name").equals("Student20");
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    public void deleteAndUpdateWithIndex() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the row is updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deletAndUpdateWithIndexAndNonIndexedColumns()
+            throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the row is updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void deleteAndUpdateWithMultipleIndexes() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            dbApp.createIndex(strTableName, "gpa", "gpaIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the indexes are updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query(3.0 + i).size() == 0;
+                } else {
+                    assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query(3.0 + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("gpa").equals(3.0 + i);
+
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void deleteAndUpdateWithIndexedAndNonIndexedColumns()
+            throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue2 = new Hashtable<String, Object>();
+
+            htblColNameValue2.put("name", "Student20");
+
+            dbApp.updateTable(strTableName, "1", htblColNameValue2);
+
+            // check that the row is deleted and the other rows are not
+
+            String pagesPath = "tables/" + strTableName;
+
+            File pagesDir = new File(pagesPath);
+
+            File[] pages = pagesDir.listFiles();
+
+            for (File page : pages) {
+                // check if the file name is in the format page_i.class
+                if (!page.getName().matches("Student_\\d+\\.class")) {
+                    continue;
+                }
+
+                Page p = Page.deserialize(page.getPath());
+                for (Tuple tuple : p.getTuples()) {
+                    if (tuple.getColumnValue("id").equals(0)) {
+                        assert false;
+                    }
+                }
+            }
+
+            // check that the indexes are updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void deleteAndSelectWithoutIndex() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // select all rows
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = strTableName;
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 5) {
+                    assert iterator.hasNext();
+                    Tuple tuple = (Tuple) iterator.next();
+                    assert tuple.getColumnValue("id").equals(5);
+                    assert tuple.getColumnValue("name").equals("Student5");
+                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                } else {
+                    assert !iterator.hasNext();
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deleteAndSelectWithIndex() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // select all rows
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = strTableName;
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 5) {
+                    assert iterator.hasNext();
+                    Tuple tuple = (Tuple) iterator.next();
+                    assert tuple.getColumnValue("id").equals(5);
+                    assert tuple.getColumnValue("name").equals("Student5");
+                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                } else {
+                    assert !iterator.hasNext();
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deleteAndSelectWithMultipleIndexes() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            dbApp.createIndex(strTableName, "gpa", "gpaIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // select all rows
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = strTableName;
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 5) {
+                    assert iterator.hasNext();
+                    Tuple tuple = (Tuple) iterator.next();
+                    assert tuple.getColumnValue("id").equals(5);
+                    assert tuple.getColumnValue("name").equals("Student5");
+                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                } else {
+                    assert !iterator.hasNext();
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void deleteAndSelectWithIndexedAndNonIndexedColumns()
+            throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // select all rows
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = strTableName;
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 5) {
+                    assert iterator.hasNext();
+                    Tuple tuple = (Tuple) iterator.next();
+                    assert tuple.getColumnValue("id").equals(5);
+                    assert tuple.getColumnValue("name").equals("Student5");
+                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                } else {
+                    assert !iterator.hasNext();
+
+                }
+
+            }
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void deleteAndSelectWithMultipleIndexesAndNonIndexedColumns()
+            throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            dbApp.createIndex(strTableName, "gpa", "gpaIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // select all rows
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = strTableName;
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 5) {
+                    assert iterator.hasNext();
+                    Tuple tuple = (Tuple) iterator.next();
+                    assert tuple.getColumnValue("id").equals(5);
+                    assert tuple.getColumnValue("name").equals("Student5");
+                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                } else {
+                    assert !iterator.hasNext();
+                }
+            }
+
+        } finally {
+            cleanUp();
+        }
+
     }
 
     /**

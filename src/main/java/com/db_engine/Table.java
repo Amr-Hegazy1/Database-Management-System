@@ -237,6 +237,18 @@ public class Table implements Serializable {
         this.vecMin.remove(this.vecPages.indexOf(pageName));
     }
 
+
+    /**
+     * The `removeMin` function removes the minimum value at a specified index from a vector.
+     * 
+     * @param index The `index` parameter specifies the position of the minimum value that you want to
+     * remove from the `vecMin` vector.
+     */
+    public void removeMin(int index){
+        //remove the minimum value of a page
+        this.vecMin.remove(index);
+    }
+
     /**
      * The `removeMax` function removes the maximum value from a page in a Java
      * program.
@@ -250,6 +262,21 @@ public class Table implements Serializable {
         this.vecMax.remove(this.vecPages.indexOf(pageName));
     }
 
+    
+
+   /**
+    * The `removeMax` function removes the maximum value at a specified index from a list.
+    * 
+    * @param index The `index` parameter specifies the position of the maximum value that you want to
+    * remove from the `vecMax` list.
+    */
+    public void removeMax(int index){
+        //remove the maximum value of a page
+        this.vecMax.remove(index);
+    }
+
+
+    
     /**
      * The function `getPageAtIndex` returns the page at the specified index from a
      * vector of pages.
@@ -279,6 +306,11 @@ public class Table implements Serializable {
 
     }
 
+    public void removePage(int index) {
+        vecPages.remove(index);
+    }
+
+   
     /**
      * The function `printAllPages` iterates through all pages in a table,
      * deserializes each page, and
