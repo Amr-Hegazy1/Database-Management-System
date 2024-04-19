@@ -1152,148 +1152,154 @@ public class DBApp {
 	}
 
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms,
-			String[] strarrOperators) throws DBAppException, ClassNotFoundException, IOException{
-				if(arrSQLTerms == null || strarrOperators == null){
-					throw new DBAppException("Nothing to query on");
+			String[] strarrOperators) throws DBAppException{
+
+				try{
+					if(arrSQLTerms == null || strarrOperators == null){
+						throw new DBAppException("Nothing to query on");
+					}
+					if(arrSQLTerms.length==0){
+						throw new DBAppException("Nothing to query on");
+					}
+					if(arrSQLTerms.length!= strarrOperators.length+1){
+						throw new DBAppException("something wrong in the input");
+					}
+					HashSet<String> checkoperators = new HashSet<>();
+					checkoperators.add("=");checkoperators.add("!=");checkoperators.add(">=");checkoperators.add("<=");checkoperators.add(">");;checkoperators.add("<");
+					boolean indexhelp2 = false;
+					for(int i=0;i<arrSQLTerms.length;i++){
+					if(arrSQLTerms[i]._strTableName!=null&&metadata.checkTableName(arrSQLTerms[i]._strTableName)&&arrSQLTerms[0]._strTableName.equals(arrSQLTerms[i]._strTableName)){
+						if(arrSQLTerms[i]._strColumnName!=null&&metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)){
+							if(!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
+								indexhelp2=true;
+							}
+							String strType= metadata.getColumnType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName);
+							if(arrSQLTerms[i]._strOperator!=null&& checkoperators.contains(arrSQLTerms[i]._strOperator)){	
+								if(arrSQLTerms[i]._strOperator==null||!strType.equals(arrSQLTerms[i]._objValue.getClass().getName())){
+									throw new DBAppException("Datatype doesn't match");
+								}
+							}
+							else 
+							throw new DBAppException("This Operator isn't supported");
+					} else
+						throw new DBAppException("Column doesn't exist");
+				} else
+					throw new DBAppException("Table doesn't exist or inconsistent");
 				}
-				if(arrSQLTerms.length==0){
-					throw new DBAppException("Nothing to query on");
+				boolean indexhelp=true;
+				for(int i=0;i<strarrOperators.length;i++){
+					if(Objects.isNull(strarrOperators[i])){
+						throw new DBAppException("null in operator");
+					}
+					if((!strarrOperators[i].toLowerCase().equals("and"))&&(!strarrOperators[i].toLowerCase().equals("or"))&&(!strarrOperators[i].toLowerCase().equals("xor")))
+					throw new DBAppException("Undefined operator is being used");
+					if(!(strarrOperators[i].toLowerCase().equals("and")))
+					indexhelp=false;
 				}
-				if(arrSQLTerms.length!= strarrOperators.length+1){
-					throw new DBAppException("something wrong in the input");
+					// el hashes at end of if statements are stand by
+					if(strarrOperators.length==0){
+						HashSet <Tuple> tut=getTuple(arrSQLTerms[0]);
+						System.out.println(tut.size());
+						return tut.iterator();
 				}
-				HashSet<String> checkoperators = new HashSet<>();
-				checkoperators.add("=");checkoperators.add("!=");checkoperators.add(">=");checkoperators.add("<=");checkoperators.add(">");;checkoperators.add("<");
-				boolean indexhelp2 = false;
-				for(int i=0;i<arrSQLTerms.length;i++){
-				if(arrSQLTerms[i]._strTableName!=null&&metadata.checkTableName(arrSQLTerms[i]._strTableName)&&arrSQLTerms[0]._strTableName.equals(arrSQLTerms[i]._strTableName)){
-					if(arrSQLTerms[i]._strColumnName!=null&&metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)){
+				if(indexhelp&&indexhelp2){
+					boolean firstornot=true;
+					HashSet<String> hmpage= new HashSet<>();
+					Vector<SQLTerm> indexsql= new Vector<>();
+					for(int i=0; i<arrSQLTerms.length;i++){
 						if(!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
-							indexhelp2=true;
+							if(firstornot){
+								hmpage=getPage(arrSQLTerms[i]);
+								firstornot= false;
+							}   
+							else{
+								hmpage=and2bp(hmpage,getPage(arrSQLTerms[i]));
+							}
+						indexsql.add(arrSQLTerms[i]);
+						} 
+					}
+					HashSet<Tuple> hmtup= new HashSet<>();
+					hmtup=pagestotuples(hmpage, indexsql);
+					for(int i=0; i<arrSQLTerms.length;i++){
+						if(metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
+							hmtup=and1bp(hmtup,arrSQLTerms[i]);
 						}
-						String strType= metadata.getColumnType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName);
-						if(arrSQLTerms[i]._strOperator!=null&& checkoperators.contains(arrSQLTerms[i]._strOperator)){	
-							if(arrSQLTerms[i]._strOperator==null||!strType.equals(arrSQLTerms[i]._objValue.getClass().getName())){
-								throw new DBAppException("Datatype doesn't match");
+					}
+					return hmtup.iterator();
+				}
+				
+				Stack<Object> stack = new Stack<>();
+				Stack<String> stack2 = new Stack<>();
+				Vector <Object> vec = new Vector<>();
+				vec.add(arrSQLTerms[0]);
+				for (int i=0;i<strarrOperators.length;i++) {
+					if (stack2.isEmpty()) {
+						stack2.push(strarrOperators[i]);
+						vec.add(arrSQLTerms[i+1]);
+					} else if (precedence(strarrOperators[i].toLowerCase()) >= precedence(stack2.peek().toLowerCase())) {
+						stack2.push(strarrOperators[i]);
+						vec.add(arrSQLTerms[i+1]);
+						}
+					else{	
+						while (!stack2.isEmpty() && precedence(strarrOperators[i].toLowerCase()) < precedence(stack2.peek().toLowerCase())) {
+							vec.add(stack2.pop());
+						}
+						stack2.push(strarrOperators[i]);
+						vec.add(arrSQLTerms[i+1]);
+					}
+				}
+				while(!stack2.isEmpty()){
+					vec.add(stack2.pop());
+				}
+				System.out.println(vec.size());
+				for(int i=0;i<vec.size();i++){
+					if(vec.get(i) instanceof SQLTerm){
+						stack.push((SQLTerm) vec.get(i));
+					}
+					else{
+						HashSet <Tuple> tm= null;
+						HashSet <Tuple> tm2= null;
+						System.out.println(i);
+						if(stack.peek() instanceof SQLTerm){
+							tm=getTuple((SQLTerm) stack.pop());
+							if(stack.peek() instanceof SQLTerm){
+								tm2=getTuple((SQLTerm) stack.pop());
+							}
+							else{
+								tm2= (HashSet<Tuple>) stack.pop();
 							}
 						}
-						else 
-						throw new DBAppException("This Operator isn't supported");
-				} else
-					throw new DBAppException("Column doesn't exist");
-			} else
-				throw new DBAppException("Table doesn't exist or inconsistent");
-			}
-			boolean indexhelp=true;
-			for(int i=0;i<strarrOperators.length;i++){
-				if(Objects.isNull(strarrOperators[i])){
-					throw new DBAppException("null in operator");
-				}
-				if((!strarrOperators[i].toLowerCase().equals("and"))&&(!strarrOperators[i].toLowerCase().equals("or"))&&(!strarrOperators[i].toLowerCase().equals("xor")))
-				throw new DBAppException("Undefined operator is being used");
-				if(!(strarrOperators[i].toLowerCase().equals("and")))
-				indexhelp=false;
-			}
-				// el hashes at end of if statements are stand by
-				if(strarrOperators.length==0){
-					HashSet <Tuple> tut=getTuple(arrSQLTerms[0]);
-					System.out.println(tut.size());
-					return tut.iterator();
-			}
-			if(indexhelp&&indexhelp2){
-				boolean firstornot=true;
-				HashSet<String> hmpage= new HashSet<>();
-				Vector<SQLTerm> indexsql= new Vector<>();
-				for(int i=0; i<arrSQLTerms.length;i++){
-					if(!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
-						if(firstornot){
-							hmpage=getPage(arrSQLTerms[i]);
-							firstornot= false;
-						}   
 						else{
-							hmpage=and2bp(hmpage,getPage(arrSQLTerms[i]));
+							tm= (HashSet<Tuple>) stack.pop();
+							if(stack.peek() instanceof SQLTerm){
+								tm2=getTuple((SQLTerm) stack.pop());
+							}
+							else{
+								tm2= (HashSet<Tuple>) stack.pop();
+							}
 						}
-					indexsql.add(arrSQLTerms[i]);
-					} 
-				}
-				HashSet<Tuple> hmtup= new HashSet<>();
-				hmtup=pagestotuples(hmpage, indexsql);
-				for(int i=0; i<arrSQLTerms.length;i++){
-					if(metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
-						hmtup=and1bp(hmtup,arrSQLTerms[i]);
-					}
-				}
-				return hmtup.iterator();
-			}
+						if(((String) vec.get(i)).toLowerCase().equals("and")){
+							
+							stack.add(and2hs(tm, tm2));
+						}
+						else if(((String) vec.get(i)).toLowerCase().equals("or")){
+							stack.add(or2hs(tm, tm2));
+						}
+						else{
+							System.out.println("and");
+							stack.add(xor2hs(tm, tm2));
+						}
 			
-			Stack<Object> stack = new Stack<>();
-			Stack<String> stack2 = new Stack<>();
-			Vector <Object> vec = new Vector<>();
-			vec.add(arrSQLTerms[0]);
-			for (int i=0;i<strarrOperators.length;i++) {
-				if (stack2.isEmpty()) {
-					stack2.push(strarrOperators[i]);
-					vec.add(arrSQLTerms[i+1]);
-				} else if (precedence(strarrOperators[i].toLowerCase()) >= precedence(stack2.peek().toLowerCase())) {
-					stack2.push(strarrOperators[i]);
-					vec.add(arrSQLTerms[i+1]);
 					}
-				else{	
-					while (!stack2.isEmpty() && precedence(strarrOperators[i].toLowerCase()) < precedence(stack2.peek().toLowerCase())) {
-						vec.add(stack2.pop());
-					}
-					stack2.push(strarrOperators[i]);
-					vec.add(arrSQLTerms[i+1]);
 				}
+				HashSet<Tuple> tm= (HashSet<Tuple>) stack.pop();
+				
+				return tm.iterator();
 			}
-			while(!stack2.isEmpty()){
-				 vec.add(stack2.pop());
+			catch(ClassNotFoundException | IOException e){
+				throw new DBAppException("Something went wrong");
 			}
-			System.out.println(vec.size());
-			for(int i=0;i<vec.size();i++){
-				if(vec.get(i) instanceof SQLTerm){
-					stack.push((SQLTerm) vec.get(i));
-				}
-				else{
-					HashSet <Tuple> tm= null;
-					HashSet <Tuple> tm2= null;
-					System.out.println(i);
-					if(stack.peek() instanceof SQLTerm){
-						 tm=getTuple((SQLTerm) stack.pop());
-						if(stack.peek() instanceof SQLTerm){
-							tm2=getTuple((SQLTerm) stack.pop());
-						}
-						else{
-							tm2= (HashSet<Tuple>) stack.pop();
-						}
-					}
-					else{
-						tm= (HashSet<Tuple>) stack.pop();
-						if(stack.peek() instanceof SQLTerm){
-							tm2=getTuple((SQLTerm) stack.pop());
-						}
-						else{
-							tm2= (HashSet<Tuple>) stack.pop();
-						}
-					}
-					if(((String) vec.get(i)).toLowerCase().equals("and")){
-						
-						stack.add(and2hs(tm, tm2));
-					}
-					else if(((String) vec.get(i)).toLowerCase().equals("or")){
-						stack.add(or2hs(tm, tm2));
-					}
-					else{
-						System.out.println("and");
-						stack.add(xor2hs(tm, tm2));
-					}
-		
-				}
-			}
-			HashSet<Tuple> tm= (HashSet<Tuple>) stack.pop();
-			
-			return tm.iterator();
-			}
+		}
 		
 		public static int findIndex(SQLTerm arr[], SQLTerm t) 
 			{ 
