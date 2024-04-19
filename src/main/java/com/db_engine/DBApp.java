@@ -13,7 +13,6 @@ import java.util.*;
 
 import com.bplustree.*;
 
-
 public class DBApp {
 
 	private Metadata metadata;
@@ -167,12 +166,11 @@ public class DBApp {
 				Page pgPage = Page.deserialize("tables/" + strTableName + "/" + pgPage_name + ".class");
 				Vector<Tuple> vecTuples = pgPage.getTuples();
 				for (Tuple tplTuple : vecTuples) {
-					
+
 					Comparable key = (Comparable) tplTuple.getColumnValue(strColName);
 					Comparable cmpClusteringKeyValue = (Comparable) tplTuple.getColumnValue(strClusteringKeyColName);
 					Pair pair = new Pair(cmpClusteringKeyValue, pgPage_name);
 					bplsBplustree.insert(key, pair);
-				
 
 				}
 			}
@@ -195,6 +193,7 @@ public class DBApp {
 		Tuple tupleNewTuple = new Tuple(); // New Tuple to be filled with input data and added to Table.
 		String strClustKeyName = ""; // Name of Clustering Key Column
 		int intColCounter = 0;
+		boolean overflowOccured = false;
 		// TODO
 
 		// Checking Table Existence, Correct Col Names, Correct Col Data Types
@@ -265,9 +264,9 @@ public class DBApp {
 				String strLastPage = vecPages.get(vecPages.size() - 1); // get last page name
 
 				// get 1st and last page objects
-				
+
 				Page pgFirstPage = Page.deserialize("tables/" + strTableName + "/" + strFirstPage + ".class");
-				
+
 				Page pgLastPage = Page.deserialize("tables/" + strTableName + "/" + strLastPage + ".class");
 
 				Tuple tupleFirstTuple = pgFirstPage.getTupleWithIndex(0); // get first tuple in 1st page(smallest clust
@@ -280,30 +279,35 @@ public class DBApp {
 																			// key, insert in index 0
 						.getColumnValue(strClustKeyName)) < 0) {
 					pgFirstPage.addTuple(0, tupleNewTuple);
-					tblTable.setMin(pgFirstPage.getPageName(), (Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
+					tblTable.setMin(pgFirstPage.getPageName(),
+							(Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
 					tupleNewTuple.setPageName(pgFirstPage.getPageName());
 
 					if (pgFirstPage.getSize() > intMaxSize) { // check for overflow and handle it
-						handleInsertOverflow(tblTable, pgFirstPage, intMaxSize, strClustKeyName, hsIndexedColumns);
+						handleInsertOverflow(tblTable, pgFirstPage, intMaxSize, strClustKeyName, hsIndexedColumns,
+								tupleNewTuple);
+						overflowOccured = true;
 					} else {
-						
+
 						pgFirstPage.serialize("tables/" + strTableName + "/" + pgFirstPage.getPageName() + ".class");
-						
+
 					}
 
 				} else {// only option left is that its bigger than last key in last page, so insert in
 						// last index in last page
 					pgLastPage.addTuple(pgLastPage.getSize(), tupleNewTuple);
-					System.out.println(" MAX LINE 284");
-					tblTable.setMax(pgLastPage.getPageName(), (Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
+					tblTable.setMax(pgLastPage.getPageName(),
+							(Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
 					tupleNewTuple.setPageName(pgLastPage.getPageName());
 
 					if (pgLastPage.getSize() > intMaxSize) {// check for overflow and handle it
-						handleInsertOverflow(tblTable, pgLastPage, intMaxSize, strClustKeyName, hsIndexedColumns);
+						handleInsertOverflow(tblTable, pgLastPage, intMaxSize, strClustKeyName, hsIndexedColumns,
+								tupleNewTuple);
+						overflowOccured = true;
 					} else {
-						
+
 						pgLastPage.serialize("tables/" + strTableName + "/" + pgLastPage.getPageName() + ".class");
-						
+
 					}
 				}
 			}
@@ -325,8 +329,9 @@ public class DBApp {
 				pgInsertPage.addTuple(index, tupleNewTuple);
 
 				if (pgInsertPage.getSize() > intMaxSize) { // check for overflow
-					handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName, hsIndexedColumns); // handle
-																													// overflow
+					handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName, hsIndexedColumns,
+							tupleNewTuple); // handle overflow
+					overflowOccured = true;
 				} else { // if no overflow, serialize page
 					pgInsertPage.serialize("tables/" + strTableName + "/" + pgInsertPage.getPageName() + ".class");
 				}
@@ -354,12 +359,13 @@ public class DBApp {
 																														// the
 																														// tree
 
-				// object
 				Comparable colValue = (Comparable) tupleNewTuple.getColumnValue(strColName); // cast column value to
 																								// Comparable
+
 				Pair pairIndexPair = new Pair(tupleNewTuple.getColumnValue(strClustKeyName),
 						tupleNewTuple.getPageName());
 
+				System.out.println("INSERTED IN INSERT" + colValue);
 				bptTree.insert(colValue, pairIndexPair); // inserting col value(key) and tuple
 															// object(value) into bTree
 
@@ -373,19 +379,20 @@ public class DBApp {
 	}
 
 	public void handleInsertOverflow(Table tblTable, Page pgFirstOverflowPage, int intMaxRowsPerPage,
-			String strClustKeyName, HashSet hsIndexedCols)
+			String strClustKeyName, HashSet hsIndexedCols, Tuple tupleNewTupleFromInsert)
 			throws DBAppException {
 
+		boolean adjustIndicies = true;
 		Vector<String> vecPages = tblTable.getPages(); // Vector of Page names in table
 		Page overflowPage = pgFirstOverflowPage; // page that caused first overflow
 		int intStartIndex = vecPages.indexOf(overflowPage.getPageName()); // get index of first overflowed page in the
 																			// vecPages Vector
 		Tuple tupleLastTuple = overflowPage.removeLastTuple(); // last tuple in overflow page
 		tblTable.setMax(overflowPage.getPageName(),
-		(Comparable) overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in overflow
-																				// page
-		// System.out.println("LAST TUPLE IN 1ST OVERFLOW PAGE:" +
-		// pgFirstOverflowPage.getLastTuple());
+				(Comparable) overflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value in
+																							// overflow
+																							// page
+
 		overflowPage.serialize("tables/" + tblTable.getTableName() + "/" + overflowPage.getPageName() + ".class"); // serialize
 																													// the
 																													// overflow
@@ -396,7 +403,7 @@ public class DBApp {
 			Page page = Page.deserialize("tables/" + tblTable.getTableName() + "/" + vecPages.get(i) + ".class"); // get
 																													// page
 			tblTable.setMax(page.getPageName(),
-			(Comparable) page.getLastTuple().getColumnValue(strClustKeyName));
+					(Comparable) page.getLastTuple().getColumnValue(strClustKeyName));
 			int index = 0;
 			Comparable inputClustKey = (Comparable) tupleLastTuple.getColumnValue(strClustKeyName); // clust key in my
 																									// last tuple (thats
@@ -423,6 +430,7 @@ public class DBApp {
 			// if unique clustering key, insert in page and adjust page name in tuple object
 			// and in B+ Tree(if present)
 			page.addTuple(index, tupleLastTuple); // add tuple to new/next page
+			// TODO add same if statement here ? (duplicate index values)
 			if (hsIndexedCols.size() > 0) {
 				for (Object objColName : hsIndexedCols) {
 					String strColName = (String) objColName;
@@ -432,15 +440,18 @@ public class DBApp {
 																															// the
 																															// tree
 
-					Comparable colValue = (Comparable) tupleLastTuple.getColumnValue(strColName); // cast column value
-																									// to
+					Comparable colValue = (Comparable) tupleLastTuple.getColumnValue(strColName);
 
 					// Update Tree Page Name Value
 					Pair pairOldIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 							tupleLastTuple.getPageName());
+
 					Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 							page.getPageName());
 
+					System.out.println("INSERTED IN HANDLEOVERFLOW FORLOOP " + colValue);
+					System.out.println("page of pair to be removed" + " " + pairOldIndexPair.getValue());
+					System.out.println("page of pair to be added" + " " + pairNewIndexPair.getValue());
 					bptTree.remove(colValue, pairOldIndexPair);
 					bptTree.insert(colValue, pairNewIndexPair);
 
@@ -467,9 +478,19 @@ public class DBApp {
 		// pages were left, therefore a new page is needed
 		String newPageName = tblTable.addPage(); // creating new page
 		Page newPage = new Page(newPageName); // creating new page object with new page name
-		tblTable.setMin(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value of new page
-		tblTable.setMax(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value of new page
-		if (hsIndexedCols.size() > 0) { // adjusting indicies (if any)
+		tblTable.setMin(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value
+																									// of new page
+		tblTable.setMax(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value
+																									// of new page
+
+		// Adjust indicies only if there is any indexed columns *AND* newtuple being
+		// inserted from "insertIntoTable"
+		// method is not the same as the last tuple that was removed from the last page
+		// (Because if they are the same, we already handle indicies at the end of
+		// "insertIntoTable" method)
+		// (avoid duplicate pairs in index & improve performance because BPTree(s) are
+		// only deserialized once for the same one tuple)
+		if (hsIndexedCols.size() > 0 && !tupleNewTupleFromInsert.equals(tupleLastTuple)) {
 			for (Object objColName : hsIndexedCols) {
 				String strColName = (String) objColName;
 				String strTableName = tblTable.getTableName();
@@ -487,6 +508,9 @@ public class DBApp {
 				Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 						newPageName);
 
+				System.out.println("INSERTED IN HANDLEOVERFLOW, CREATING A NEW PAGE" + colValue);
+				System.out.println("page of pair to be removed" + " " + pairOldIndexPair.getValue());
+				System.out.println("page of pair to be added" + " " + pairNewIndexPair.getValue());
 				bptTree.remove(colValue, pairOldIndexPair);
 				bptTree.insert(colValue, pairNewIndexPair); // inserting col value[key] and Pair(clust key val, page
 															// name) [value] into bTree
@@ -495,7 +519,9 @@ public class DBApp {
 
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class"); // serializing the tree
 			}
-		} else {
+		} else {// TODO LastTuple == NewTuple from "InsertIntoTable" , so update the newTuple's
+				// value
+			// because we will adjust its indicies in InsertIntoTable method
 			tupleLastTuple.setPageName(newPageName); // adjusting page name in tuple obj
 		}
 		newPage.addTuple(0, tupleLastTuple); // inserting tuple in new object
@@ -507,56 +533,55 @@ public class DBApp {
 	// htblColNameValue holds the key and new value
 	// htblColNameValue will not include clustering key as column name
 	// strClusteringKeyValue is the value to look for to find the row to update.
-	public void updateTable(String strTableName, String strClusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws DBAppException {
-		if(strTableName==null)
+	public void updateTable(String strTableName, String strClusteringKeyValue,
+			Hashtable<String, Object> htblColNameValue) throws DBAppException {
+		if (strTableName == null)
 			throw new DBAppException("Table does not exist.");
 
-		if (!metadata.checkTableName(strTableName)) 
+		if (!metadata.checkTableName(strTableName))
 			throw new DBAppException("Table does not exist.");
 
-		if (strClusteringKeyValue==null)
+		if (strClusteringKeyValue == null)
 			throw new DBAppException("Clustering key value is null.");
 
-		if(htblColNameValue==null)
+		if (htblColNameValue == null)
 			throw new DBAppException("Column values are null.");
-		
-		if (htblColNameValue.isEmpty()) 
+
+		if (htblColNameValue.isEmpty())
 			throw new DBAppException("No column to update.");
-		
-			for (String strColumnName : htblColNameValue.keySet()) {
-				if (!metadata.checkColumnName(strTableName,strColumnName)) { 
-					throw new DBAppException("Column doesn't exist.");
+
+		for (String strColumnName : htblColNameValue.keySet()) {
+			if (!metadata.checkColumnName(strTableName, strColumnName)) {
+				throw new DBAppException("Column doesn't exist.");
+			} else {
+				String strColumnTypeMetadata = metadata.getColumnType(strTableName, strColumnName);
+				Object objColumnValue = htblColNameValue.get(strColumnName);
+				if (objColumnValue == null) {
+					throw new DBAppException("Column value for " + strColumnName + " is null.");
 				}
-				else{
-					String strColumnTypeMetadata = metadata.getColumnType(strTableName, strColumnName);
-            		Object objColumnValue = htblColNameValue.get(strColumnName);
-            		if (objColumnValue == null) {
-                		throw new DBAppException("Column value for " + strColumnName + " is null.");
-            }
-            String strDataType = objColumnValue.getClass().getName();
-            if (!strColumnTypeMetadata.equals(strDataType)) {
-                throw new DBAppException("Datatypes do not match for the column " + strColumnName);
-            }
+				String strDataType = objColumnValue.getClass().getName();
+				if (!strColumnTypeMetadata.equals(strDataType)) {
+					throw new DBAppException("Datatypes do not match for the column " + strColumnName);
+				}
+			}
 		}
-	}
 		String strClusteringKey = metadata.getClusteringkey(strTableName);
 		String strclusteringKeyType = metadata.getColumnType(strTableName, strClusteringKey);
 		Comparable cmpClusteringKeyValue;
 
-		try{
-		  if (strclusteringKeyType.equals("java.lang.Integer")) {
-			cmpClusteringKeyValue = Integer.parseInt(strClusteringKeyValue);
-		} else if (strclusteringKeyType.equals("java.lang.Double")) {
-			cmpClusteringKeyValue = Double.parseDouble(strClusteringKeyValue);
-		} else if (strclusteringKeyType.equals("java.lang.String")) {
-            cmpClusteringKeyValue = strClusteringKeyValue;
-        } else {
-            throw new DBAppException("Unsupported data type for clustering key.");
-        }
-    	} 
-		catch (NumberFormatException e) {
-          throw new DBAppException("Clustering key value does not match expected data type.");
-    }
+		try {
+			if (strclusteringKeyType.equals("java.lang.Integer")) {
+				cmpClusteringKeyValue = Integer.parseInt(strClusteringKeyValue);
+			} else if (strclusteringKeyType.equals("java.lang.Double")) {
+				cmpClusteringKeyValue = Double.parseDouble(strClusteringKeyValue);
+			} else if (strclusteringKeyType.equals("java.lang.String")) {
+				cmpClusteringKeyValue = strClusteringKeyValue;
+			} else {
+				throw new DBAppException("Unsupported data type for clustering key.");
+			}
+		} catch (NumberFormatException e) {
+			throw new DBAppException("Clustering key value does not match expected data type.");
+		}
 
 		Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 		String strKey = metadata.getClusteringkey(strTableName);
@@ -576,60 +601,60 @@ public class DBApp {
 			System.out.println("No tuples found in the page.");
 			return;
 		}
-	
+
 		Tuple tplTuple = vecTuples.get(intTupleIndex);
 		if (tplTuple == null) {
 			System.out.println("Tuple is null.");
 			return;
 		}
-	
-			Tuple tupleOriginalTuple = tplTuple.clone();
-			List<String> listMetaCol = metadata.getColumnNames(strTableName);
-			HashSet<String> hashsetIndexedonly = new HashSet<String>();
-			for(String strName : listMetaCol){
-				String strIndexName = metadata.getIndexName(strTableName, strName);
-				if (!(strIndexName.equals("null"))){
-					hashsetIndexedonly.add(strName);
-				}
-			}
-			for (String strColumnName : hashsetIndexedonly) {
-					Comparable cmpTemp = (Comparable)tplTuple.getColumnValue(strColumnName);
-					
-					if(htblColNameValue.containsKey(strColumnName)){
-						cmpTemp = (Comparable)tplTuple.getColumnValue(strColumnName);
-						Comparable cmpColumnValue = (Comparable)htblColNameValue.get(strColumnName);
-						tplTuple.setColumnValue(strColumnName, cmpColumnValue);
-				
-						String indexName = metadata.getIndexName(strTableName, strColumnName);
-						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
-						// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
-						// bptTree.insert(cmpColumnValue, (Comparable) tplTuple);
-						Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(), tplTuple.getColumnValue(strClusteringKey));
-               			bptTree.remove(cmpTemp, keyPair);
-                		bptTree.insert(cmpColumnValue, keyPair);
-						bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");	
-					
-					pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-					tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-					}
-					else{
-						String strIndexName = metadata.getIndexName(strTableName, strColumnName);
-						BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-						// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
-						// bptTree.insert(cmpTemp, (Comparable) tplTuple);
-						Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(), tplTuple.getColumnValue(strClusteringKey));
-                		bptTree.remove(cmpTemp, keyPair);
-                		bptTree.insert(cmpTemp, keyPair);
-						bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
-					}
 
+		Tuple tupleOriginalTuple = tplTuple.clone();
+		List<String> listMetaCol = metadata.getColumnNames(strTableName);
+		HashSet<String> hashsetIndexedonly = new HashSet<String>();
+		for (String strName : listMetaCol) {
+			String strIndexName = metadata.getIndexName(strTableName, strName);
+			if (!(strIndexName.equals("null"))) {
+				hashsetIndexedonly.add(strName);
 			}
-		//}
-			pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-			tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
-			
+		}
+		for (String strColumnName : hashsetIndexedonly) {
+			Comparable cmpTemp = (Comparable) tplTuple.getColumnValue(strColumnName);
+
+			if (htblColNameValue.containsKey(strColumnName)) {
+				cmpTemp = (Comparable) tplTuple.getColumnValue(strColumnName);
+				Comparable cmpColumnValue = (Comparable) htblColNameValue.get(strColumnName);
+				tplTuple.setColumnValue(strColumnName, cmpColumnValue);
+
+				String indexName = metadata.getIndexName(strTableName, strColumnName);
+				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + indexName + ".class");
+				// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
+				// bptTree.insert(cmpColumnValue, (Comparable) tplTuple);
+				Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(),
+						tplTuple.getColumnValue(strClusteringKey));
+				bptTree.remove(cmpTemp, keyPair);
+				bptTree.insert(cmpColumnValue, keyPair);
+				bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
+
+				pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
+				tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
+			} else {
+				String strIndexName = metadata.getIndexName(strTableName, strColumnName);
+				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
+				// bptTree.remove(cmpTemp, (Comparable) tupleOriginalTuple);
+				// bptTree.insert(cmpTemp, (Comparable) tplTuple);
+				Pair<String, Object> keyPair = new Pair<>(tplTuple.getPageName(),
+						tplTuple.getColumnValue(strClusteringKey));
+				bptTree.remove(cmpTemp, keyPair);
+				bptTree.insert(cmpTemp, keyPair);
+				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
+			}
+
+		}
+		// }
+		pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
+		tblTable.serialize("tables/" + strTableName + "/" + strTableName + ".class");
+
 	}
-	
 
 	/**
 	 * The function `getPageByClusteringKey` searches for a specific page in a table
@@ -683,8 +708,6 @@ public class DBApp {
 
 			Comparable cmpPageMaxValue = table.getMax(strMiddlePage);
 
-			
-
 			// convert the object to comparable to compare it with the clustering key
 
 			Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
@@ -729,7 +752,7 @@ public class DBApp {
 	 */
 	private void deleteWithClusteringKey(String strTableName, String strClusteringKey,
 			Hashtable<String, Object> htblColNameValue, Table table) throws DBAppException {
-		
+
 		String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
 
 		Object objClusteringKeyValue = htblColNameValue.get(strClusteringKey);
@@ -750,10 +773,9 @@ public class DBApp {
 		if (!tupleSatisfiesAndedConditions(tupleTuple, htblColNameValue)) {
 			return;
 		}
-		
+
 		pagePage.deleteTupleWithIndex(intTupleIndex);
 
-		
 		if (pagePage.getSize() == 0) {
 			Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 			table.removePage(intTupleIndex);
@@ -769,7 +791,7 @@ public class DBApp {
 			table.setMax(intTupleIndex, cmpMax);
 
 			pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-			
+
 		}
 
 		table.serialize("tables/" + strTableName + "/" + strTableName + ".class");
@@ -780,7 +802,8 @@ public class DBApp {
 			if (metadata.isColumnIndexed(strTableName, col)) {
 				String strIndexName = metadata.getIndexName(strTableName, col);
 				BPlusTree bptTree = BPlusTree.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-				Pair<Object, String> pair = new Pair<>(tupleTuple.getColumnValue(strClusteringKeyColName), tupleTuple.getPageName());
+				Pair<Object, String> pair = new Pair<>(tupleTuple.getColumnValue(strClusteringKeyColName),
+						tupleTuple.getPageName());
 				bptTree.remove((Comparable) tupleTuple.getColumnValue(col), pair);
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 			}
@@ -810,17 +833,16 @@ public class DBApp {
 	 *                         `getTuplesFromIndex`, it is used to specify the
 	 *                         column name and value that you want to search for
 	 *                         in the index.
-	 * @param table 		   The `table` parameter is an object of type `Table`
-	 * 					       that represents a table in a database. It contains
-	 * 					       information about the table, such as the number of
-	 * 					       pages and the pages themselves.
+	 * @param table            The `table` parameter is an object of type `Table`
+	 *                         that represents a table in a database. It contains
+	 *                         information about the table, such as the number of
+	 *                         pages and the pages themselves.
 	 * @return This method returns a Hashtable containing tuples and their
 	 *         corresponding page names that
 	 *         match the given indexed column value in the specified table.
 	 */
 	private Hashtable<Tuple, String> getTuplesFromIndex(String strTableName, String strIndexedColumn,
 			Hashtable<String, Object> htblColNameValue, Table table) throws DBAppException {
-
 
 		String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
 
@@ -834,7 +856,7 @@ public class DBApp {
 
 		Hashtable<Tuple, String> htblTuples = new Hashtable<>(); // Tuple, page name
 
-		List<Pair> arrayPairs = bplustreeIndex.query(cmpIndexedColumnValue); 
+		List<Pair> arrayPairs = bplustreeIndex.query(cmpIndexedColumnValue);
 
 		for (Pair pairPair : arrayPairs) {
 
@@ -851,7 +873,6 @@ public class DBApp {
 			}
 
 			Tuple tupleTuple = pagePage.getTupleWithIndex(intTupleIndex);
-
 
 			htblTuples.put(tupleTuple, strPageName);
 
@@ -950,18 +971,20 @@ public class DBApp {
 				table.removePage(pageCurrentPage.getPageName());
 				table.removeMin(pageCurrentPageName);
 				table.removeMax(pageCurrentPageName);
-				
+
 			} else {
 				// set min and max values for the page
-				Comparable cmpMin = (Comparable) pageCurrentPage.getTupleWithIndex(0).getColumnValue(strClusteringKeyColName);
-				Comparable cmpMax = (Comparable) pageCurrentPage.getTupleWithIndex(pageCurrentPage.getSize() - 1).getColumnValue(strClusteringKeyColName);
+				Comparable cmpMin = (Comparable) pageCurrentPage.getTupleWithIndex(0)
+						.getColumnValue(strClusteringKeyColName);
+				Comparable cmpMax = (Comparable) pageCurrentPage.getTupleWithIndex(pageCurrentPage.getSize() - 1)
+						.getColumnValue(strClusteringKeyColName);
 				table.setMin(pageCurrentPageName, cmpMin);
 				table.setMax(pageCurrentPageName, cmpMax);
 
 				// TODO: Don't do this step if no tuples were deleted
 				pageCurrentPage.serialize("tables/" + strTableName + "/" + pageCurrentPageName + ".class");
 				intPageIndex++;
-				
+
 			}
 			intNumberOfPages = table.getNumberOfPages();
 
@@ -990,7 +1013,6 @@ public class DBApp {
 	 * @param table
 	 */
 
-	
 	private void deleteWithoutClusteringKey(String strTableName, Hashtable<String, Object> htblColNameValue,
 			Table table) throws DBAppException {
 
@@ -1002,7 +1024,7 @@ public class DBApp {
 				System.out.println("Indexed column: " + col + " found.");
 				if (htblTuples == null) {
 					htblTuples = getTuplesFromIndex(strTableName, col, htblColNameValue, table);
-					
+
 				} else {
 					// get the intersection hashmap entries
 
@@ -1020,7 +1042,7 @@ public class DBApp {
 				if (!tupleSatisfiesAndedConditions(tuple, htblColNameValue)) {
 					continue;
 				}
-				
+
 				String strPageName = htblTuples.get(tuple);
 
 				Page pagePage = Page.deserialize("tables/" + strTableName + "/" + strPageName + ".class");
@@ -1032,30 +1054,31 @@ public class DBApp {
 					table.removePage(pagePage.getPageName());
 					table.removeMin(strPageName);
 					table.removeMax(strPageName);
-					
-				}else{
+
+				} else {
 
 					// set min and max values for the page
-					Comparable cmpMin = (Comparable) pagePage.getTupleWithIndex(0).getColumnValue(strClusteringKeyColName);
-					Comparable cmpMax = (Comparable) pagePage.getTupleWithIndex(pagePage.getSize() - 1).getColumnValue(strClusteringKeyColName);
+					Comparable cmpMin = (Comparable) pagePage.getTupleWithIndex(0)
+							.getColumnValue(strClusteringKeyColName);
+					Comparable cmpMax = (Comparable) pagePage.getTupleWithIndex(pagePage.getSize() - 1)
+							.getColumnValue(strClusteringKeyColName);
 					table.setMin(strPageName, cmpMin);
 					table.setMax(strPageName, cmpMax);
-					
+
 					pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 				}
-				
+
 				table.serialize("tables/" + strTableName + "/" + strTableName + ".class");
 
 				// delete from all relevant indices
-
-				
 
 				for (String col : metadata.getColumnNames(strTableName)) {
 					if (metadata.isColumnIndexed(strTableName, col)) {
 						String strIndexName = metadata.getIndexName(strTableName, col);
 						BPlusTree bptTree = BPlusTree
 								.deserialize("tables/" + strTableName + "/" + strIndexName + ".class");
-						Pair<Object, String> pair = new Pair<>(tuple.getColumnValue(strClusteringKeyColName), tuple.getPageName());
+						Pair<Object, String> pair = new Pair<>(tuple.getColumnValue(strClusteringKeyColName),
+								tuple.getPageName());
 						bptTree.remove((Comparable) tuple.getColumnValue(col), pair);
 						bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 					}
@@ -1145,7 +1168,7 @@ public class DBApp {
 		if (htblColNameValue.containsKey(strClusteringKey)) {
 			deleteWithClusteringKey(strTableName, strClusteringKey, htblColNameValue, table);
 		} else {
-			
+
 			deleteWithoutClusteringKey(strTableName, htblColNameValue, table);
 		}
 
@@ -1305,24 +1328,22 @@ public class DBApp {
 			{ 
 		  
 
-				if (arr == null) { 
-					return -1; 
-				} 
-		  
-				
-				int len = arr.length; 
-				int i = 0; 
-		  
- 
-				while (i < len) { 
-		  
+		if (arr == null) {
+			return -1;
+		}
 
-					if (arr[i]._strTableName.equals(t._strTableName) && arr[i]._strColumnName.equals(t._strColumnName)&& arr[i]._strOperator.equals(t._strOperator)) { 
-					   if(t._objValue instanceof Integer){
-					   Integer te = (Integer) t._objValue;
-						if(te==((Integer)arr[i]._objValue))
-						return i; 
-						else
+		int len = arr.length;
+		int i = 0;
+
+		while (i < len) {
+
+			if (arr[i]._strTableName.equals(t._strTableName) && arr[i]._strColumnName.equals(t._strColumnName)
+					&& arr[i]._strOperator.equals(t._strOperator)) {
+				if (t._objValue instanceof Integer) {
+					Integer te = (Integer) t._objValue;
+					if (te == ((Integer) arr[i]._objValue))
+						return i;
+					else
 						i++;
 				} else if (t._objValue instanceof Double) {
 					Double te = (Double) t._objValue;
@@ -1336,432 +1357,409 @@ public class DBApp {
 						return i;
 					else
 						i++;
-					   }
-					   }
-					else { 
-						i = i + 1; 
-					} 
-				} 
-				return -1; 
-			} 
-		private static HashSet<Tuple> and2hs(HashSet<Tuple> hs1,HashSet<Tuple> hs2){
-			HashSet<Tuple> temp= new HashSet<>();
-			for(Tuple tm: hs1){
-				if(! hs2.contains(tm)){
-					temp.add(tm);
 				}
+			} else {
+				i = i + 1;
 			}
-			for(Tuple tm:temp){
-				hs1.remove(tm);
-			}
-			return hs1;
 		}
-		private static HashSet<String> and2bp(HashSet<String> hs1,HashSet<String> hs2){
-			HashSet<String> temp= new HashSet<>();
-			for(String tm: hs1){
-				if(! hs2.contains(tm)){
-					temp.add(tm);
-				}
+		return -1;
+	}
+
+	private static HashSet<Tuple> and2hs(HashSet<Tuple> hs1, HashSet<Tuple> hs2) {
+		HashSet<Tuple> temp = new HashSet<>();
+		for (Tuple tm : hs1) {
+			if (!hs2.contains(tm)) {
+				temp.add(tm);
 			}
-			for(String tm:temp){
-				hs1.remove(tm);
-			}
-			return hs1;
 		}
-		private static HashSet<Tuple> or2hs(HashSet<Tuple> hs1,HashSet<Tuple> hs2){
-			hs1.addAll(hs2);
-			return hs1;
+		for (Tuple tm : temp) {
+			hs1.remove(tm);
 		}
-		private static HashSet<Tuple> xor2hs(HashSet<Tuple> hs1,HashSet<Tuple> hs2){
-			if(hs1.size()==0){
-				return hs2;
+		return hs1;
+	}
+
+	private static HashSet<String> and2bp(HashSet<String> hs1, HashSet<String> hs2) {
+		HashSet<String> temp = new HashSet<>();
+		for (String tm : hs1) {
+			if (!hs2.contains(tm)) {
+				temp.add(tm);
 			}
-			if(hs2.size()==0){
-				return hs1;
-			}
-			for(Tuple tm: hs1){
-				if(hs2.contains(tm)){
-					hs2.remove(tm);
-				}else{
-					hs2.add(tm);
-				}
-			}
+		}
+		for (String tm : temp) {
+			hs1.remove(tm);
+		}
+		return hs1;
+	}
+
+	private static HashSet<Tuple> or2hs(HashSet<Tuple> hs1, HashSet<Tuple> hs2) {
+		hs1.addAll(hs2);
+		return hs1;
+	}
+
+	private static HashSet<Tuple> xor2hs(HashSet<Tuple> hs1, HashSet<Tuple> hs2) {
+		if (hs1.size() == 0) {
 			return hs2;
 		}
-		private static HashSet<Tuple> and1bp(HashSet<Tuple> hs1, SQLTerm sql) throws DBAppException{
-			HashSet<Tuple> temp= new HashSet<>();
-			for(Tuple tm:hs1){
-				if(sql._strOperator.equals("=")){
-					if(sql._objValue instanceof Integer){
-						Integer te = (Integer) sql._objValue;
-						if(!((Integer)tm.getColumnValue(sql._strColumnName)).equals(te)){
-							temp.add(tm);
-						}
-					}
-					else if(sql._objValue instanceof Double){
-						Double te = (Double)sql._objValue;
-						if(!((Double)tm.getColumnValue(sql._strColumnName)).equals(te)){
-							temp.add(tm);
-						}
-					}
-					else{
-						String te = (String) sql._objValue;
-						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)!=0){
-							temp.add(tm);
-						}
-					}
-				}
-				else if(sql._strOperator.equals(">")){
-					if(sql._objValue instanceof Integer){
-						Integer te = (Integer) sql._objValue;
-						if(((Integer)tm.getColumnValue(sql._strColumnName))<=(te)){
-							temp.add(tm);
-						}
-					}
-					else if(sql._objValue instanceof Double){
-						Double te = (Double)sql._objValue;
-						if(((Double)tm.getColumnValue(sql._strColumnName))<=(te)){
-							temp.add(tm);
-						}
-					}
-					else{
-						String te = (String) sql._objValue;
-						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)<=0){
-							temp.add(tm);
-						}
-					}
-				} 
-				else if(sql._strOperator.equals(">=")){
-					if(sql._objValue instanceof Integer){
-						Integer te = (Integer) sql._objValue;
-						if(((Integer)tm.getColumnValue(sql._strColumnName))<(te)){
-							temp.add(tm);
-						}
-					}
-					else if(sql._objValue instanceof Double){
-						Double te = (Double)sql._objValue;
-						if(((Double)tm.getColumnValue(sql._strColumnName))<(te)){
-							temp.add(tm);
-						}
-					}
-					else{
-						String te = (String) sql._objValue;
-						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)<0){
-							temp.add(tm);
-						}
-					}
-				}
-				else if (sql._strOperator.equals("<")){
-					if(sql._objValue instanceof Integer){
-						Integer te = (Integer) sql._objValue;
-						if(((Integer)tm.getColumnValue(sql._strColumnName))>=(te)){
-							temp.add(tm);
-						}
-					}
-					else if(sql._objValue instanceof Double){
-						Double te = (Double)sql._objValue;
-						if(((Double)tm.getColumnValue(sql._strColumnName))>=(te)){
-							temp.add(tm);
-						}
-					}
-					else{
-						String te = (String) sql._objValue;
-						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)>=0){
-							temp.add(tm);
-						}
-					}
-				}
-				else if (sql._strOperator.equals("<=")){
-					if(sql._objValue instanceof Integer){
-						Integer te = (Integer) sql._objValue;
-						if(((Integer)tm.getColumnValue(sql._strColumnName))>(te)){
-							temp.add(tm);
-						}
-					}
-					else if(sql._objValue instanceof Double){
-						Double te = (Double)sql._objValue;
-						if(((Double)tm.getColumnValue(sql._strColumnName))>(te)){
-							temp.add(tm);
-						}
-					}
-					else{
-						String te = (String) sql._objValue;
-						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)>0){
-							temp.add(tm);
-						}
-					}
-				}
-				else{
-					if(sql._objValue instanceof Integer){
-						Integer te = (Integer) sql._objValue;
-						if(((Integer)tm.getColumnValue(sql._strColumnName)).equals(te)){
-							temp.add(tm);
-						}
-					}
-					else if(sql._objValue instanceof Double){
-						Double te = (Double)sql._objValue;
-						if(((Double)tm.getColumnValue(sql._strColumnName)).equals(te)){
-							temp.add(tm);
-						}
-					}
-					else{
-						String te = (String) sql._objValue;
-						if(((String)tm.getColumnValue(sql._strColumnName)).compareTo(te)==0){
-							temp.add(tm);
-						}
-					}
-				} 
-			}
-			for(Tuple tm:temp){
-				hs1.remove(tm);
-			}
+		if (hs2.size() == 0) {
 			return hs1;
 		}
-		private static HashSet<Tuple> pagestotuples(HashSet<String> hs1, Vector<SQLTerm> vec) throws DBAppException{
-			HashSet<Tuple> hstup=new HashSet<>();
-			for(String tm:hs1){
-				HashSet<Tuple> temp=new HashSet<>();
-				Page page= Page.deserialize("tables/"+vec.get(0)._strTableName+"/"+tm+".class");
-				Vector<Tuple> listtmp = page.getTuples();
-				for(Tuple tup:listtmp){
-					temp.add(tup);
-				} 
-				for(SQLTerm sql:vec){
-					temp=and1bp(temp,sql);
-				}
-				hstup.addAll(temp);
+		for (Tuple tm : hs1) {
+			if (hs2.contains(tm)) {
+				hs2.remove(tm);
+			} else {
+				hs2.add(tm);
 			}
-			return hstup;
 		}
-		private HashSet<Tuple> getTuple(SQLTerm sql) throws ClassNotFoundException, IOException, DBAppException{
-			HashSet<Tuple> hstup = new HashSet<>();
-			if(sql._strOperator.equals("=")){
-				if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
-					BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+  metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-					Vector<Pair> listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable)sql._objValue, (Comparable)sql._objValue);
-					HashSet <String> hspage = new HashSet<>();
-					for(Pair tup:listtmp){
-						hspage.add((String)tup.getValue());
-					} 
-					Vector<SQLTerm> vec = new Vector<>();
-					vec.add(sql);
-					return pagestotuples(hspage, vec);
-				}
-				else{
+		return hs2;
+	}
 
-					Table table = Table.deserialize("tables/"+sql._strTableName+"/"+sql._strTableName+".class");
-					if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
-						 hstup= table.eqsearch(sql._strColumnName, sql._objValue); 
-						return hstup;
+	private static HashSet<Tuple> and1bp(HashSet<Tuple> hs1, SQLTerm sql) throws DBAppException {
+		HashSet<Tuple> temp = new HashSet<>();
+		for (Tuple tm : hs1) {
+			if (sql._strOperator.equals("=")) {
+				if (sql._objValue instanceof Integer) {
+					Integer te = (Integer) sql._objValue;
+					if (!((Integer) tm.getColumnValue(sql._strColumnName)).equals(te)) {
+						temp.add(tm);
 					}
-					else{
-						hstup= table.cleqsearch(sql._strColumnName, sql._objValue);
-						return hstup;
+				} else if (sql._objValue instanceof Double) {
+					Double te = (Double) sql._objValue;
+					if (!((Double) tm.getColumnValue(sql._strColumnName)).equals(te)) {
+						temp.add(tm);
+					}
+				} else {
+					String te = (String) sql._objValue;
+					if (((String) tm.getColumnValue(sql._strColumnName)).compareTo(te) != 0) {
+						temp.add(tm);
 					}
 				}
-				
+			} else if (sql._strOperator.equals(">")) {
+				if (sql._objValue instanceof Integer) {
+					Integer te = (Integer) sql._objValue;
+					if (((Integer) tm.getColumnValue(sql._strColumnName)) <= (te)) {
+						temp.add(tm);
+					}
+				} else if (sql._objValue instanceof Double) {
+					Double te = (Double) sql._objValue;
+					if (((Double) tm.getColumnValue(sql._strColumnName)) <= (te)) {
+						temp.add(tm);
+					}
+				} else {
+					String te = (String) sql._objValue;
+					if (((String) tm.getColumnValue(sql._strColumnName)).compareTo(te) <= 0) {
+						temp.add(tm);
+					}
+				}
+			} else if (sql._strOperator.equals(">=")) {
+				if (sql._objValue instanceof Integer) {
+					Integer te = (Integer) sql._objValue;
+					if (((Integer) tm.getColumnValue(sql._strColumnName)) < (te)) {
+						temp.add(tm);
+					}
+				} else if (sql._objValue instanceof Double) {
+					Double te = (Double) sql._objValue;
+					if (((Double) tm.getColumnValue(sql._strColumnName)) < (te)) {
+						temp.add(tm);
+					}
+				} else {
+					String te = (String) sql._objValue;
+					if (((String) tm.getColumnValue(sql._strColumnName)).compareTo(te) < 0) {
+						temp.add(tm);
+					}
+				}
+			} else if (sql._strOperator.equals("<")) {
+				if (sql._objValue instanceof Integer) {
+					Integer te = (Integer) sql._objValue;
+					if (((Integer) tm.getColumnValue(sql._strColumnName)) >= (te)) {
+						temp.add(tm);
+					}
+				} else if (sql._objValue instanceof Double) {
+					Double te = (Double) sql._objValue;
+					if (((Double) tm.getColumnValue(sql._strColumnName)) >= (te)) {
+						temp.add(tm);
+					}
+				} else {
+					String te = (String) sql._objValue;
+					if (((String) tm.getColumnValue(sql._strColumnName)).compareTo(te) >= 0) {
+						temp.add(tm);
+					}
+				}
+			} else if (sql._strOperator.equals("<=")) {
+				if (sql._objValue instanceof Integer) {
+					Integer te = (Integer) sql._objValue;
+					if (((Integer) tm.getColumnValue(sql._strColumnName)) > (te)) {
+						temp.add(tm);
+					}
+				} else if (sql._objValue instanceof Double) {
+					Double te = (Double) sql._objValue;
+					if (((Double) tm.getColumnValue(sql._strColumnName)) > (te)) {
+						temp.add(tm);
+					}
+				} else {
+					String te = (String) sql._objValue;
+					if (((String) tm.getColumnValue(sql._strColumnName)).compareTo(te) > 0) {
+						temp.add(tm);
+					}
+				}
+			} else {
+				if (sql._objValue instanceof Integer) {
+					Integer te = (Integer) sql._objValue;
+					if (((Integer) tm.getColumnValue(sql._strColumnName)).equals(te)) {
+						temp.add(tm);
+					}
+				} else if (sql._objValue instanceof Double) {
+					Double te = (Double) sql._objValue;
+					if (((Double) tm.getColumnValue(sql._strColumnName)).equals(te)) {
+						temp.add(tm);
+					}
+				} else {
+					String te = (String) sql._objValue;
+					if (((String) tm.getColumnValue(sql._strColumnName)).compareTo(te) == 0) {
+						temp.add(tm);
+					}
+				}
 			}
-			else if(sql._strOperator.equals(">")){
-				if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
-					
-					BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName+"/"+metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-					Vector<Pair> listtmp;
-					if(sql._objValue instanceof Integer){
-						listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable)sql._objValue,Integer.MAX_VALUE );
-					}	
-					else if(sql._objValue instanceof Double){
-						listtmp = (Vector<Pair>)bptmp.rangeQuery((Comparable)sql._objValue,Double.MAX_VALUE );	
-					}
-					else{
-						listtmp =(Vector<Pair>) bptmp.rangeQuery((Comparable)sql._objValue,"{" );
-					}
-					HashSet <String> hspage = new HashSet<>();
-					for(Pair tup:listtmp){
-						hspage.add((String)tup.getValue());
-					} 
-					Vector<SQLTerm> vec = new Vector<>();
-					vec.add(sql);
-					return pagestotuples(hspage, vec); 
+		}
+		for (Tuple tm : temp) {
+			hs1.remove(tm);
+		}
+		return hs1;
+	}
+
+	private static HashSet<Tuple> pagestotuples(HashSet<String> hs1, Vector<SQLTerm> vec) throws DBAppException {
+		HashSet<Tuple> hstup = new HashSet<>();
+		for (String tm : hs1) {
+			HashSet<Tuple> temp = new HashSet<>();
+			Page page = Page.deserialize("tables/" + vec.get(0)._strTableName + "/" + tm + ".class");
+			Vector<Tuple> listtmp = page.getTuples();
+			for (Tuple tup : listtmp) {
+				temp.add(tup);
+			}
+			for (SQLTerm sql : vec) {
+				temp = and1bp(temp, sql);
+			}
+			hstup.addAll(temp);
+		}
+		return hstup;
+	}
+
+	private HashSet<Tuple> getTuple(SQLTerm sql) throws ClassNotFoundException, IOException, DBAppException {
+		HashSet<Tuple> hstup = new HashSet<>();
+		if (sql._strOperator.equals("=")) {
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
+				BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
+						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
+				Vector<Pair> listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue,
+						(Comparable) sql._objValue);
+				HashSet<String> hspage = new HashSet<>();
+				for (Pair tup : listtmp) {
+					hspage.add((String) tup.getValue());
 				}
-				else{
-			
-					Table table = Table.deserialize("tables/"+sql._strTableName+"/"+sql._strTableName+".class");
-					if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
-						hstup= table.greaterthannc(sql._strColumnName, sql._objValue);
-						return hstup; 
-					}
-					else{
-						hstup= table.greaterthan(sql._strColumnName, sql._objValue);
-						return hstup;
-					}
-				}	
-			}else if(sql._strOperator.equals(">=")){
-			if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
-				
-				BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+ metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-				Vector<Pair> listtmp;
-				if(sql._objValue instanceof Integer){
-					listtmp = (Vector<Pair>)bptmp.rangeQuery((Comparable)sql._objValue,Integer.MAX_VALUE );
-				}	
-				else if(sql._objValue instanceof Double){
-					listtmp = (Vector<Pair>)bptmp.rangeQuery((Comparable)sql._objValue,Double.MAX_VALUE );
-				}
-				else{
-					listtmp = (Vector<Pair>)bptmp.rangeQuery((Comparable)sql._objValue,"{" ); 
-				}
-				HashSet <String> hspage = new HashSet<>();
-				for(Pair tup:listtmp){
-					hspage.add((String)tup.getValue());
-				} 
 				Vector<SQLTerm> vec = new Vector<>();
 				vec.add(sql);
 				return pagestotuples(hspage, vec);
+			} else {
+
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
+				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
+					hstup = table.eqsearch(sql._strColumnName, sql._objValue);
+					return hstup;
+				} else {
+					hstup = table.cleqsearch(sql._strColumnName, sql._objValue);
+					return hstup;
+				}
 			}
-			else{
-				Table table = Table.deserialize("tables/"+sql._strTableName+"/"+sql._strTableName+".class");
-				if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
-					hstup= table.greaterthaneqnc(sql._strColumnName, sql._objValue); 
+
+		} else if (sql._strOperator.equals(">")) {
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
+
+				BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
+						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
+				Vector<Pair> listtmp;
+				if (sql._objValue instanceof Integer) {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE);
+				} else if (sql._objValue instanceof Double) {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE);
+				} else {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, "{");
+				}
+				HashSet<String> hspage = new HashSet<>();
+				for (Pair tup : listtmp) {
+					hspage.add((String) tup.getValue());
+				}
+				Vector<SQLTerm> vec = new Vector<>();
+				vec.add(sql);
+				return pagestotuples(hspage, vec);
+			} else {
+
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
+				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
+					hstup = table.greaterthannc(sql._strColumnName, sql._objValue);
+					return hstup;
+				} else {
+					hstup = table.greaterthan(sql._strColumnName, sql._objValue);
+					return hstup;
+				}
+			}
+		} else if (sql._strOperator.equals(">=")) {
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
+
+				BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
+						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
+				Vector<Pair> listtmp;
+				if (sql._objValue instanceof Integer) {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE);
+				} else if (sql._objValue instanceof Double) {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE);
+				} else {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, "{");
+				}
+				HashSet<String> hspage = new HashSet<>();
+				for (Pair tup : listtmp) {
+					hspage.add((String) tup.getValue());
+				}
+				Vector<SQLTerm> vec = new Vector<>();
+				vec.add(sql);
+				return pagestotuples(hspage, vec);
+			} else {
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
+				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
+					hstup = table.greaterthaneqnc(sql._strColumnName, sql._objValue);
 					return hstup;
 				} else {
 					hstup = table.greaterthaneq(sql._strColumnName, sql._objValue);
 					return hstup;
 				}
-			}	
-		}else if(sql._strOperator.equals("<")){
-			if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
-				
-				BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName+"/"+metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-				Vector<Pair>  listtmp;
-				if(sql._objValue instanceof Integer){
-					listtmp = (Vector<Pair>)bptmp.rangeQuery(Integer.MIN_VALUE,(Comparable)sql._objValue ); 
-				}	
-				else if(sql._objValue instanceof Double){
-					listtmp = (Vector<Pair>)bptmp.rangeQuery(Double.MIN_VALUE,(Comparable)sql._objValue );	
+			}
+		} else if (sql._strOperator.equals("<")) {
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
+
+				BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
+						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
+				Vector<Pair> listtmp;
+				if (sql._objValue instanceof Integer) {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue);
+				} else if (sql._objValue instanceof Double) {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue);
+				} else {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery("", (Comparable) sql._objValue);
 				}
-				else{
-					listtmp = (Vector<Pair>)bptmp.rangeQuery("",(Comparable)sql._objValue );
+				HashSet<String> hspage = new HashSet<>();
+				for (Pair tup : listtmp) {
+					hspage.add((String) tup.getValue());
 				}
-				HashSet <String> hspage = new HashSet<>();
-				for(Pair tup:listtmp){
-					hspage.add((String)tup.getValue());
-				} 
 				Vector<SQLTerm> vec = new Vector<>();
 				vec.add(sql);
 				return pagestotuples(hspage, vec);
-			}
-			else{
-				Table table = Table.deserialize("tables/"+sql._strTableName+"/"+sql._strTableName+".class");
-				if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
-					hstup= table.lesserthannc(sql._strColumnName, sql._objValue); 
+			} else {
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
+				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
+					hstup = table.lesserthannc(sql._strColumnName, sql._objValue);
 					return hstup;
 				} else {
 					hstup = table.lesserthan(sql._strColumnName, sql._objValue);
 					return hstup;
 				}
-			}	
-		}else if(sql._strOperator.equals("<=")){
-			if(! metadata.getIndexType(sql._strTableName,sql._strColumnName).equals("null")){
-				
-				BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+ metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
+			}
+		} else if (sql._strOperator.equals("<=")) {
+			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
+
+				BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
+						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
 				Vector<Pair> listtmp;
-				if(sql._objValue instanceof Integer){
-					listtmp = (Vector<Pair>)bptmp.rangeQuery(Integer.MIN_VALUE,(Comparable)sql._objValue ); 
-				}	
-				else if(sql._objValue instanceof Double){
-					listtmp = (Vector<Pair>)bptmp.rangeQuery(Double.MIN_VALUE,(Comparable)sql._objValue );	
+				if (sql._objValue instanceof Integer) {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue);
+				} else if (sql._objValue instanceof Double) {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue);
+				} else {
+					listtmp = (Vector<Pair>) bptmp.rangeQuery("", (Comparable) sql._objValue);
 				}
-				else{
-					listtmp = (Vector<Pair>)bptmp.rangeQuery("",(Comparable)sql._objValue );
+				HashSet<String> hspage = new HashSet<>();
+				for (Pair tup : listtmp) {
+					hspage.add((String) tup.getValue());
 				}
-				HashSet <String> hspage = new HashSet<>();
-				for(Pair tup:listtmp){
-					hspage.add((String)tup.getValue());
-				} 
 				Vector<SQLTerm> vec = new Vector<>();
 				vec.add(sql);
 				return pagestotuples(hspage, vec);
-			}
-			else{
-				Table table = Table.deserialize("tables/"+sql._strTableName+"/"+sql._strTableName+".class");
-				if( ! metadata.isClusteringKey(sql._strTableName, sql._strColumnName)){
-					hstup= table.lesserthannceq(sql._strColumnName, sql._objValue); 
+			} else {
+				Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
+				if (!metadata.isClusteringKey(sql._strTableName, sql._strColumnName)) {
+					hstup = table.lesserthannceq(sql._strColumnName, sql._objValue);
 					return hstup;
 				} else {
 					hstup = table.lesserthaneq(sql._strColumnName, sql._objValue);
 					return hstup;
 				}
-			}	
-		} else{   
-			Table table = Table.deserialize("tables/"+sql._strTableName+"/"+sql._strTableName+".class");
-			hstup= table.noteqsearch(sql._strColumnName, sql._objValue);
+			}
+		} else {
+			Table table = Table.deserialize("tables/" + sql._strTableName + "/" + sql._strTableName + ".class");
+			hstup = table.noteqsearch(sql._strColumnName, sql._objValue);
 			return hstup;
 		}
 
 	}
 
-	private HashSet<String> getPage(SQLTerm sql) throws ClassNotFoundException, IOException, DBAppException{
+	private HashSet<String> getPage(SQLTerm sql) throws ClassNotFoundException, IOException, DBAppException {
 		HashSet<String> hstup = new HashSet<>();
-		if(sql._strOperator.equals("=")){
-				BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+  metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-				Vector <Pair> listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable)sql._objValue, (Comparable)sql._objValue);
-				for(Pair tup:listtmp){
-					hstup.add((String)tup.getValue());
-				} 
-				return hstup;
+		if (sql._strOperator.equals("=")) {
+			BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
+					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
+			Vector<Pair> listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue,
+					(Comparable) sql._objValue);
+			for (Pair tup : listtmp) {
+				hstup.add((String) tup.getValue());
+			}
+			return hstup;
 		}
-		
-		else if(sql._strOperator.equals(">=")||sql._strOperator.equals(">")){
-			BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+ metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-			Vector <Pair> listtmp;
-			if(sql._objValue instanceof Integer){
-				listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable)sql._objValue,Integer.MAX_VALUE );
-				for(Pair tup:listtmp){
-					hstup.add((String)tup.getValue());
-				} 
-			}	
-			else if(sql._objValue instanceof Double){
-				listtmp = (Vector<Pair>)bptmp.rangeQuery((Comparable)sql._objValue,Double.MAX_VALUE );
-				for(Pair tup:listtmp){
-					hstup.add((String)tup.getValue());
-				} 	
-			}
-			else{
-				listtmp = (Vector<Pair>)bptmp.rangeQuery((Comparable)sql._objValue,"{" );
-				for(Pair tup:listtmp){
-					hstup.add((String)tup.getValue());
-				} 
-			}
-			return hstup;
-		
-		
-	}
-	else {
-			BPlusTree bptmp = BPlusTree.deserialize("tables/" +sql._strTableName+"/"+ metadata.getIndexName(sql._strTableName,sql._strColumnName)+ ".class");
-			Vector<Pair> listtmp;
-			if(sql._objValue instanceof Integer){
-				listtmp = (Vector<Pair>)bptmp.rangeQuery(Integer.MIN_VALUE,(Comparable)sql._objValue );
-				for(Pair tup:listtmp){
-					hstup.add((String)tup.getValue());
-				} 
-			}	
-			else if(sql._objValue instanceof Double){
-				listtmp = (Vector<Pair>)bptmp.rangeQuery(Double.MIN_VALUE,(Comparable)sql._objValue );
-				for(Pair tup:listtmp){
-					hstup.add((String)tup.getValue());
-				} 	
-			}
-			else{
-				listtmp = (Vector<Pair>)bptmp.rangeQuery("",(Comparable)sql._objValue );
-				for(Pair tup:listtmp){
-					hstup.add((String)tup.getValue());
-				}  
-			}
-			return hstup;
-		
-	}
-		
 
-}
+		else if (sql._strOperator.equals(">=") || sql._strOperator.equals(">")) {
+			BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
+					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
+			Vector<Pair> listtmp;
+			if (sql._objValue instanceof Integer) {
+				listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE);
+				for (Pair tup : listtmp) {
+					hstup.add((String) tup.getValue());
+				}
+			} else if (sql._objValue instanceof Double) {
+				listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE);
+				for (Pair tup : listtmp) {
+					hstup.add((String) tup.getValue());
+				}
+			} else {
+				listtmp = (Vector<Pair>) bptmp.rangeQuery((Comparable) sql._objValue, "{");
+				for (Pair tup : listtmp) {
+					hstup.add((String) tup.getValue());
+				}
+			}
+			return hstup;
+
+		} else {
+			BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
+					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
+			Vector<Pair> listtmp;
+			if (sql._objValue instanceof Integer) {
+				listtmp = (Vector<Pair>) bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue);
+				for (Pair tup : listtmp) {
+					hstup.add((String) tup.getValue());
+				}
+			} else if (sql._objValue instanceof Double) {
+				listtmp = (Vector<Pair>) bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue);
+				for (Pair tup : listtmp) {
+					hstup.add((String) tup.getValue());
+				}
+			} else {
+				listtmp = (Vector<Pair>) bptmp.rangeQuery("", (Comparable) sql._objValue);
+				for (Pair tup : listtmp) {
+					hstup.add((String) tup.getValue());
+				}
+			}
+			return hstup;
+
+		}
+
+	}
+
 	private static int precedence(String operator) {
 		switch (operator) {
 
@@ -1776,152 +1774,104 @@ public class DBApp {
 		}
 	}
 
-	private static void cleanUp() throws IOException{
-        try{
-            // delete tables directory
+	private static void cleanUp() throws IOException {
+		try {
+			// delete tables directory
 
-            String tablesPath = "tables/";
+			String tablesPath = "tables/";
 
-            
+			Path dir = Paths.get(tablesPath); // path to the directory
+			Files
+					.walk(dir) // Traverse the file tree in depth-first order
+					.sorted(Comparator.reverseOrder())
+					.forEach(path -> {
+						try {
 
-            Path dir = Paths.get(tablesPath); //path to the directory  
-            Files
-                .walk(dir) // Traverse the file tree in depth-first order
-                .sorted(Comparator.reverseOrder())
-                .forEach(path -> {
-                    try {
-                        
-                        Files.delete(path);  //delete each file or directory
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-        }catch(Exception e){
-        
-        }
+							Files.delete(path); // delete each file or directory
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					});
+		} catch (Exception e) {
 
-        try{
-            
-            // delete Indicies directory
+		}
 
-            String indiciesPath = "Indicies/";
+		try {
 
-            Path dir2 = Paths.get(indiciesPath); //path to the directory
-            Files
-                .walk(dir2) // Traverse the file tree in depth-first order
-                .sorted(Comparator.reverseOrder())
-                .forEach(path -> {
-                    try {
-                       
-                        Files.delete(path);  //delete each file or directory
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-        }catch(Exception e){
-        
-        }
-        try{
-            // delete metadata.csv
+			// delete Indicies directory
 
-            File metadata = new File("metadata.csv");
-            metadata.delete();
-        }catch(Exception e){
-            
-        }
+			String indiciesPath = "Indicies/";
 
+			Path dir2 = Paths.get(indiciesPath); // path to the directory
+			Files
+					.walk(dir2) // Traverse the file tree in depth-first order
+					.sorted(Comparator.reverseOrder())
+					.forEach(path -> {
+						try {
 
+							Files.delete(path); // delete each file or directory
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					});
+		} catch (Exception e) {
 
-    }
+		}
+		try {
+			// delete metadata.csv
 
-	public static void main(String[] args) throws DBAppException, IOException {
+			File metadata = new File("metadata.csv");
+			metadata.delete();
+		} catch (Exception e) {
 
-		try{
-            DBApp dbApp = new DBApp();
+		}
+	}
 
-            dbApp.init();
+	public static void main(String[] args) throws IOException {
 
-            String strTableName = "Student";
+		try {
+			DBApp dbApp = new DBApp();
 
-            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+			dbApp.init();
 
-            htblColNameType.put("id", "java.lang.Integer");
+			String strTableName = "Student";
 
-            htblColNameType.put("name", "java.lang.String");
+			Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
-            htblColNameType.put("gpa", "java.lang.Double");
+			htblColNameType.put("id", "java.lang.Integer");
 
-            dbApp.createTable(strTableName, "id", htblColNameType);
+			htblColNameType.put("name", "java.lang.String");
 
-            // insert 20 rows
+			htblColNameType.put("gpa", "java.lang.Double");
 
-            for(int i = 0; i < 20; i++){
-                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-                htblColNameValue.put("id", i);
-                htblColNameValue.put("name", "Student" + i);
-                htblColNameValue.put("gpa", 3.0 + i);
-                dbApp.insertIntoTable(strTableName, htblColNameValue);
-            }
-			// select all row
-			// Testing XOR+OR+AND
-			SQLTerm [] arrSQLTerms = new SQLTerm[4];
-          	String [] strarrOperators = new String[3];
+			dbApp.createTable(strTableName, "id", htblColNameType);
 
-			  arrSQLTerms[0] = new SQLTerm();
-			  arrSQLTerms[0]._strTableName = "Student";
-			  arrSQLTerms[0]._strColumnName = "id";
-			  arrSQLTerms[0]._strOperator = "=";
-			  arrSQLTerms[0]._objValue = 1;
-  
-			  strarrOperators[0] = "xor";
-  
-			  arrSQLTerms[1] = new SQLTerm();
-			  arrSQLTerms[1]._strTableName = "Student";
-			  arrSQLTerms[1]._strColumnName = "id";
-			  arrSQLTerms[1]._strOperator = "=";
-			  arrSQLTerms[1]._objValue = 2;
-  
-			  strarrOperators[1] = "or";
-  
-			  arrSQLTerms[2] = new SQLTerm();
-			  arrSQLTerms[2]._strTableName = "Student";
-			  arrSQLTerms[2]._strColumnName = "id";
-			  arrSQLTerms[2]._strOperator = "=";
-			  arrSQLTerms[2]._objValue = 3;
-  
-			  strarrOperators[2] = "and";
-  
-			  arrSQLTerms[3] = new SQLTerm();
-			  arrSQLTerms[3]._strTableName = "Student";
-			  arrSQLTerms[3]._strColumnName = "id";
-			  arrSQLTerms[3]._strOperator = "=";
-			  arrSQLTerms[3]._objValue = 4;
-			//System.out.println(dbApp.selectFromTable(arrSQLTerms, strarrOperators));
-            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-			
-            // for(int i = 0; i < 20; i++){
-            //     if(i == 5){
-            //         assert iterator.hasNext();
-            //         Tuple tuple = (Tuple) iterator.next();
-            //         assert tuple.getColumnValue("id").equals(5);
-            //         assert tuple.getColumnValue("name").equals("Student5");
-            //         assert tuple.getColumnValue("gpa").equals(3.0 + 5);
-            //     }else{
-            //         assert !iterator.hasNext();
-            //     }
-            // }
-			int count =0; 
-			while(iterator.hasNext()){
-				Tuple tuple = (Tuple) iterator.next();
-				System.out.println(tuple);
-				count++;
+			// insert n rows
+
+			for (int i = 0; i < 20; i++) {
+				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+				htblColNameValue.put("id", i);
+				htblColNameValue.put("name", "Student" + i);
+				htblColNameValue.put("gpa", 3.0 + i);
+				dbApp.insertIntoTable(strTableName, htblColNameValue);
 			}
-			System.out.println(count);
-		}catch(Exception e){
+
+			Page p = Page.deserialize("tables/" + strTableName + "/" + "/Student_0.class");
+
+			Vector v = p.getTuples();
+
+			for (int i = 0; i < v.size(); i++) {
+				Tuple t = (Tuple) v.get(i);
+				System.out.println(t);
+			}
+
+		} catch (Exception e) {
 			e.printStackTrace();
-            
-        }finally{
-        	cleanUp();
-        }
+
+		}
+
+		finally {
+			cleanUp();
+		}
 	}
 }

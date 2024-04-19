@@ -6,7 +6,7 @@ import com.db_engine.Page;
 
 import java.io.*;
 
-public class BPlusTree<K extends Comparable<K> & Serializable, E extends Serializable> implements Serializable{
+public class BPlusTree<K extends Comparable<K> & Serializable, E extends Serializable> implements Serializable {
 
     private final int OVERFLOW_BOUND;
 
@@ -15,7 +15,7 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
     private BPlusTreeNode root;
 
     public BPlusTree(int order) {
-        if(order < 3){
+        if (order < 3) {
             throw new IllegalArgumentException("The order of BPlus Tree must be greater than or equal to 3");
         }
         this.OVERFLOW_BOUND = order - 1;
@@ -38,7 +38,6 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
             return;
         }
 
-
         BPlusTreeNode newChildNode = root.insert(entry, value);
         if (newChildNode != null) {
             K newRootEntry = newChildNode.getClass().equals(BPlusTreeLeafNode.class)
@@ -57,7 +56,7 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
     }
 
     public List<E> rangeQuery(K startInclude, K endExclude) {
-        if(startInclude.compareTo(endExclude) >= 0){
+        if (startInclude.compareTo(endExclude) >= 0) {
             throw new IllegalArgumentException("invalid range");
         }
 
@@ -130,13 +129,13 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
 
     @Override
     public String toString() {
-        if(root == null){
+        if (root == null) {
             return "";
         }
         return root.toString();
     }
 
-    private abstract class BPlusTreeNode implements Serializable{
+    private abstract class BPlusTreeNode implements Serializable {
 
         protected List<K> entries;
 
@@ -144,7 +143,9 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
             return entries.size() < UNDERFLOW_BOUND;
         }
 
-        protected boolean isOverflow(){ return entries.size() > OVERFLOW_BOUND; }
+        protected boolean isOverflow() {
+            return entries.size() > OVERFLOW_BOUND;
+        }
 
         protected int getMedianIndex() {
             return OVERFLOW_BOUND / 2;
@@ -179,8 +180,7 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
         public abstract void combine(BPlusTreeNode neighbor, K parentEntry);
 
         public abstract void borrow(BPlusTreeNode neighbor, K parentEntry, boolean isLeft);
-        
-        
+
     }
 
     private class BPlusTreeNonLeafNode extends BPlusTreeNode {
@@ -191,7 +191,6 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
             this.entries = entries;
             this.children = children;
         }
-
 
         @Override
         public List<E> rangeQuery(K startInclude, K endExclude) {
@@ -258,20 +257,23 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
             return new RemoveResult(true, isUnderflow());
         }
 
-
         private void handleUnderflow(BPlusTreeNode childNode, int childIndex, int entryIndex) {
             BPlusTreeNode neighbor;
             if (childIndex > 0 && (neighbor = this.children.get(childIndex - 1)).entries.size() > UNDERFLOW_BOUND) {
 
                 childNode.borrow(neighbor, this.entries.get(entryIndex), true);
-                K boundEntry = childNode.getClass().equals(BPlusTreeNonLeafNode.class) ? findLeafEntry(childNode) : childNode.entries.get(0);
+                K boundEntry = childNode.getClass().equals(BPlusTreeNonLeafNode.class) ? findLeafEntry(childNode)
+                        : childNode.entries.get(0);
                 this.entries.set(entryIndex, boundEntry);
 
-            } else if (childIndex < this.children.size() - 1 && (neighbor = this.children.get(childIndex + 1)).entries.size() > UNDERFLOW_BOUND) {
+            } else if (childIndex < this.children.size() - 1
+                    && (neighbor = this.children.get(childIndex + 1)).entries.size() > UNDERFLOW_BOUND) {
 
-                int parentEntryIndex = childIndex == 0 ? 0 :Math.min(this.entries.size() - 1, entryIndex + 1);
+                int parentEntryIndex = childIndex == 0 ? 0 : Math.min(this.entries.size() - 1, entryIndex + 1);
                 childNode.borrow(neighbor, this.entries.get(parentEntryIndex), false);
-                this.entries.set(parentEntryIndex, childNode.getClass().equals(BPlusTreeNonLeafNode.class) ? findLeafEntry(neighbor) : neighbor.entries.get(0));
+                this.entries.set(parentEntryIndex,
+                        childNode.getClass().equals(BPlusTreeNonLeafNode.class) ? findLeafEntry(neighbor)
+                                : neighbor.entries.get(0));
 
             } else {
 
@@ -303,7 +305,8 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
             this.children = new ArrayList<>(allChildren.subList(0, medianIndex + 1));
 
             List<K> rightEntries = new ArrayList<>(allEntries.subList(medianIndex + 1, allEntries.size()));
-            List<BPlusTreeNode> rightChildren = new ArrayList<>(allChildren.subList(medianIndex + 1, allChildren.size()));
+            List<BPlusTreeNode> rightChildren = new ArrayList<>(
+                    allChildren.subList(medianIndex + 1, allChildren.size()));
             return new BPlusTreeNonLeafNode(rightEntries, rightChildren);
         }
 
@@ -376,7 +379,7 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
             int startUpperBound = Math.max(1, entryIndexUpperBound(startInclude));
 
             int end = entryIndexUpperBound(endExclude) - 1;
-            if(end >= 0 && entries.get(end) == endExclude){
+            if (end >= 0 && entries.get(end) == endExclude) {
                 --end;
             }
 
@@ -526,7 +529,7 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
         }
     }
 
-    private static class RemoveResult implements Serializable{
+    private static class RemoveResult implements Serializable {
 
         public boolean isRemoved;
 
@@ -540,11 +543,7 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
 
     public void serialize(String strFileName) throws DBAppException {
 
-        
-
-        try{
-
-            
+        try {
 
             FileOutputStream fos = new FileOutputStream(strFileName);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -552,17 +551,16 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
 
             oos.close();
             fos.close();
-        }catch(IOException ioe){
-           
+        } catch (IOException ioe) {
+
             throw new DBAppException("Error in Serialization");
         }
-
 
     }
 
     public static BPlusTree deserialize(String strFileName) throws DBAppException {
 
-        try{
+        try {
 
             FileInputStream fis = new FileInputStream(strFileName);
             ObjectInputStream ois = new ObjectInputStream(fis);
@@ -572,9 +570,9 @@ public class BPlusTree<K extends Comparable<K> & Serializable, E extends Seriali
             fis.close();
 
             return tree;
-        }catch(IOException ioe){
+        } catch (IOException ioe) {
             throw new DBAppException("Error in Deserialization");
-        }catch(ClassNotFoundException c){
+        } catch (ClassNotFoundException c) {
             throw new DBAppException("Class not found");
         }
 
