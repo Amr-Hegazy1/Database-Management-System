@@ -1274,7 +1274,7 @@ public class SelectTestCases {
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
                                                                             // "Student1" XOR id = 2 OR id = 3 AND id =
                                                                             // 4;
-            while (!iterator.hasNext()) {
+            while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
                 assert (int) tuple.getColumnValue("id") == 1
                         || (int) tuple.getColumnValue("id") == 2;
