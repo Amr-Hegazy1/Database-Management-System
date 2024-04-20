@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.*;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.db_engine.DBApp;
@@ -496,6 +497,7 @@ public class SelectTestCases {
 
             while (iterator3.hasNext()) {
                 Tuple tuple = (Tuple) iterator3.next();
+                Tuple tuple = (Tuple) iterator3.next();
                 assert tuple.getColumnValue("id").equals(6);
                 assert tuple.getColumnValue("name").equals("Student6");
                 assert tuple.getColumnValue("gpa").equals(3.0 + 6);
@@ -670,6 +672,7 @@ public class SelectTestCases {
             }
 
             assert count == 15;
+            assert count == 15;
 
             count = 0;
 
@@ -701,6 +704,7 @@ public class SelectTestCases {
                 count++;
             }
 
+            assert count == 17;
             assert count == 17;
 
             count = 0;
@@ -734,6 +738,7 @@ public class SelectTestCases {
             }
 
             assert count == 16;
+            assert count == 16;
 
             count = 0;
 
@@ -765,6 +770,7 @@ public class SelectTestCases {
                 count++;
             }
 
+            assert count == 16;
             assert count == 16;
 
             count = 0;
@@ -814,7 +820,7 @@ public class SelectTestCases {
             count = 0;
 
             // Test on Non-Clustering Key (Test 3 : String)
-            arrSQLTerms = new SQLTerm[2];
+            arrSQLTerms = new SQLTerm[1];
             strarrOperators = new String[0];
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = "Student";
@@ -976,7 +982,7 @@ public class SelectTestCases {
 
     @Test
     public void NonExistantTuplesExactValues() throws DBAppException, ClassNotFoundException, IOException {
-        // select tuples/values that dont exist in my table using exact values
+        // select tuples/values that don't exist in my table using exact values
 
         try {
             DBApp dbApp = new DBApp();
@@ -1401,13 +1407,11 @@ public class SelectTestCases {
 
         assert flag;
     }
-
     @Test
     public void SingleIndexedQueries() throws DBAppException, ClassNotFoundException, IOException {
         // Compare Select query results with and without index for one indexed column at
         // a time
         try {
-
             DBApp dbApp = new DBApp();
             dbApp.init();
 
@@ -2483,7 +2487,8 @@ public class SelectTestCases {
         }
     }
 
-    private void cleanUp() throws IOException {
+    @Before
+    public void cleanUp() throws IOException {
         try {
             // delete tables directory
 

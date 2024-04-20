@@ -19,6 +19,71 @@ import com.db_engine.*;
 
 public class InsertTest {
 
+
+    @Test
+    public void insertWrongTableName() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            
+
+            assertThrows(DBAppException.class, () -> {
+                dbApp.insertIntoTable("Student2", new Hashtable<String, Object>());
+            });
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void insertExtraColumn() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            htblColNameValue.put("id", 1);
+            htblColNameValue.put("name", "Student");
+            htblColNameValue.put("gpa", 3.0);
+            htblColNameValue.put("extra", "extra");
+
+            assertThrows(DBAppException.class, () -> {
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            });
+
+        } finally {
+            cleanUp();
+        }
+    } 
+
     @Test
     public void insertWrongDataType() throws DBAppException, IOException {
         try {

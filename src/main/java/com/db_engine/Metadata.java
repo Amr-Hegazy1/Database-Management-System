@@ -39,6 +39,9 @@ public class Metadata {
         if(!fileMetadataFile.exists())
             try {
                 fileMetadataFile.createNewFile();
+                // write file header
+                // FileOutputStream fileOutputStream = new FileOutputStream("metadata.csv");
+                // fileOutputStream.write("Table Name, Column Name, Column Type, ClusteringKey, Index Name, Index Type\n".getBytes());
             } catch (IOException e) {
                 throw new DBAppException("Error creating metadata file");
             }
@@ -61,6 +64,10 @@ public class Metadata {
         
         try (Scanner scanner = new Scanner(new File("metadata.csv"))) {
             while (scanner.hasNextLine()) {
+                // check if first line is header
+                // if(scanner.nextLine().contains("Table Name, Column Name, Column Type, ClusteringKey, Index Name, Index Type"))
+                //     continue;
+
                 String[] arrstrRecord = scanner.nextLine().split(",", 2);
                 String strTableName = arrstrRecord[0].replaceAll("\\s+","");
                 if(!htblMetadata.containsKey(strTableName)){

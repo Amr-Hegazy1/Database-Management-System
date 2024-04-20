@@ -143,7 +143,7 @@ public class Page implements Serializable {
      *                              tuples. It is used to identify the specific
      *                              attribute or column in the tuple that serves as
      *                              the clustering key for the data structure.
-     * @param strClusteringKeyValue The `strClusteringKeyValue` parameter represents
+     * @param objClusteringKeyValue The `objClusteringKeyValue` parameter represents
      *                              the value of the
      *                              clustering key that you are searching for within
      *                              the list of tuples. The method
@@ -258,7 +258,7 @@ public class Page implements Serializable {
      *                              tuples. It is used to identify the specific
      *                              attribute or column in the tuple that serves as
      *                              the clustering key for the data structure.
-     * @param strClusteringKeyValue The `strClusteringKeyValue` parameter represents
+     * @param objClusteringKeyValue The `objClusteringKeyValue` parameter represents
      *                              the value of the
      *                              clustering key that you are searching for within
      *                              the list of tuples. The method
@@ -295,8 +295,28 @@ public class Page implements Serializable {
             }
 
         }
+        
+        Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
 
-        return left;
+        // Base cases
+        if (cmpClusteringKeyValue.compareTo(vecTuples.get(0).getColumnValue(strClusteringKeyName)) < 0)
+            return 0;
+        else if (cmpClusteringKeyValue.compareTo(vecTuples.get(n - 1).getColumnValue(strClusteringKeyName)) > 0)
+            return n-1;
+
+        int lowerPnt = 0;
+        int i = 1;
+
+        while (i < n && ((Comparable) vecTuples.get(i).getColumnValue(strClusteringKeyName)).compareTo(cmpClusteringKeyValue) > 0) {
+            lowerPnt = i;
+            i = i * 2;
+        }
+
+        // Final check for the remaining elements which are < X
+        while (lowerPnt < n && ((Comparable) vecTuples.get(lowerPnt).getColumnValue(strClusteringKeyName)).compareTo(cmpClusteringKeyValue) > 0)
+            lowerPnt++;
+
+        return lowerPnt;
 
     }
 
@@ -438,22 +458,19 @@ public class Page implements Serializable {
     public  HashSet<Tuple> eqsearch(String col, Object val, boolean isclu, int index) throws DBAppException{
         HashSet<Tuple> hstups= new HashSet<>();
         if(isclu){
-            
-                if(val instanceof Integer){
-                    Integer te = (Integer) val;
-                    System.out.println(te);
-                    System.out.println((Integer)vecTuples.get(index).getColumnValue(col));
-                    if(((Integer)vecTuples.get(index).getColumnValue(col)).equals(te)){
-                        hstups.add(vecTuples.get(index));
-                    }
+            if(val instanceof Integer){
+                Integer te = (Integer) val;
+                if(((Integer)vecTuples.get(index).getColumnValue(col)).equals(te)){
+                    hstups.add(vecTuples.get(index));
                 }
-                else if(val instanceof Double){
-                    Double te = (Double) val;
-                    if(((Double)vecTuples.get(index).getColumnValue(col)).equals(te)){
-                        hstups.add(vecTuples.get(index));
-                    }
+            }
+            else if(val instanceof Double){
+                Double te = (Double) val;
+                if(((Double)vecTuples.get(index).getColumnValue(col)).equals(te)){
+                    hstups.add(vecTuples.get(index));
                 }
-             else {
+            }
+            else {
                 String te = (String) val;
                 if (((String) vecTuples.get(index).getColumnValue(col)).compareTo(te) == 0) {
                     hstups.add(vecTuples.get(index));
@@ -478,10 +495,83 @@ public class Page implements Serializable {
                         hstups.add(tu);
                     }
                 }
-
             }
         }
         return hstups;
+    }
+
+    /**
+     * The function `getPageByClusteringKey` searches for a specific page in a table
+     * based on a given
+     * clustering key value.
+     *
+     * @param strTableName          It seems like you were about to provide some
+     *                              information about the parameters,
+     *                              but the message got cut off. Could you please
+     *                              provide more details about the parameters
+     *                              `strTableName`, `strClusteringKey`, and
+     *                              `objClusteringKeyValue` so that I can assist you
+     *                              further
+     *                              with the `getPageByCl
+     * @param strClusteringKey      It seems like you were about to provide some
+     *                              information about the
+     *                              parameter `strClusteringKey` but the message got
+     *                              cut off. How can I assist you further with this
+     *                              parameter?
+     * @param objClusteringKeyValue It seems like the method
+     *                              `getPageByClusteringKey` is trying to find a
+     *                              specific page in a table based on a clustering
+     *                              key value. The method uses binary search to
+     *                              locate
+     *                              the page efficiently.
+     * @return The method `getPageByClusteringKey` is returning a `Page` object. If
+     *         the clustering key
+     *         value is found within the specified range in the page, then that page
+     *         is returned. If the key is
+     *         not found within the range, the method will continue searching
+     *         through the pages until it either
+     *         finds the key or exhausts all pages, in which case it will return
+     *         `null`.
+     */
+    public static Page getPageByClusteringKey(String strTableName, Object objClusteringKeyValue,
+                                              Table table) throws DBAppException {
+
+        int intTableSize = table.getNumberOfPages();
+        int intTopPageIndex = 0;
+        int intBottomPageIndex = intTableSize - 1;
+
+        while (intTopPageIndex <= intBottomPageIndex) {
+
+            int intMiddlePageIndex = intTopPageIndex + (intBottomPageIndex - intTopPageIndex) / 2;
+
+            String strMiddlePage = table.getPageAtIndex(intMiddlePageIndex);
+
+
+
+            Comparable cmpPageMinValue = table.getMin(strMiddlePage);
+
+            Comparable cmpPageMaxValue = table.getMax(strMiddlePage);
+
+            // convert the object to comparable to compare it with the clustering key
+
+            Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
+
+            // check if the clustering key is in the page by checking if the value is
+            // between the top and bottom tuple
+            if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) >= 0
+                    && cmpClusteringKeyValue
+                    .compareTo(cmpPageMaxValue) <= 0) {
+                Page pageMiddlePage = Page.deserialize("tables/" + strTableName + "/" + strMiddlePage + ".class");
+                return pageMiddlePage;
+            } else if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) < 0) {
+                intBottomPageIndex = intMiddlePageIndex - 1;
+            } else {
+                intTopPageIndex = intMiddlePageIndex + 1;
+            }
+        }
+
+        return null;
+
     }
 
     public HashSet<Tuple> gtrsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
