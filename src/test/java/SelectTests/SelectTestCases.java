@@ -497,7 +497,7 @@ public class SelectTestCases {
 
             while (iterator3.hasNext()) {
                 Tuple tuple = (Tuple) iterator3.next();
-                Tuple tuple = (Tuple) iterator3.next();
+                
                 assert tuple.getColumnValue("id").equals(6);
                 assert tuple.getColumnValue("name").equals("Student6");
                 assert tuple.getColumnValue("gpa").equals(3.0 + 6);

@@ -74,7 +74,7 @@ public class Metadata {
                     htblMetadata.put(strTableName, getRecordFromLine(arrstrRecord[1]));
                 }
                 else{
-                    htblMetadata.get(strTableName).putAll(getRecordFromLine(arrstrRecord[1]));
+                   htblMetadata.get(strTableName).putAll(getRecordFromLine(arrstrRecord[1]));
                 }
                 
             }

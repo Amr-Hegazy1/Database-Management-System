@@ -573,7 +573,7 @@ public class Page implements Serializable {
         return null;
 
     }
-
+    
     public HashSet<Tuple> gtrsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
         HashSet<Tuple> hstups = new HashSet<>();
         if (isclu) {
