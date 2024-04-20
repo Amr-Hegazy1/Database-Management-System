@@ -21,7 +21,6 @@ public class DBApp {
 	public DBApp() throws DBAppException{
 
 		try {
-			
 
 			Properties prop = new Properties();
 			String fileName = "/DBApp.config";
@@ -47,8 +46,6 @@ public class DBApp {
 
 		try {
 			metadata = new Metadata();
-
-			
 
 		} catch (DBAppException e) {
 			e.printStackTrace();
@@ -155,9 +152,21 @@ public class DBApp {
 			throw new DBAppException("An index for this column already exists");
 
 		} else {
+
 			if (strIndexName.equals(strTableName)) strIndexName += "Index";
 
+			for (Pair pair : metadata.getIndexedColumns(strTableName)) {
+				
+				if (pair.getValue().equals(strIndexName)) {
+					throw new DBAppException("An index with this name already exists");
+				}
+			}
+
 			String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
+			if (strIndexName.equals(strTableName))
+				strIndexName += "Index";
+
+			
 
 			metadata.addIndex(strTableName, strColName, "B+Tree", strIndexName);
 
@@ -737,11 +746,12 @@ public class DBApp {
 		pagePage.deleteTupleWithIndex(intTupleIndex);
 
 		if (pagePage.getSize() == 0) {
-			Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
+			String strPageName = pagePage.getPageName();
+			Page.deletePage("tables/" + strTableName + "/" + strPageName + ".class");
 
-			table.removeMin(intTupleIndex);
-			table.removeMax(intTupleIndex);
-			table.removePage(intTupleIndex);
+			table.removeMin(strPageName);
+			table.removeMax(strPageName);
+			table.removePage(strPageName);
 
 		} else {
 			// set min and max values for the page
