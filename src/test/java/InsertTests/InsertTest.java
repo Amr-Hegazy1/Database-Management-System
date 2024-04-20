@@ -704,6 +704,108 @@ public class InsertTest {
         }
     }
 
+    public Vector<Tuple> getAllTuples (Table table) throws DBAppException {
+        Vector<Tuple> vec = new Vector<>();
+        for(String strPageName : table.getPages()){
+            Page page = Page.deserialize("tables/" + table.getTableName() + "/" +
+                    strPageName + ".class");
+            vec.addAll(page.getTuples());
+        }
+        return vec;
+    }
+
+    @Test
+    public void test_insert_edgeCase() throws DBAppException , IOException {
+        try {
+            cleanUp();
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 100 rows
+            //page1:1-20 ; page2:41-60 ; page3:81-100 .....
+
+            for (int i = 0; i < 200; i++) {
+                if(i == 180) break;
+                if(i%20==0 && i!=0){
+                    i+=20;
+                }
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", (i + 1));
+                htblColNameValue.put("name", "Student" + (i + 1));
+                htblColNameValue.put("gpa", 3.0 + (i + 1));
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            Table table = Table.deserialize("tables/" + strTableName + "/" +
+                    strTableName + ".class");
+
+            Vector<Tuple> allTuples = getAllTuples(table);
+
+            //insert 2 intermediate rows in each page except the 1st
+            //25,26,66,67,107,108,148,149,189,190
+            //page1:1-20 ; page2:25,26--58 ; page3:59,60-- ; page4:
+            int count =0;
+            for (int i = 25; i < 200; i++) {
+
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+                // i+=10;
+                count++;
+                if(count==2){
+                    i+=39;
+                    count=0;
+                }
+
+
+            }
+
+            table = Table.deserialize("tables/" + strTableName + "/" +
+                    strTableName + ".class");
+
+            allTuples = getAllTuples(table);
+
+            //
+
+            String newPage = "";
+            Page pgPage = null;
+            int max;
+            int min;
+
+            Table tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
+            for (int i = 0; i < tblTable.getNumberOfPages() ; i++) {
+
+                newPage = tblTable.getPageAtIndex(i);
+                pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage + ".class");
+                min = (int) pgPage.getFirstTuple().getColumnValue("id");
+                max = (int) pgPage.getLastTuple().getColumnValue("id");
+
+                System.out.println("min=" + min + "   " + "max=" + max);
+
+                assert min == (int) tblTable.getMin(newPage) && max == (int) tblTable.getMax(newPage);
+            }
+        }
+        finally{
+            cleanUp();
+        }
+    }
+
     @Before
     public void cleanUp() throws IOException {
         try {

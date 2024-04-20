@@ -314,6 +314,176 @@ public class DeleteTest {
             cleanUp();
         }
     }
+
+    @Test
+    public void checkRightOrderAndShifting () throws DBAppException{
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            for(int i = 0 ; i < 4 ; i ++){
+                Hashtable<String , Object> ht = new Hashtable<>();
+                ht.put("id" , 2*i);
+                ht.put("name" , "ahmed"+i);
+                dbApp.insertIntoTable(strTableName , ht);
+            }
+
+            Hashtable<String , Object> ht = new Hashtable<>();
+            ht.put("id" , 1);
+            ht.put("name" , "ali");
+            dbApp.insertIntoTable(strTableName , ht);
+            dbApp.createIndex(strTableName , "name" , "nameIndex");
+
+            Table table = Table.deserialize("tables/" + strTableName + "/" + strTableName
+                    + ".class");
+            Page page = Page.deserialize("tables/" + strTableName + "/" +
+                    table.getPages().get(2) + ".class");
+            Vector<Tuple> vec = page.getTuples();
+            assert vec.size() == 1;
+
+            ht = new Hashtable<>();
+            ht.put("name" , "ali");
+            dbApp.updateTable(strTableName , "4" , ht);
+
+            table = Table.deserialize("tables/" + strTableName + "/" + strTableName
+                    + ".class");
+            page = Page.deserialize("tables/" + strTableName + "/" +
+                    table.getPages().get(0) + ".class");
+            vec = page.getTuples();
+            for(Tuple tup : vec){
+                if((Integer) tup.getColumnValue("id") == 1
+                        && ((String) tup.getColumnValue("name")).equals("ali")){
+                    return;
+                }
+            }
+            assert false;
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void checkProperShifting () throws DBAppException{
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            for(int i = 0 ; i < 6 ; i ++){
+                Hashtable<String , Object> ht = new Hashtable<>();
+                ht.put("id" , 2*i);
+                if(i >= 2 && i <= 3)
+                    ht.put("name" , "ahmed");
+                else
+                    ht.put("name" , "ahmed"+i);
+                dbApp.insertIntoTable(strTableName , ht);
+            }
+
+            dbApp.createIndex(strTableName , "name" , "nameIndex");
+
+            Table table = Table.deserialize("tables/" + strTableName + "/" + strTableName
+                    + ".class");
+
+            int before = table.getNumberOfPages();
+
+            Hashtable<String , Object> ht = new Hashtable<>();
+            ht.put("name" , "ahmed");
+            dbApp.deleteFromTable(strTableName , ht);
+
+            table = Table.deserialize("tables/" + strTableName + "/" + strTableName
+                    + ".class");
+
+            assert table.getNumberOfPages() == 2;
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deleteNonExistingTuple () throws DBAppException{
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            for(int i = 0 ; i < 200 ; i ++){
+                Hashtable<String , Object> ht = new Hashtable<>();
+                ht.put("id" , 2*i);
+                if(i >= 2 && i <= 3)
+                    ht.put("name" , "ahmed");
+                else
+                    ht.put("name" , "ahmed"+i);
+                dbApp.insertIntoTable(strTableName , ht);
+            }
+
+            dbApp.createIndex(strTableName , "name" , "nameIndex");
+
+            Table table = Table.deserialize("tables/" + strTableName + "/" + strTableName
+                    + ".class");
+
+            int numOfTuplesBefore = 0;
+
+            for(String strPageName : table.getPages()){
+                Page page = Page.deserialize("tables/" + strTableName + "/" +
+                        strPageName + ".class");
+                numOfTuplesBefore += page.getTuples().size();
+            }
+
+            Hashtable<String , Object> ht = new Hashtable<>();
+            ht.put("name" , "ali");
+            dbApp.deleteFromTable(strTableName , ht);
+
+            table = Table.deserialize("tables/" + strTableName + "/" + strTableName
+                    + ".class");
+
+            int numOfTuplesAfter = 0;
+
+            for(String strPageName : table.getPages()){
+                Page page = Page.deserialize("tables/" + strTableName + "/" +
+                        strPageName + ".class");
+                numOfTuplesAfter += page.getTuples().size();
+            }
+
+            assert numOfTuplesAfter == numOfTuplesBefore;
+        } finally {
+            cleanUp();
+        }
+    }
+
     @Before
     public void cleanUp() {
         try {
