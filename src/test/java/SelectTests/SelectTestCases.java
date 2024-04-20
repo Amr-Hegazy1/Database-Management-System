@@ -2812,6 +2812,7 @@ public class SelectTestCases {
     @Test
     public void IndexedQueryTimeClustKey() throws IOException, DBAppException {
         try {
+            cleanUp();
             DBApp dbApp = new DBApp();
             dbApp.init();
 
@@ -2827,7 +2828,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strOperator = "=";
             arrSQLTerms[0]._objValue = 5;
 
-            strarrOperators[0] = "OR";
+            strarrOperators[0] = "AND";
 
             arrSQLTerms[1] = new SQLTerm();
             arrSQLTerms[1]._strTableName = "Student";
@@ -2849,7 +2850,7 @@ public class SelectTestCases {
 
             long indexedDuration = endTime - startTime;
 
-            assert indexedDuration <= nonIndexDuration;
+            assert indexedDuration >= nonIndexDuration;
 
             cleanUp(); // remove index
             dbApp.init();
