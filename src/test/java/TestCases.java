@@ -3218,6 +3218,74 @@ public class TestCases {
 
     }
 
+    @Test
+    public void checkRightOrder () throws DBAppException, IOException{
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            for(int i = 0 ; i < 4 ; i ++){
+                Hashtable<String , Object> ht = new Hashtable<>();
+                ht.put("id" , 2*i);
+                ht.put("name" , "ankdk"+i);
+                dbApp.insertIntoTable(strTableName , ht);
+            }
+            
+
+            Hashtable<String , Object> ht = new Hashtable<>();
+            ht.put("id" , 2);
+            dbApp.deleteFromTable(strTableName , ht);
+            ht.put("id" , 4);
+            dbApp.deleteFromTable(strTableName , ht);
+
+            // check that two pages are half full
+            Table table = Table.deserialize("tables/" + strTableName + "/" + strTableName
+                    + ".class");
+            for(int i = 0 ; i < table.getNumberOfPages() ; i ++){
+                Page page = Page.deserialize("tables/" + strTableName + "/" +
+                        table.getPages().get(i) + ".class");
+                Vector<Tuple> vec = page.getTuples();
+                System.out.println("AMR " + vec);
+                assert vec.size() == 1;
+            }
+
+            // insert in the first page
+            ht.put("id" , 8);
+            ht.put("name" , "sasa");
+            dbApp.insertIntoTable(strTableName , ht);
+
+            // check sasa is in the second page
+            table = Table.deserialize("tables/" + strTableName + "/" + strTableName
+                    + ".class");
+            Page page = Page.deserialize("tables/" + strTableName + "/" +
+                    table.getPages().get(1) + ".class");
+            Vector<Tuple> vec = page.getTuples();
+            for(Tuple tup : vec){
+                if((Integer) tup.getColumnValue("id") == 8
+                        && ((String) tup.getColumnValue("name")).equals("sasa")){
+                    return;
+                }
+            }
+            assert false;
+        } finally {
+            cleanUp();
+        }
+    }
+    
+
+
     /**
      * This Java function searches for tuples by a given clustering key name and
      * value using binary
