@@ -1327,6 +1327,8 @@ public class DBApp {
 }
 
 	private static <T> HashSet<T> and2hs (HashSet<T> hs1 , HashSet<T> hs2){
+		
+
 		HashSet<T> hsResult = new HashSet<>() , hsToBeLoopedOver = null , hsAnotherHashSet = null;
 		if(hs1.size() > hs2.size()){
 			hsToBeLoopedOver = hs2;
@@ -1339,6 +1341,7 @@ public class DBApp {
 			if(hsAnotherHashSet.contains(element))
 				hsResult.add(element);
 		}
+		
 		return hsResult;
 	}
 
@@ -1351,10 +1354,12 @@ public class DBApp {
 			hs2 = hsTemp;
 		}
 		hs1.addAll(hs2);
+		
 		return hs1;
 	}
 
 	private static HashSet<Tuple> xor2hs(HashSet<Tuple> hs1, HashSet<Tuple> hs2) {
+		
 		if (hs1.size() > hs2.size()){
 			HashSet<Tuple> hsTemp = hs1;
 			hs1 = hs2;
@@ -1367,6 +1372,7 @@ public class DBApp {
 				hs2.add(tm);
 			}
 		}
+		
 		return hs2;
 	}
 

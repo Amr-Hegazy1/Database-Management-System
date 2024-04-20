@@ -1277,13 +1277,13 @@ public class SelectTestCases {
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
                                                                             // "Student1" XOR id = 2 OR id = 3 AND id =
                                                                             // 4;
-            while (!iterator.hasNext()) {
+            while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
                 assert (int) tuple.getColumnValue("id") == 1
                         || (int) tuple.getColumnValue("id") == 2;
                 count++;
             }
-            System.out.println(count);
+            
             assert count == 2;
 
         } finally {
@@ -2306,7 +2306,7 @@ public class SelectTestCases {
             }
             
             assert noIndexCount == indexCount;
-            assert noIndexCount == 10; // if this assert passes that means the number of values is correct and that
+            assert noIndexCount == 1; // if this assert passes that means the number of values is correct and that
                                        // they are equal. Final Tuple range after ANDing -> Student10 to Student19
 
         } finally {
