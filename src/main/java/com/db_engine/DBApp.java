@@ -18,10 +18,10 @@ public class DBApp {
 	private Metadata metadata;
 	final int MAX_ROWS_COUNT_IN_PAGE;
 
-	public DBApp() throws DBAppException {
+	public DBApp() throws DBAppException{
 
 		try {
-			metadata = new Metadata();
+			
 
 			Properties prop = new Properties();
 			String fileName = "/DBApp.config";
@@ -36,6 +36,7 @@ public class DBApp {
 		} catch (IOException ex) {
 			throw new DBAppException("Error reading config file");
 		}
+		
 
 	}
 
@@ -44,8 +45,14 @@ public class DBApp {
 	// execute at application startup
 	public void init() {
 
-		// TODO: LOAD INDICES
-		// TODO: LOAD METADATA FILE
+		try {
+			metadata = new Metadata();
+
+			
+
+		} catch (DBAppException e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -84,6 +91,10 @@ public class DBApp {
 		}
 		if(!boolValidTypes){
 			throw new DBAppException("Unsupported Data Types!");
+		}
+
+		if (!htblColNameType.containsKey(strClusteringKeyColumn)) {
+			throw new DBAppException("Clustering Key Column not found in Column Types!");
 		}
 
 		metadata.addTable(strTableName, strClusteringKeyColumn, htblColNameType);
@@ -590,6 +601,9 @@ public class DBApp {
 		String strClusteringKey = metadata.getClusteringkey(strTableName);
 		String strclusteringKeyType = metadata.getColumnType(strTableName, strClusteringKey);
 		Comparable cmpClusteringKeyValue;
+
+		if (htblColNameValue.containsKey(strClusteringKey))
+			throw new DBAppException("Clustering key cannot be updated.");
 
 		try {
 			if (strclusteringKeyType.equals("java.lang.Integer")) {

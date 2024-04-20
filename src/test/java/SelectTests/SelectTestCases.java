@@ -2301,6 +2301,66 @@ public class SelectTestCases {
         }
     }
 
+    @Test
+    public void deleteAndSelectWithIndex() throws DBAppException, IOException, ClassNotFoundException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            dbApp.createIndex(strTableName, "name", "nameIndex");
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // select all rows
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = strTableName;
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "<";
+            arrSQLTerms[0]._objValue = 100;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while(iterator.hasNext()){
+                Tuple tuple = (Tuple) iterator.next();
+                assert ((Integer) tuple.getColumnValue("id")) != 0;
+                assert ((String) tuple.getColumnValue("name")).equals("Student" + tuple.getColumnValue("id"));
+            }
+
+            
+            
+                
+            
+
+        } finally {
+            cleanUp();
+        }
+    }
+
     // TODO complete query time test
     @Test
     public void IndexedQueryTime() throws IOException, DBAppException {

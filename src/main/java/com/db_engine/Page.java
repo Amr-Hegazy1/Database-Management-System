@@ -295,8 +295,28 @@ public class Page implements Serializable {
             }
 
         }
+        
+        Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
 
-        return left;
+        // Base cases
+        if (cmpClusteringKeyValue.compareTo(vecTuples.get(0).getColumnValue(strClusteringKeyName)) < 0)
+            return 0;
+        else if (cmpClusteringKeyValue.compareTo(vecTuples.get(n - 1).getColumnValue(strClusteringKeyName)) > 0)
+            return n-1;
+
+        int lowerPnt = 0;
+        int i = 1;
+
+        while (i < n && ((Comparable) vecTuples.get(i).getColumnValue(strClusteringKeyName)).compareTo(cmpClusteringKeyValue) > 0) {
+            lowerPnt = i;
+            i = i * 2;
+        }
+
+        // Final check for the remaining elements which are < X
+        while (lowerPnt < n && ((Comparable) vecTuples.get(lowerPnt).getColumnValue(strClusteringKeyName)).compareTo(cmpClusteringKeyValue) > 0)
+            lowerPnt++;
+
+        return lowerPnt;
 
     }
 
