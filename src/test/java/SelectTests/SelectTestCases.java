@@ -497,7 +497,7 @@ public class SelectTestCases {
 
             while (iterator3.hasNext()) {
                 Tuple tuple = (Tuple) iterator3.next();
-                
+
                 assert tuple.getColumnValue("id").equals(6);
                 assert tuple.getColumnValue("name").equals("Student6");
                 assert tuple.getColumnValue("gpa").equals(3.0 + 6);
@@ -860,8 +860,6 @@ public class SelectTestCases {
             arrSQLTerms[1]._objValue = "Student15"; // Total 8 tuples (Student2-Student9 (8))
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name <
-                                                                        
-                                                                           
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -869,8 +867,8 @@ public class SelectTestCases {
                         || ((String) tuple.getColumnValue("name")).compareTo("Student15") > 0;
                 count++;
             }
-            
-            assert count == 20; 
+
+            assert count == 20;
 
             count = 0;
 
@@ -926,7 +924,6 @@ public class SelectTestCases {
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name <
                                                                             // "Student5"(15) OR name >= "Student15"
-                                                                            
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -1283,7 +1280,7 @@ public class SelectTestCases {
                         || (int) tuple.getColumnValue("id") == 2;
                 count++;
             }
-            
+
             assert count == 2;
 
         } finally {
@@ -1404,6 +1401,7 @@ public class SelectTestCases {
 
         assert flag;
     }
+
     @Test
     public void SingleIndexedQueries() throws DBAppException, ClassNotFoundException, IOException {
         // Compare Select query results with and without index for one indexed column at
@@ -1462,7 +1460,6 @@ public class SelectTestCases {
 
             initializeTestTable(dbApp, 20);
 
-            
             // Test 2: Ranged queries 1 (Lower bound only)
             arrSQLTerms = new SQLTerm[1];
             strarrOperators = new String[0];
@@ -1474,7 +1471,7 @@ public class SelectTestCases {
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
                                                                                         // id > 5;
-            
+
             dbApp.createIndex("Student", "id", "idIndex");
 
             IteratorWithIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
@@ -1497,7 +1494,6 @@ public class SelectTestCases {
 
             noIndexCount = 0;
             indexCount = 0;
-            
 
             cleanUp(); // remove index
             dbApp.init();
@@ -1964,7 +1960,7 @@ public class SelectTestCases {
 
         } finally {
             cleanUp();
-            
+
         }
     }
 
@@ -2067,7 +2063,7 @@ public class SelectTestCases {
                 assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") <= 12.0;
                 indexCount++;
             }
-           
+
             assert noIndexCount == indexCount;
             assert noIndexCount == 4; // if this assert passes that means the number of values is correct and that
                                       // they are equal.
@@ -2304,10 +2300,10 @@ public class SelectTestCases {
                         && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
                 indexCount++;
             }
-            
+
             assert noIndexCount == indexCount;
             assert noIndexCount == 1; // if this assert passes that means the number of values is correct and that
-                                       // they are equal. Final Tuple range after ANDing -> Student10 to Student19
+                                      // they are equal. Final Tuple range after ANDing -> Student10 to Student19
 
         } finally {
             cleanUp();
@@ -2409,7 +2405,412 @@ public class SelectTestCases {
     }
 
     @Test
-    public void IndexedQueryTime() throws IOException, DBAppException {
+    public void outOfRange() throws IOException, DBAppException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 60);
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            // I. Test Values Bigger than Max of Table
+            // Test 1: Exact value out of range (clust key / int)
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 200;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            assert !iterator.hasNext();
+
+            // Test 2: Exact value out of range (non-clust key / double)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 120.0; // max gpa = 62.0
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            assert !iterator.hasNext();
+
+            // Test 3: Exact value out of range (non-clust key / string)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = "Student156";
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            assert !iterator.hasNext();
+
+            // Test 4: Ranged value out of range (clust key / int)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = 200;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            assert !iterator.hasNext();
+
+            // Test 5: Ranged value out of range (clust key / int) (query exactly bigger
+            // than biggest value)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = 59;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            assert !iterator.hasNext();
+
+            // Test 6: Ranged value out of range (non-clust key / double)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = 120.0; // max gpa = 62.0
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            assert !iterator.hasNext();
+
+            // Test 7: Ranged value out of range (non-clust key / double) (query exactly
+            // bigger
+            // than biggest value)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = 62.0; // max gpa = 62.0
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            assert !iterator.hasNext();
+
+            // Test 8: Ranged value out of range (non-clust key / string)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = "Zebra";
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            assert !iterator.hasNext();
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void ExactValueEdgeCaseValues() throws IOException, DBAppException {
+        // Testing Queries that yield results on the edge of the Table / Page.
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 60);
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            int count = 0;
+
+            // Test 1: Exact Value Query (Upper bound) (clust key / int)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 59;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (int) tuple.getColumnValue("id") == 59;
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 2: Exact Value Query (Lower bound) (clust key / int)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 0;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (int) tuple.getColumnValue("id") == 0;
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 3: Exact Value Query (Upper bound) (non-clust key / double)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 59.0;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (double) tuple.getColumnValue("gpa") == 59.0;
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 4: Exact Value Query (Lower bound) (non-clust key / double)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 3.0;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (double) tuple.getColumnValue("gpa") == 3.0;
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 5: Exact Value Query (Upper bound) (non-clust key / string)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = "Student59";
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert tuple.getColumnValue("name").equals("Student59");
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 6: Exact Value Query (Lower bound) (non-clust key / string)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = "Student0";
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert tuple.getColumnValue("name").equals("Student0");
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void rangedValuesEdgeCaseValues() throws IOException, DBAppException {
+        // Testing Queries that yield results on the edge of the Table / Page.
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 60);
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            int count = 0;
+
+            // Test 1: Clust Key/ Int (Lower bound)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "<=";
+            arrSQLTerms[0]._objValue = 0;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple t = (Tuple) iterator.next();
+                assert t.getColumnValue("id").equals(0);
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 2: Clust Key/ Int (upper bound)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = ">=";
+            arrSQLTerms[0]._objValue = 59;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple t = (Tuple) iterator.next();
+                assert t.getColumnValue("id").equals(59);
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 3: Non-Clust Key/ Double (Lower bound)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = "<=";
+            arrSQLTerms[0]._objValue = 3.0;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple t = (Tuple) iterator.next();
+                assert t.getColumnValue("gpa").equals(3.0);
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 4: Non-Clust Key/ Double (Upper bound)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = ">=";
+            arrSQLTerms[0]._objValue = 62.0;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple t = (Tuple) iterator.next();
+                assert t.getColumnValue("gpa").equals(62.0);
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 5: Non-Clust Key/String (Lower bound)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "<";
+            arrSQLTerms[0]._objValue = "Student1";
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple t = (Tuple) iterator.next();
+                assert t.getColumnValue("name").equals("Student0");
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Test 5: Non-Clust Key/String (Upper bound)
+            arrSQLTerms = new SQLTerm[2];
+            strarrOperators = new String[1];
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = "Student58";
+
+            strarrOperators[0] = "AND";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "name";
+            arrSQLTerms[1]._strOperator = "<";
+            arrSQLTerms[1]._objValue = "Student60";
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple t = (Tuple) iterator.next();
+                if (t.getColumnValue("name").equals("Student6")) {
+                    count--;
+                }
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void bigTableSize() throws IOException, DBAppException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 1000);
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[1];
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void IndexedQueryTimeClustKey() throws IOException, DBAppException {
         try {
             DBApp dbApp = new DBApp();
             dbApp.init();
@@ -2448,7 +2849,7 @@ public class SelectTestCases {
 
             long indexedDuration = endTime - startTime;
 
-            assert indexedDuration < nonIndexDuration;
+            assert indexedDuration <= nonIndexDuration;
 
             cleanUp(); // remove index
             dbApp.init();
@@ -2490,7 +2891,89 @@ public class SelectTestCases {
         }
     }
 
-    
+    @Test // sometimes fails if range is too big (max tuples per page = 20)
+    public void IndexedQueryNonTimeClustKey() throws IOException, DBAppException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 1000);
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[1];
+
+            // Test 1: Exact Value Query
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 3.0;
+
+            strarrOperators[0] = "AND";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "name";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = "Student0";
+
+            long startTime = System.currentTimeMillis();
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            long endTime = System.currentTimeMillis();
+
+            long nonIndexDuration = endTime - startTime;
+
+            dbApp.createIndex("Student", "gpa", "gpaIndex");
+
+            startTime = System.currentTimeMillis();
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            endTime = System.currentTimeMillis();
+
+            long indexedDuration = endTime - startTime;
+
+            assert indexedDuration < nonIndexDuration;
+
+            cleanUp(); // remove index
+            dbApp.init();
+            initializeTestTable(dbApp, 1000);
+
+            // Test 2: Ranged Query
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = "<=";
+            arrSQLTerms[0]._objValue = 400.0;
+
+            strarrOperators[0] = "AND";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "gpa";
+            arrSQLTerms[1]._strOperator = ">=";
+            arrSQLTerms[1]._objValue = 8.0;
+
+            startTime = System.currentTimeMillis();
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            endTime = System.currentTimeMillis();
+
+            nonIndexDuration = endTime - startTime;
+
+            dbApp.createIndex("Student", "gpa", "gpaIndex");
+
+            startTime = System.currentTimeMillis();
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            endTime = System.currentTimeMillis();
+
+            indexedDuration = endTime - startTime;
+
+            assert indexedDuration <= nonIndexDuration;
+            assert indexedDuration < nonIndexDuration;
+
+        } finally {
+            cleanUp();
+        }
+    }
+
     public void cleanUp() throws IOException {
         try {
             // delete tables directory

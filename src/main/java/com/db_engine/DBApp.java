@@ -21,7 +21,6 @@ public class DBApp {
 	public DBApp() throws DBAppException{
 
 		try {
-			
 
 			Properties prop = new Properties();
 			String fileName = "/DBApp.config";
@@ -47,8 +46,6 @@ public class DBApp {
 
 		try {
 			metadata = new Metadata();
-
-			
 
 		} catch (DBAppException e) {
 			e.printStackTrace();
@@ -166,6 +163,10 @@ public class DBApp {
 			}
 
 			String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
+			if (strIndexName.equals(strTableName))
+				strIndexName += "Index";
+
+			
 
 			metadata.addIndex(strTableName, strColName, "B+Tree", strIndexName);
 
