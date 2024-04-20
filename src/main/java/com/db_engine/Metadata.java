@@ -242,6 +242,28 @@ public class Metadata {
         return htblMetadata.get(strTableName).get(strColumnName).get("IndexType");
     }
 
+
+    /**
+     * The function `getIndexedColumns` retrieves a list of indexed columns along with their
+     * corresponding index names for a specified table in a database.
+     * 
+     * @param strTableName The `strTableName` parameter in the `getIndexedColumns` method is a String
+     * variable that represents the name of the table for which you want to retrieve the indexed
+     * columns.
+     * @return The `getIndexedColumns` method returns a list of `Pair` objects representing the indexed
+     * columns for a given table specified by `strTableName`.
+     */
+    public List<Pair> getIndexedColumns(String strTableName) throws DBAppException{
+        if(!htblMetadata.containsKey(strTableName))
+            throw new DBAppException("Table does not exist");
+        List<Pair> indexedColumns = new ArrayList<>();
+        for(String col : htblMetadata.get(strTableName).keySet()){
+            if(isColumnIndexed(strTableName, col)){
+                indexedColumns.add(new Pair(col, getIndexName(strTableName, col)));
+            }
+        }
+        return indexedColumns;
+    }
    
 
     /**
