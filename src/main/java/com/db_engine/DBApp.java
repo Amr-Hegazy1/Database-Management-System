@@ -339,7 +339,7 @@ public class DBApp {
 					}
 				} else {
 
-					int pageIndex = tblTable.getPageIndexInsert(inputClustKey);
+					int pageIndex = tblTable.getPageIndex(inputClustKey);
 					pgInsertPage = Page
 							.deserialize("tables/" + strTableName + "/" + vecPages.get(pageIndex) + ".class");
 					Comparable currMax = tblTable.getMax(pgInsertPage.getPageName());
