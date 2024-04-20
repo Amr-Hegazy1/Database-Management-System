@@ -1345,7 +1345,7 @@ public class TestCases {
 
             for (int i = 0; i < 20; i++) {
                 if (i == 0) {
-                    
+
                     assert tree.query(i).size() == 0;
                 } else {
                     assert tree.query(i) != null && tree.query(i).size() == 1;
@@ -1584,7 +1584,6 @@ public class TestCases {
                     assert tuple.getColumnValue("gpa").equals(3.0 + i);
 
                 }
-                
 
             }
         } finally {
@@ -1873,14 +1872,6 @@ public class TestCases {
             cleanUp();
         }
     }
-
-
-
-    
-
-    
-
-    
 
     // INTEGRATION TESTS
 
@@ -2548,11 +2539,11 @@ public class TestCases {
             for (int i = 0; i < 20; i++) {
                 if (i == 0) {
                     assert tree.query("Student" + i).size() == 0;
-                } else if (i == 1){
-                    
+                } else if (i == 1) {
+
                     assert tree.query("Student" + i).size() == 0;
                     assert tree.query("Student20").size() == 1;
-                }else {
+                } else {
                     assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
 
                     Pair pair = (Pair) tree.query("Student" + i).get(0);
