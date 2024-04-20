@@ -1157,6 +1157,23 @@ public class DBApp {
 					if(arrSQLTerms.length!= strarrOperators.length+1){
 						throw new DBAppException("something wrong in the input");
 					}
+					if(arrSQLTerms.length==1){
+						if(arrSQLTerms[0]._strTableName!=null&&arrSQLTerms[0]._strColumnName==null&&arrSQLTerms[0]._strOperator==null&&arrSQLTerms[0]._objValue==null){
+							if(metadata.checkTableName(arrSQLTerms[0]._strTableName)){
+								Table table = Table.deserialize("tables/" + arrSQLTerms[0]._strTableName + "/" + arrSQLTerms[0]._strTableName + ".class");
+								Vector<String>pages=  table.getPageVector();
+								HashSet<Tuple>hstup= new HashSet<>();
+								for(String page:pages){
+									Page page2 = Page.deserialize("tables/" + arrSQLTerms[0]._strTableName + "/" + page + ".class");
+									hstup.addAll(page2.allTup());
+								}
+								return hstup.iterator();
+							}
+							else{
+								throw new DBAppException("Table doesn't exist");
+							}
+						}
+					}
 					HashSet<String> checkoperators = new HashSet<>();
 					checkoperators.add("=");checkoperators.add("!=");checkoperators.add(">=");checkoperators.add("<=");checkoperators.add(">");;checkoperators.add("<");
 					boolean indexhelp2 = false;
@@ -1199,6 +1216,7 @@ public class DBApp {
 				}
 				if(indexhelp&&indexhelp2){
 					boolean firstornot=true;
+					System.out.println("inside index");
 					HashSet<String> hmpage= new HashSet<>();
 					Vector<SQLTerm> indexsql= new Vector<>();
 					for(int i=0; i<arrSQLTerms.length;i++){
@@ -1844,20 +1862,8 @@ public class DBApp {
 				dbApp.insertIntoTable(strTableName, htblColNameValue);
 			}
 
-			Page p = Page.deserialize("tables/" + strTableName + "/" + strTableName + "_0.class");
-
-			Vector<Tuple> tuples = p.getTuples();
-
-			for (Tuple t : tuples) {
-				System.out.println(t);
-			}
-            for (int i = 0; i < 20; i++) {
-                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-                htblColNameValue.put("id", i);
-                htblColNameValue.put("name", "Student" + i);
-                htblColNameValue.put("gpa", 3.0 + i);
-                dbApp.insertIntoTable(strTableName, htblColNameValue);
-            }
+			
+          
 
             // delete a row
 
@@ -1868,21 +1874,21 @@ public class DBApp {
             dbApp.deleteFromTable(strTableName, htblColNameValue);
 
             // select all rows
-
+			dbApp.createIndex(strTableName, "id", "idindex");
             SQLTerm[] arrSQLTerms = new SQLTerm[1];
             String[] strarrOperators = new String[0];
 
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = strTableName;
-            arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "<";
-            arrSQLTerms[0]._objValue = 100;
 
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+			int count=0;
 			while(iterator.hasNext()){
                 Tuple tuple = (Tuple) iterator.next();
                System.out.println(tuple);
+			   count++;
             }
+			System.out.println(count);
 			// for (int i = 0; i < 80; i++) {
 
 			// if (i % 20 == 0) {
