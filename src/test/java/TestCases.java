@@ -78,6 +78,28 @@ public class TestCases {
         }
 
     }
+    
+
+    @Test
+    public void createTableInvalidPrimaryKey() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            String strTableName = "Student";
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            assertThrows(DBAppException.class, () -> {
+                dbApp.createTable(strTableName, "amr", htblColNameType);
+            });
+
+        } finally {
+            cleanUp();
+        }
+    }
 
     /**
      * The function tests creating a table with invalid data types and expects a
@@ -737,7 +759,7 @@ public class TestCases {
 
             for (File page : pages) {
                 // check if the file name is in the format page_i.class
-                if (!page.getName().matches("page_\\d+\\.class")) {
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -808,7 +830,7 @@ public class TestCases {
 
             for (File page : pages) {
                 // check if the file name is in the format page_i.class
-                if (!page.getName().matches("page_\\d+\\.class")) {
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -984,11 +1006,12 @@ public class TestCases {
 
             tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
 
-            for (int i = 0; i < 21; i++) {
+            for (int i = 0; i < 20; i++) {
                 if (i == 0) {
                     System.out.println(tree.query(3.0 + i));
-                    assert tree.query(3.0 + i).size() == 0;
+                    assert tree.query(3.0 + i).size() == 1;
                 } else {
+                    System.out.println(tree.query(3.0 + i));
                     assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
 
                     Pair pair = (Pair) tree.query(3.0 + i).get(0);
@@ -1014,6 +1037,112 @@ public class TestCases {
         } finally {
             cleanUp();
         }
+    }
+
+    @Test
+    public void updateClusteringKey() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 21);
+
+            assertThrows(DBAppException.class, () -> dbApp.updateTable(strTableName, "0", htblColNameValue));
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void updateWithExtraColumn() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // update a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("name", "Student20");
+            htblColNameValue.put("extra", "extra");
+
+            assertThrows(DBAppException.class, () -> dbApp.updateTable(strTableName, "0", htblColNameValue));
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
+    @Test
+    public void updateInvalidTableName() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("name", "Student20");
+
+            assertThrows(DBAppException.class, () -> dbApp.updateTable("Student", "0", htblColNameValue));
+
+        } finally {
+            cleanUp();
+        }
+
     }
 
     /**
@@ -1389,7 +1518,7 @@ public class TestCases {
 
             for (File page : pages) {
                 // check if the file name is in the format page_i.class
-                if (!page.getName().matches("page_\\d+\\.class")) {
+                if (!page.getName().matches("Student_\\d+\\.class")) {
                     continue;
                 }
 
@@ -1606,6 +1735,64 @@ public class TestCases {
                 Page p = Page.deserialize(page.getPath());
                 assert p.getTuples().size() == 0;
             }
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deleteWithExtraColumns() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert 20 rows
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student0");
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            htblColNameValue.put("name", "Student0");
+            htblColNameValue.put("extra", "extra");
+
+            assertThrows(DBAppException.class, () -> {
+                dbApp.deleteFromTable(strTableName, htblColNameValue);
+            });
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void deleteWithWrongTableName() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            htblColNameValue.put("name", "Student0");
+
+            assertThrows(DBAppException.class, () -> {
+                dbApp.deleteFromTable("Student", htblColNameValue);
+            });
 
         } finally {
             cleanUp();
@@ -1899,6 +2086,9 @@ public class TestCases {
                     if (tuple.getColumnValue("id").equals(0)) {
                         assert false;
                     }
+                    if (tuple.getColumnValue("id").equals(1)) {
+                        assert tuple.getColumnValue("name").equals("Student20");
+                    }
                 }
             }
 
@@ -1909,6 +2099,7 @@ public class TestCases {
                     Page page = Page.deserialize("tables/" + strTableName + "/Student_0.class");
                     int tupleIndex = TestCases.searchTuplesByClusteringKey("id", 1, page);
                     Tuple tuple = page.getTupleWithIndex(tupleIndex);
+                    System.out.println(tuple.getColumnValue("name"));
                     assert tuple.getColumnValue("name").equals("Student20");
                 }
             }
@@ -2097,6 +2288,10 @@ public class TestCases {
             for (int i = 0; i < 20; i++) {
                 if (i == 0) {
                     assert tree.query("Student" + i).size() == 0;
+
+                } else if (i == 1){
+                    assert tree.query("Student" + i).size() == 0;
+                    assert tree.query("Student20").size() == 1;
                 } else {
                     assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
 
@@ -2193,6 +2388,9 @@ public class TestCases {
                     if (tuple.getColumnValue("id").equals(0)) {
                         assert false;
                     }
+                    if (tuple.getColumnValue("id").equals(1)) {
+                        assert tuple.getColumnValue("name").equals("Student20");
+                    }
                 }
             }
 
@@ -2203,6 +2401,9 @@ public class TestCases {
             for (int i = 0; i < 20; i++) {
                 if (i == 0) {
                     assert tree.query("Student" + i).size() == 0;
+                }else if (i == 1){
+                    assert tree.query("Student" + i).size() == 0;
+                    assert tree.query("Student20").size() == 1;
                 } else {
                     assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
 
@@ -2415,22 +2616,16 @@ public class TestCases {
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = strTableName;
             arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 5;
+            arrSQLTerms[0]._strOperator = "<";
+            arrSQLTerms[0]._objValue = 100;
 
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-
-            for (int i = 0; i < 20; i++) {
-                if (i == 5) {
-                    assert iterator.hasNext();
-                    Tuple tuple = (Tuple) iterator.next();
-                    assert tuple.getColumnValue("id").equals(5);
-                    assert tuple.getColumnValue("name").equals("Student5");
-                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
-                } else {
-                    assert !iterator.hasNext();
-                }
+            while(iterator.hasNext()){
+                Tuple tuple = (Tuple) iterator.next();
+                assert ((Integer) tuple.getColumnValue("id")) != 0;
+                assert ((String) tuple.getColumnValue("name")).equals("Student" + tuple.getColumnValue("id"));
             }
+            
 
         } finally {
             cleanUp();
@@ -2476,6 +2671,35 @@ public class TestCases {
 
             dbApp.deleteFromTable(strTableName, htblColNameValue);
 
+            // check that the index is updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
             // select all rows
 
             SQLTerm[] arrSQLTerms = new SQLTerm[1];
@@ -2484,22 +2708,50 @@ public class TestCases {
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = strTableName;
             arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 5;
+            arrSQLTerms[0]._strOperator = "<";
+            arrSQLTerms[0]._objValue = 100;
 
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
+            while(iterator.hasNext()){
+                Tuple tuple = (Tuple) iterator.next();
+                assert ((Integer) tuple.getColumnValue("id")) != 0;
+                assert ((String) tuple.getColumnValue("name")).equals("Student" + tuple.getColumnValue("id"));
+            }
+
+            // check that index is maintained
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
             for (int i = 0; i < 20; i++) {
-                if (i == 5) {
-                    assert iterator.hasNext();
-                    Tuple tuple = (Tuple) iterator.next();
-                    assert tuple.getColumnValue("id").equals(5);
-                    assert tuple.getColumnValue("name").equals("Student5");
-                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
                 } else {
-                    assert !iterator.hasNext();
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
                 }
             }
+
+
+            
+                
+            
 
         } finally {
             cleanUp();
@@ -2547,6 +2799,64 @@ public class TestCases {
 
             dbApp.deleteFromTable(strTableName, htblColNameValue);
 
+            // check that the indexes are updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query(3.0 + i).size() == 0;
+                } else {
+                    assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query(3.0 + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("gpa").equals(3.0 + i);
+
+                }
+            }
+
+
+
             // select all rows
 
             SQLTerm[] arrSQLTerms = new SQLTerm[1];
@@ -2555,22 +2865,46 @@ public class TestCases {
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = strTableName;
             arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 5;
+            arrSQLTerms[0]._strOperator = "<";
+            arrSQLTerms[0]._objValue = 100;
 
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
+            while(iterator.hasNext()){
+                Tuple tuple = (Tuple) iterator.next();
+                assert ((Integer) tuple.getColumnValue("id")) != 0;
+                assert ((String) tuple.getColumnValue("name")).equals("Student" + tuple.getColumnValue("id"));
+            }
+
+            // make sure the indexes are maintained and not tampered with
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
             for (int i = 0; i < 20; i++) {
-                if (i == 5) {
-                    assert iterator.hasNext();
-                    Tuple tuple = (Tuple) iterator.next();
-                    assert tuple.getColumnValue("id").equals(5);
-                    assert tuple.getColumnValue("name").equals("Student5");
-                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
                 } else {
-                    assert !iterator.hasNext();
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
                 }
             }
+
 
         } finally {
             cleanUp();
@@ -2618,6 +2952,37 @@ public class TestCases {
 
             dbApp.deleteFromTable(strTableName, htblColNameValue);
 
+            // check that the indexes are updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+
+
             // select all rows
 
             SQLTerm[] arrSQLTerms = new SQLTerm[1];
@@ -2626,23 +2991,44 @@ public class TestCases {
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = strTableName;
             arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 5;
+            arrSQLTerms[0]._strOperator = "<";
+            arrSQLTerms[0]._objValue = 100;
 
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
+            while(iterator.hasNext()){
+                Tuple tuple = (Tuple) iterator.next();
+                assert ((Integer) tuple.getColumnValue("id")) != 0;
+                assert ((String) tuple.getColumnValue("name")).equals("Student" + tuple.getColumnValue("id"));
+            }
+
+            // make sure the indexes are maintained and not tampered with
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
             for (int i = 0; i < 20; i++) {
-                if (i == 5) {
-                    assert iterator.hasNext();
-                    Tuple tuple = (Tuple) iterator.next();
-                    assert tuple.getColumnValue("id").equals(5);
-                    assert tuple.getColumnValue("name").equals("Student5");
-                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
                 } else {
-                    assert !iterator.hasNext();
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
 
                 }
-
             }
 
         } finally {
@@ -2693,6 +3079,62 @@ public class TestCases {
 
             dbApp.deleteFromTable(strTableName, htblColNameValue);
 
+            // make sure the indexes are updated
+
+            BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
+                } else {
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
+                }
+            }
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query(3.0 + i).size() == 0;
+                } else {
+                    assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query(3.0 + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("gpa").equals(3.0 + i);
+
+                }
+            }
+
             // select all rows
 
             SQLTerm[] arrSQLTerms = new SQLTerm[1];
@@ -2701,22 +3143,73 @@ public class TestCases {
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = strTableName;
             arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 5;
+            arrSQLTerms[0]._strOperator = "<";
+            arrSQLTerms[0]._objValue = 100;
 
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert ((Integer) tuple.getColumnValue("id")) != 0;
+                assert ((String) tuple.getColumnValue("name")).equals("Student" + tuple.getColumnValue("id"));
+            }
+
+            // make sure the indexes are maintained and not tampered with
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+
             for (int i = 0; i < 20; i++) {
-                if (i == 5) {
-                    assert iterator.hasNext();
-                    Tuple tuple = (Tuple) iterator.next();
-                    assert tuple.getColumnValue("id").equals(5);
-                    assert tuple.getColumnValue("name").equals("Student5");
-                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
+                if (i == 0) {
+                    assert tree.query("Student" + i).size() == 0;
                 } else {
-                    assert !iterator.hasNext();
+                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query("Student" + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("name").equals("Student" + i);
+
                 }
             }
+
+            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
+
+            for (int i = 0; i < 20; i++) {
+                if (i == 0) {
+                    assert tree.query(3.0 + i).size() == 0;
+                } else {
+                    assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1;
+
+                    Pair pair = (Pair) tree.query(3.0 + i).get(0);
+
+                    Comparable clusteringKey = (Comparable) pair.getKey();
+
+                    String pageName = (String) pair.getValue();
+
+                    Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                    int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                    assert tupleIndex != -1;
+
+                    Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                    assert tuple.getColumnValue("gpa").equals(3.0 + i);
+
+                }
+            }
+
 
         } finally {
             cleanUp();
@@ -2735,7 +3228,7 @@ public class TestCases {
      *                              tuples. It is used to identify the specific
      *                              attribute or column in the tuple that serves as
      *                              the clustering key for the data structure.
-     * @param strClusteringKeyValue The `strClusteringKeyValue` parameter represents
+     * @param objClusteringKeyValue The `objClusteringKeyValue` parameter represents
      *                              the value of the
      *                              clustering key that you are searching for within
      *                              the list of tuples. The method

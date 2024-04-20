@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.*;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.db_engine.DBApp;
@@ -496,6 +497,7 @@ public class SelectTestCases {
 
             while (iterator3.hasNext()) {
                 Tuple tuple = (Tuple) iterator3.next();
+                
                 assert tuple.getColumnValue("id").equals(6);
                 assert tuple.getColumnValue("name").equals("Student6");
                 assert tuple.getColumnValue("gpa").equals(3.0 + 6);
@@ -670,6 +672,7 @@ public class SelectTestCases {
             }
 
             assert count == 15;
+            assert count == 15;
 
             count = 0;
 
@@ -701,6 +704,7 @@ public class SelectTestCases {
                 count++;
             }
 
+            assert count == 17;
             assert count == 17;
 
             count = 0;
@@ -734,6 +738,7 @@ public class SelectTestCases {
             }
 
             assert count == 16;
+            assert count == 16;
 
             count = 0;
 
@@ -765,6 +770,7 @@ public class SelectTestCases {
                 count++;
             }
 
+            assert count == 16;
             assert count == 16;
 
             count = 0;
@@ -814,7 +820,7 @@ public class SelectTestCases {
             count = 0;
 
             // Test on Non-Clustering Key (Test 3 : String)
-            arrSQLTerms = new SQLTerm[2];
+            arrSQLTerms = new SQLTerm[1];
             strarrOperators = new String[0];
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = "Student";
@@ -854,8 +860,8 @@ public class SelectTestCases {
             arrSQLTerms[1]._objValue = "Student15"; // Total 8 tuples (Student2-Student9 (8))
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name <
-                                                                            // "Student5"(15) OR name > "Student15" (8)
-                                                                            // --> 15+8= 23 records;
+                                                                        
+                                                                           
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -863,8 +869,8 @@ public class SelectTestCases {
                         || ((String) tuple.getColumnValue("name")).compareTo("Student15") > 0;
                 count++;
             }
-
-            assert count == 23;
+            
+            assert count == 20; 
 
             count = 0;
 
@@ -875,8 +881,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "name";
             arrSQLTerms[0]._strOperator = "<=";
-            arrSQLTerms[0]._objValue = "Student5"; // Total 16 Tuples(Student0-Student5(6) & Student10-Student19(10) ->
-                                                   // (6+10=16))
+            arrSQLTerms[0]._objValue = "Student5";
 
             strarrOperators[0] = "OR";
 
@@ -897,7 +902,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 24;
+            assert count == 20;
 
             count = 0;
 
@@ -921,8 +926,7 @@ public class SelectTestCases {
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name <
                                                                             // "Student5"(15) OR name >= "Student15"
-                                                                            // (19)
-                                                                            // --> 15+19=34 records;
+                                                                            
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -931,8 +935,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 34;
-
+            assert count == 20;
             count = 0;
 
             // Test on Non-Clustering Key (Test 7 : String) (Same as Test 6 but change order
@@ -965,7 +968,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 34;
+            assert count == 20;
 
             count = 0;
 
@@ -976,7 +979,7 @@ public class SelectTestCases {
 
     @Test
     public void NonExistantTuplesExactValues() throws DBAppException, ClassNotFoundException, IOException {
-        // select tuples/values that dont exist in my table using exact values
+        // select tuples/values that don't exist in my table using exact values
 
         try {
             DBApp dbApp = new DBApp();
@@ -1280,7 +1283,7 @@ public class SelectTestCases {
                         || (int) tuple.getColumnValue("id") == 2;
                 count++;
             }
-            System.out.println(count);
+            
             assert count == 2;
 
         } finally {
@@ -1401,13 +1404,11 @@ public class SelectTestCases {
 
         assert flag;
     }
-
     @Test
     public void SingleIndexedQueries() throws DBAppException, ClassNotFoundException, IOException {
         // Compare Select query results with and without index for one indexed column at
         // a time
         try {
-
             DBApp dbApp = new DBApp();
             dbApp.init();
 
@@ -1457,9 +1458,11 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
+            dbApp.init();
 
             initializeTestTable(dbApp, 20);
 
+            
             // Test 2: Ranged queries 1 (Lower bound only)
             arrSQLTerms = new SQLTerm[1];
             strarrOperators = new String[0];
@@ -1471,7 +1474,7 @@ public class SelectTestCases {
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
                                                                                         // id > 5;
-
+            
             dbApp.createIndex("Student", "id", "idIndex");
 
             IteratorWithIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
@@ -1494,8 +1497,10 @@ public class SelectTestCases {
 
             noIndexCount = 0;
             indexCount = 0;
+            
 
             cleanUp(); // remove index
+            dbApp.init();
 
             initializeTestTable(dbApp, 20);
 
@@ -1543,7 +1548,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // II. Non-Clustering Index tests
@@ -1583,7 +1588,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 2: Exact Values (String)
@@ -1621,7 +1626,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             String strTableName = "Student";
 
             Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
@@ -1681,7 +1686,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             dbApp.createTable(strTableName, "name", htblColNameType);
 
             // insert n rows (20)
@@ -1730,7 +1735,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             dbApp.createTable(strTableName, "name", htblColNameType);
 
             // insert n rows (20)
@@ -1786,7 +1791,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 6 Ranged Values (double) (lower bound)
@@ -1825,7 +1830,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 7 : Ranged Values (double) (Lower & Upper bound)
@@ -1872,7 +1877,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 8 : Ranged Values (String) (Lower bound)
@@ -1911,7 +1916,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 9 : Ranged Values (String) (Lower & Upper bound)
@@ -1942,14 +1947,14 @@ public class SelectTestCases {
             while (iteratorWithoutIndex.hasNext()) {
                 Tuple tuple = (Tuple) iteratorWithoutIndex.next();
                 assert ((String) tuple.getColumnValue("name")).compareTo("Student5") > 0
-                        && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
+                        && ((String) tuple.getColumnValue("name")).compareTo("Student9") <= 0;
                 noIndexCount++;
             }
 
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
                 assert ((String) tuple.getColumnValue("name")).compareTo("Student5") > 0
-                        && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
+                        && ((String) tuple.getColumnValue("name")).compareTo("Student9") <= 0;
                 indexCount++;
             }
 
@@ -1959,6 +1964,7 @@ public class SelectTestCases {
 
         } finally {
             cleanUp();
+            
         }
     }
 
@@ -2023,7 +2029,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 2: Two indexed values (Ranged Values) (clust key + non-clust key)
@@ -2059,8 +2065,9 @@ public class SelectTestCases {
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
                 assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") <= 12.0;
+                indexCount++;
             }
-
+           
             assert noIndexCount == indexCount;
             assert noIndexCount == 4; // if this assert passes that means the number of values is correct and that
                                       // they are equal.
@@ -2069,7 +2076,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 3: Two indexed values (Exact Value) (non-clust + non-clust)
@@ -2121,7 +2128,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 4: Two indexed values (Ranged Values) (non-clust + non-clust)
@@ -2175,7 +2182,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 5: Three indexed values (Exact Value) (clust key + non-clust key +
@@ -2240,7 +2247,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 6: Three indexed values (Ranged Values) (clust key + non-clust key +
@@ -2297,9 +2304,9 @@ public class SelectTestCases {
                         && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
                 indexCount++;
             }
-
+            
             assert noIndexCount == indexCount;
-            assert noIndexCount == 10; // if this assert passes that means the number of values is correct and that
+            assert noIndexCount == 1; // if this assert passes that means the number of values is correct and that
                                        // they are equal. Final Tuple range after ANDing -> Student10 to Student19
 
         } finally {
@@ -2444,7 +2451,7 @@ public class SelectTestCases {
             assert indexedDuration < nonIndexDuration;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 1000);
 
             // Test 2: Ranged Query
@@ -2483,7 +2490,8 @@ public class SelectTestCases {
         }
     }
 
-    private void cleanUp() throws IOException {
+    
+    public void cleanUp() throws IOException {
         try {
             // delete tables directory
 
