@@ -1137,43 +1137,32 @@ public class DBApp {
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms,
 			String[] strarrOperators) throws DBAppException {
 
-		try {
-			if (arrSQLTerms == null || strarrOperators == null) {
-				throw new DBAppException("Nothing to query on");
-			}
-			if (arrSQLTerms.length == 0) {
-				throw new DBAppException("Nothing to query on");
-			}
-			if (arrSQLTerms.length != strarrOperators.length + 1) {
-				throw new DBAppException("something wrong in the input");
-			}
-			HashSet<String> checkoperators = new HashSet<>();
-			checkoperators.add("=");
-			checkoperators.add("!=");
-			checkoperators.add(">=");
-			checkoperators.add("<=");
-			checkoperators.add(">");
-			checkoperators.add("<");
-
-			boolean indexhelp2 = false;
-			for (int i = 0; i < arrSQLTerms.length; i++) {
-				if (arrSQLTerms[i]._strTableName != null && metadata.checkTableName(arrSQLTerms[i]._strTableName)
-						&& arrSQLTerms[0]._strTableName.equals(arrSQLTerms[i]._strTableName)) {
-					if (arrSQLTerms[i]._strColumnName != null
-							&& metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)) {
-						if (!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)
-								.equals("null")) {
-							indexhelp2 = true;
-						}
-						String strType = metadata.getColumnType(arrSQLTerms[i]._strTableName,
-								arrSQLTerms[i]._strColumnName);
-						if (arrSQLTerms[i]._strOperator != null
-								&& checkoperators.contains(arrSQLTerms[i]._strOperator)) {
-							if (arrSQLTerms[i]._strOperator == null
-									|| !strType.equals(arrSQLTerms[i]._objValue.getClass().getName())) {
-								throw new DBAppException("Datatype doesn't match");
+				try{
+					if(arrSQLTerms == null || strarrOperators == null){
+						throw new DBAppException("Nothing to query on");
+					}
+					if(arrSQLTerms.length==0){
+						throw new DBAppException("Nothing to query on");
+					}
+					if(arrSQLTerms.length!= strarrOperators.length+1){
+						throw new DBAppException("something wrong in the input");
+					}
+					HashSet<String> checkoperators = new HashSet<>();
+					checkoperators.add("=");checkoperators.add("!=");checkoperators.add(">=");checkoperators.add("<=");checkoperators.add(">");;checkoperators.add("<");
+					boolean indexhelp2 = false;
+					for(int i=0;i<arrSQLTerms.length;i++){
+					if(arrSQLTerms[i]._strTableName!=null&&metadata.checkTableName(arrSQLTerms[i]._strTableName)&&arrSQLTerms[0]._strTableName.equals(arrSQLTerms[i]._strTableName)){
+						if(arrSQLTerms[i]._strColumnName!=null&&metadata.checkColumnName(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)){
+							String strType= metadata.getColumnType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName);
+							if(arrSQLTerms[i]._strOperator!=null&& checkoperators.contains(arrSQLTerms[i]._strOperator)){	
+								if(!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")&& (!arrSQLTerms[i]._strOperator.equals("!="))){
+									indexhelp2=true;
+								}
+								if(arrSQLTerms[i]._strOperator==null||!strType.equals(arrSQLTerms[i]._objValue.getClass().getName())){
+									throw new DBAppException("Datatype doesn't match");
+								}
 							}
-						} else
+							else 
 							throw new DBAppException("This Operator isn't supported");
 					} else
 						throw new DBAppException("Column doesn't exist");
@@ -1203,7 +1192,7 @@ public class DBApp {
 					HashSet<String> hmpage= new HashSet<>();
 					Vector<SQLTerm> indexsql= new Vector<>();
 					for(int i=0; i<arrSQLTerms.length;i++){
-						if(!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
+						if(!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")&& (!arrSQLTerms[i]._strOperator.equals("!="))){
 							if(firstornot){
 								hmpage=getPage(arrSQLTerms[i]);
 								firstornot= false;
@@ -1217,7 +1206,7 @@ public class DBApp {
 					HashSet<Tuple> hmtup= new HashSet<>();
 					hmtup=pagestotuples(hmpage, indexsql);
 					for(int i=0; i<arrSQLTerms.length;i++){
-						if(metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")){
+						if(metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName).equals("null")||(arrSQLTerms[i]._strOperator.equals("!="))){
 							hmtup=and1bp(hmtup,arrSQLTerms[i]);
 						}
 					}
@@ -1713,7 +1702,8 @@ public class DBApp {
 			}
 			return hstup;
 
-		} else {
+		} 
+		else {
 			BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
 					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
 			Vector<Pair> listtmp;
@@ -1813,21 +1803,22 @@ public class DBApp {
 
 		try {
 			DBApp dbApp = new DBApp();
+
 			dbApp.init();
 
-			String strTableName = "Student";
+            String strTableName = "Student";
 
-			Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
-			htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("id", "java.lang.Integer");
 
-			htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("name", "java.lang.String");
 
-			htblColNameType.put("gpa", "java.lang.Double");
+            htblColNameType.put("gpa", "java.lang.Double");
 
 			dbApp.createTable(strTableName, "id", htblColNameType);
 
-			// insert n rows
+			// insert 20 rows
 
 			for (int i = 0; i < 20; i++) {
 				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
@@ -1844,6 +1835,205 @@ public class DBApp {
 			for (Tuple t : tuples) {
 				System.out.println(t);
 			}
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+            // delete a row
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+
+            htblColNameValue.put("id", 0);
+
+            dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+            // select all rows
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = strTableName;
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "<";
+            arrSQLTerms[0]._objValue = 100;
+
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+			while(iterator.hasNext()){
+                Tuple tuple = (Tuple) iterator.next();
+               System.out.println(tuple);
+            }
+			// for (int i = 0; i < 80; i++) {
+
+			// if (i % 20 == 0) {
+			// newPage = strTableName + "_" + (i / 20);
+			// pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage +
+			// ".class");
+			// min = (int) pgPage.getFirstTuple().getColumnValue("id");
+			// max = (int) pgPage.getLastTuple().getColumnValue("id");
+
+			// System.out.println("index: "+ index + " " + v.get(index));
+
+			// assert min == (int) tblTable.getMin(newPage) && max == (int)
+			// tblTable.getMax(newPage);
+			// }
+			// // if (pgPage.getTupleWithIndex(i).getColumnValue("id").equals(0)) {
+			// // assert false;
+			// // }
+			// }
+			// int index = tblTable.getMaxIndex(newPage);
+			// Vector<Comparable> v = tblTable.getMaxVec(newPage);
+
+			// Vector<Comparable> v2 = tblTable.getMinVec(newPage);
+
+			// for (Comparable c : v) {
+			// 	System.out.println("comparable max" + " " + c);
+			// }
+
+			// for (Comparable c : v2) {
+			// 	System.out.println("comparable min" + " " + c);
+			// }
+
+			// System.out.println("index :" + index);
+
+			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			// htblColNameValue.put("id", 0);
+			// htblColNameValue.put("name", "Student0");
+			// htblColNameValue.put("gpa", 3.0);
+			// dbApp.insertIntoTable(strTableName, htblColNameValue);
+			// tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
+
+			// Vector<String> v3 = tblTable.getPages();
+
+			// System.out.println("pages after insert" + " " + v3);
+
+			// for (Comparable c : v) {
+			// 	System.out.println("comparable MAX AFTER INSERT" + " " + c);
+			// }
+
+			// for (Comparable c : v2) {
+			// 	System.out.println("comparable MIN AFTER INSERT" + " " + c);
+			// }
+
+			// for (int i = 0; i < 81; i++) {
+
+			// 	if (i % 20 == 0) {
+			// 		newPage = strTableName + "_" + (i / 20);
+			// 		pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage + ".class");
+			// 		min = (int) pgPage.getFirstTuple().getColumnValue("id");
+			// 		max = (int) pgPage.getLastTuple().getColumnValue("id");
+
+			// 		System.out.println("table min :" + tblTable.getMin(newPage) + " page min :" + min);
+			// 		System.out.println("table max :" + tblTable.getMax(newPage) + " page max :" + max);
+
+			// 		assert min == (int) tblTable.getMin(newPage) && max == (int) tblTable.getMax(newPage);
+			// 	}
+
+			// }
+			// DBApp dbApp = new DBApp();
+
+			// dbApp.init();
+
+			// String strTableName = "Student";
+
+			// Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+			// htblColNameType.put("id", "java.lang.Integer");
+
+			// htblColNameType.put("name", "java.lang.String");
+
+			// htblColNameType.put("gpa", "java.lang.Double");
+
+			// dbApp.createTable(strTableName, "id", htblColNameType);
+
+			// // insert 20 rows
+
+			// for (int i = 0; i < 40; i++) {
+			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			// htblColNameValue.put("id", i + 1);
+			// htblColNameValue.put("name", "Student" + (i + 1));
+			// htblColNameValue.put("gpa", 3.0 + i + 1);
+			// dbApp.insertIntoTable(strTableName, htblColNameValue);
+			// }
+
+			// dbApp.createIndex(strTableName, "name", "nameIndex");
+
+			// dbApp.createIndex(strTableName, "gpa", "gpaIndex");
+
+			// // check that index contains correct values
+
+			// BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" +
+			// "nameIndex.class");
+			// Table tblTable = Table.deserialize("tables/" + strTableName + "/" +
+			// strTableName + ".class");
+
+			// for (int i = 0; i < 40; i++) {
+			// String strPageName = tblTable.getPageAtIndex(i / 20);
+			// assert tree.query("Student" + (i + 1)) != null && tree.query("Student" + (i +
+			// 1)).size() == 1
+			// && ((Pair) tree.query("Student" + (i + 1)).get(0)).getKey().equals((i + 1))
+			// && ((Pair) tree.query("Student" + (i +
+			// 1)).get(0)).getValue().equals(strPageName);
+			// }
+			// // insert a new row
+
+			// Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			// htblColNameValue.put("id", 0);
+			// htblColNameValue.put("name", "Student0");
+			// htblColNameValue.put("gpa", 3.0);
+			// dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			// String newPage = newPage = strTableName + "_" + 0;
+			// ;
+			// Page pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage +
+			// ".class");
+			// for (int i = 0; i < 41; i++) {
+			// if (i % 20 == 0 && i > 0) {
+			// newPage = strTableName + "_" + (i / 20);
+			// pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage +
+			// ".class");
+			// }
+			// if (pgPage.getTupleWithIndex(i).getColumnValue("id").equals(0)) {
+			// break;
+			// }
+			// }
+
+			// Pair pairIndexPair = new Pair(0, newPage);
+
+			// // tree.insert("Student0", pairIndexPair);
+			// tree = BPlusTree.deserialize("tables/" + strTableName + "/" +
+			// "nameIndex.class");
+
+			// for (int i = 0; i < 41; i++) {
+			// String strPageName = tblTable.getPageAtIndex(i / 20);
+			// System.out.println(strPageName);
+			// System.out.println(tree.query("Student" + i) + "boolean :" + " "
+			// + (tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1
+			// && ((Pair) tree.query("Student" + i).get(0)).getKey().equals(i)
+			// && ((Pair) tree.query("Student" +
+			// i).get(0)).getValue().equals(strPageName)));
+			// // assert tree.query("Student" + i).size() == 1;
+			// // assert tree.query("Student" + i) != null && tree.query("Student" +
+			// // i).size()
+			// // == 1
+			// // && ((Pair) tree.query("Student" + i).get(0)).getKey().equals(i)
+			// // && ((Pair) tree.query("Student" +
+			// // i).get(0)).getValue().equals(strPageName);
+
+			// } // error was here
+
+			// Page p = Page.deserialize("tables/" + strTableName + "/" + strTableName +
+			// "_2.class");
+			// Vector<Tuple> tuples = p.getTuples();
+			// for (Tuple t : tuples) {
+			// System.out.println("tuples" + " " + t);
+			// }
+			// tree = BPlusTree.deserialize("tables/" + strTableName + "/" +
+			// "gpaIndex.class");
 
 		} catch (Exception e) {
 			e.printStackTrace();
