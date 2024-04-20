@@ -1195,6 +1195,8 @@ public class DBApp {
 			;
 			checkoperators.add("<");
 			boolean indexhelp2 = false;
+			boolean indexhelp3 = false;
+			int ind =0;
 			for (int i = 0; i < arrSQLTerms.length; i++) {
 				if (arrSQLTerms[i]._strTableName != null && metadata.checkTableName(arrSQLTerms[i]._strTableName)
 						&& arrSQLTerms[0]._strTableName.equals(arrSQLTerms[i]._strTableName)) {
@@ -1207,6 +1209,13 @@ public class DBApp {
 							if (!metadata.getIndexType(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)
 									.equals("null") && (!arrSQLTerms[i]._strOperator.equals("!="))) {
 								indexhelp2 = true;
+							}
+							
+							if (metadata.isClusteringKey(arrSQLTerms[i]._strTableName, arrSQLTerms[i]._strColumnName)
+								 && (!arrSQLTerms[i]._strOperator.equals("!="))) {
+									System.out.println(i);
+									indexhelp3 = true;
+								ind=i;
 							}
 							if (arrSQLTerms[i]._strOperator == null
 									|| !strType.equals(arrSQLTerms[i]._objValue.getClass().getName())) {
@@ -1238,6 +1247,7 @@ public class DBApp {
 				return tut.iterator();
 			}
 			if (indexhelp && indexhelp2) {
+				System.out.println("Index ya bsha");
 				boolean firstornot = true;
 				HashSet<String> hmpage = new HashSet<>();
 				Vector<SQLTerm> indexsql = new Vector<>();
@@ -1253,6 +1263,7 @@ public class DBApp {
 						indexsql.add(arrSQLTerms[i]);
 					}
 				}
+				
 				HashSet<Tuple> hmtup = new HashSet<>();
 				hmtup = pagestotuples(hmpage, indexsql);
 				for (int i = 0; i < arrSQLTerms.length; i++) {
@@ -1263,7 +1274,16 @@ public class DBApp {
 				}
 				return hmtup.iterator();
 			}
-
+			if(indexhelp&&indexhelp3){
+				System.out.println("cluster ya bsha");
+				HashSet<Tuple> hstup = getTuple(arrSQLTerms[ind]);
+				for(int i=0;i<arrSQLTerms.length;i++){
+					if(i!=ind){
+						hstup=and1bp(hstup, arrSQLTerms[i]);
+					}
+				}
+				return hstup.iterator();
+			}
 			Stack<Object> stack = new Stack<>();
 			Stack<String> stack2 = new Stack<>();
 			Vector<Object> vec = new Vector<>();
@@ -1872,43 +1892,60 @@ public class DBApp {
 
 		try {
 			// cleanUp();
-
 			DBApp dbApp = new DBApp();
+            dbApp.init();
 
-			dbApp.init();
+			String strTableName = "Student";
 
-			// create table
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
-			Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
-			htblColNameType.put("ID", "java.lang.Integer");
-			htblColNameType.put("NAME", "java.lang.String");
-			htblColNameType.put("AGE", "java.lang.Integer");
+            htblColNameType.put("id", "java.lang.Integer");
 
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            // insert n rows
+
+            for (int i = 0; i < 20; i++) {
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
 			
+			SQLTerm [] arrSQLTerms = new SQLTerm[2];
+            String []strarrOperators = new String[1];
 
-			dbApp.createTable("STUDENT", "ID", htblColNameType);
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "!=";
+            arrSQLTerms[0]._objValue = 10;
 
-			//CREATE TABLE "STUDENT" ("ID" INT PRIMARY KEY, "NAME" STRING , "AGE" INT);
-			//"CREATE INDEX \"idIndex\" ON \"STUDENT\" (\"ID\");"
-			//"INSERT INTO \"STUDENT\" (\"ID\",\"NAME\",\"AGE\") VALUES (5,\"AHMED\",19);"
-			//"UPDATE \"STUDENT\" SET \"AGE\" = 50 WHERE \"ID\"= 5;"
-			//"DELETE FROM \"STUDENT\" WHERE \"ID\" = 1 and \"NAME\" = \"Ibra\";"
-			//
-			String s= "SELECT * FROM \"STUDENT\" WHERE \"NAME\" = \"AHMED\";";
-			StringBuffer sb = new StringBuffer();
-			sb.append(s);
+            strarrOperators[0] = "AND";
 
-			Iterator i = dbApp.parseSQL(sb);
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "name";
+            arrSQLTerms[1]._strOperator = ">";
+            arrSQLTerms[1]._objValue = "Student1";
+			Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where id < 10 AND
+                                                                            // id > 5;
 
-			while(i.hasNext()){
-				Tuple t= (Tuple) i.next();
-				System.out.println(t);
-			}
-
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                System.out.println(tuple);
+            }
 
 		} catch (Exception e) {
 			e.printStackTrace();
 
+		}finally{
+			cleanUp();
 		}
 
 		
