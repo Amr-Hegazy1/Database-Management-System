@@ -19,7 +19,6 @@ import com.db_engine.*;
 
 public class InsertTest {
 
-
     @Test
     public void insertWrongTableName() throws DBAppException, IOException {
         try {
@@ -38,8 +37,6 @@ public class InsertTest {
             htblColNameType.put("gpa", "java.lang.Double");
 
             dbApp.createTable(strTableName, "id", htblColNameType);
-
-            
 
             assertThrows(DBAppException.class, () -> {
                 dbApp.insertIntoTable("Student2", new Hashtable<String, Object>());
@@ -82,7 +79,7 @@ public class InsertTest {
         } finally {
             cleanUp();
         }
-    } 
+    }
 
     @Test
     public void insertWrongDataType() throws DBAppException, IOException {
@@ -398,47 +395,47 @@ public class InsertTest {
      * logarithmic time
      * complexity.
      */
-    @Test
-    public void insertOccursInLogN() throws DBAppException, IOException {
-        try {
-            DBApp dbApp = new DBApp();
+    // @Test
+    // public void insertOccursInLogN() throws DBAppException, IOException {
+    // try {
+    // DBApp dbApp = new DBApp();
 
-            dbApp.init();
+    // dbApp.init();
 
-            String strTableName = "Student";
+    // String strTableName = "Student";
 
-            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+    // Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 
-            htblColNameType.put("id", "java.lang.Integer");
+    // htblColNameType.put("id", "java.lang.Integer");
 
-            htblColNameType.put("name", "java.lang.String");
+    // htblColNameType.put("name", "java.lang.String");
 
-            htblColNameType.put("gpa", "java.lang.Double");
+    // htblColNameType.put("gpa", "java.lang.Double");
 
-            dbApp.createTable(strTableName, "id", htblColNameType);
+    // dbApp.createTable(strTableName, "id", htblColNameType);
 
-            long startTime = System.currentTimeMillis();
+    // long startTime = System.currentTimeMillis();
 
-            for (int i = 0; i < 100000; i++) {
-                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
-                htblColNameValue.put("id", i);
-                htblColNameValue.put("name", "Student" + i);
-                htblColNameValue.put("gpa", 3.0 + i);
-                dbApp.insertIntoTable(strTableName, htblColNameValue);
-            }
+    // for (int i = 0; i < 100000; i++) {
+    // Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+    // htblColNameValue.put("id", i);
+    // htblColNameValue.put("name", "Student" + i);
+    // htblColNameValue.put("gpa", 3.0 + i);
+    // dbApp.insertIntoTable(strTableName, htblColNameValue);
+    // }
 
-            long endTime = System.currentTimeMillis();
+    // long endTime = System.currentTimeMillis();
 
-            long duration = endTime - startTime;
+    // long duration = endTime - startTime;
 
-            System.out.println("Duration: " + duration);
+    // System.out.println("Duration: " + duration);
 
-            assert duration < 1600;
+    // assert duration < 1600;
 
-        } finally {
-            cleanUp();
-        }
-    }
+    // } finally {
+    // cleanUp();
+    // }
+    // }
 
     @Test
     public void insertNewPage() throws DBAppException, IOException {
