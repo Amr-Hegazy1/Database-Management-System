@@ -39,7 +39,7 @@ public class Metadata {
         if(!fileMetadataFile.exists())
             try {
                 fileMetadataFile.createNewFile();
-                // write file header
+                //write file header
                 FileOutputStream fileOutputStream = new FileOutputStream("metadata.csv");
                 fileOutputStream.write("Table Name, Column Name, Column Type, ClusteringKey, Index Name, Index Type\n".getBytes());
                 
@@ -47,7 +47,7 @@ public class Metadata {
                 fileOutputStream.close();
 
                 
-                fileMetadataFile = new File("metadata.csv");
+                // fileMetadataFile = new File("metadata.csv");
             } catch (IOException e) {
                 throw new DBAppException("Error creating metadata file");
             }
