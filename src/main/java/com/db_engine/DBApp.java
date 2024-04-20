@@ -210,7 +210,7 @@ public class DBApp {
 	public void insertIntoTable(String strTableName,
 			Hashtable<String, Object> htblColNameValue) throws DBAppException {
 
-		HashSet<String> hsIndexedColumns = new HashSet<String>();// hashset to store indexed column names
+		HashSet<String> hsIndexedColumns = new HashSet<>();// hashset to store indexed column names
 		Tuple tupleNewTuple = new Tuple(); // New Tuple to be filled with input data and added to Table.
 		String strClustKeyName = ""; // Name of Clustering Key Column
 		int intColCounter = 0;
@@ -349,7 +349,11 @@ public class DBApp {
 					int insertIndex = vecInsertPageVector.indexOf(currMax);
 					insertIndex++;
 					pgInsertPage.addTuple(insertIndex, tupleNewTuple);
-
+					tblTable.setMin(pgInsertPage.getPageName(),
+							(Comparable) pgInsertPage.getTuples().get(0).getColumnValue(strClustKeyName));
+					tblTable.setMax(pgLastPage.getPageName(),
+							(Comparable) pgInsertPage.getTuples().get(pgInsertPage.getSize()-1)
+									.getColumnValue(strClustKeyName));
 					if (pgInsertPage.getSize() > intMaxSize) {
 						handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName, hsIndexedColumns,
 								tupleNewTuple);
@@ -357,7 +361,6 @@ public class DBApp {
 					} else {
 						pgInsertPage.serialize("tables/" + strTableName + "/" + pgInsertPage.getPageName() + ".class");
 					}
-
 				}
 			}
 

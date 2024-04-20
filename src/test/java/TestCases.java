@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.bplustree.BPlusTree;
@@ -669,7 +670,43 @@ public class TestCases {
 
     }
 
-    
+    /**
+     * The function tests the efficiency of inserting records into a table in
+     * logarithmic time
+     * complexity.
+     */
+    @Test(timeout = 2000)
+    public void insertOccursInLogN() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            for (int i = 0; i < 1e3; i++) {
+                System.out.println(i);
+                Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+                htblColNameValue.put("id", i);
+                htblColNameValue.put("name", "Student" + i);
+                htblColNameValue.put("gpa", 3.0 + i);
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            }
+
+        } finally {
+            cleanUp();
+        }
+    }
 
     /**
      * The function `updateWithoutIndex` in Java updates a row in a table and
@@ -3306,7 +3343,8 @@ public class TestCases {
 
     }
 
-    protected void cleanUp() throws IOException {
+    @Before
+    public void cleanUp() throws IOException {
         try {
             // delete tables directory
 

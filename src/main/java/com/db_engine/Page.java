@@ -645,6 +645,39 @@ public class Page implements Serializable {
 
     }
 
+    public static int getPageIndexByClusteringKey(Object objClusteringKeyValue , Table table) {
+        int intTableSize = table.getNumberOfPages();
+        int intTopPageIndex = 0;
+        int intBottomPageIndex = intTableSize - 1;
+
+        while (intTopPageIndex <= intBottomPageIndex) {
+
+            int intMiddlePageIndex = intTopPageIndex + (intBottomPageIndex - intTopPageIndex) / 2;
+
+            Comparable cmpPageMinValue = table.getMinVec().get(intMiddlePageIndex);
+
+            Comparable cmpPageMaxValue = table.getMaxVec().get(intMiddlePageIndex);
+
+            // convert the object to comparable to compare it with the clustering key
+
+            Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
+
+            // check if the clustering key is in the page by checking if the value is
+            // between the top and bottom tuple
+            if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) >= 0
+                    && cmpClusteringKeyValue
+                    .compareTo(cmpPageMaxValue) <= 0) {
+                return intMiddlePageIndex;
+            } else if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) < 0) {
+                intBottomPageIndex = intMiddlePageIndex - 1;
+            } else {
+                intTopPageIndex = intMiddlePageIndex + 1;
+            }
+        }
+
+        return -1;
+    }
+
     public HashSet<Tuple> gtrsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
         HashSet<Tuple> hstups = new HashSet<>();
         if (isclu) {
