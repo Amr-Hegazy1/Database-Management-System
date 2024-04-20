@@ -745,18 +745,21 @@ public class DBApp {
 	 */
 	private void deleteWithClusteringKey(String strTableName, String strClusteringKey,
 			Hashtable<String, Object> htblColNameValue, Table table) throws DBAppException {
-
+		
 		String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
 
 		Object objClusteringKeyValue = htblColNameValue.get(strClusteringKey);
 		Page pagePage = Page.getPageByClusteringKey(strTableName, objClusteringKeyValue, table);
-
+		
+		
 		// if the page is null, then the tuple does not exist
 		if (pagePage == null) {
 			return;
 		}
 
 		int intTupleIndex = pagePage.searchTuplesByClusteringKey(strClusteringKey, objClusteringKeyValue);
+
+		
 
 		if (intTupleIndex < 0) {
 			return;
@@ -768,9 +771,9 @@ public class DBApp {
 		}
 
 		pagePage.deleteTupleWithIndex(intTupleIndex);
-
+		String strPageName = pagePage.getPageName();
 		if (pagePage.getSize() == 0) {
-			String strPageName = pagePage.getPageName();
+			
 			Page.deletePage("tables/" + strTableName + "/" + strPageName + ".class");
 
 			table.removeMin(strPageName);
@@ -782,8 +785,8 @@ public class DBApp {
 			Comparable cmpMin = (Comparable) pagePage.getTupleWithIndex(0).getColumnValue(strClusteringKeyColName);
 			Comparable cmpMax = (Comparable) pagePage.getTupleWithIndex(pagePage.getSize() - 1)
 					.getColumnValue(strClusteringKeyColName);
-			table.setMin(intTupleIndex, cmpMin);
-			table.setMax(intTupleIndex, cmpMax);
+			table.setMin(strPageName, cmpMin);
+			table.setMax(strPageName, cmpMax);
 
 			pagePage.serialize("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
 
