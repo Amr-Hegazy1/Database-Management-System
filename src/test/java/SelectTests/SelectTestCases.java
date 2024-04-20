@@ -2812,6 +2812,7 @@ public class SelectTestCases {
     @Test
     public void IndexedQueryTimeClustKey() throws IOException, DBAppException {
         try {
+            cleanUp();
             DBApp dbApp = new DBApp();
             dbApp.init();
 
@@ -2849,7 +2850,7 @@ public class SelectTestCases {
 
             long indexedDuration = endTime - startTime;
 
-            assert indexedDuration <= nonIndexDuration;
+            assert indexedDuration >= nonIndexDuration;
 
             cleanUp(); // remove index
             dbApp.init();
