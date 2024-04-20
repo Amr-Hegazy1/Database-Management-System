@@ -40,13 +40,12 @@ public class Table implements Serializable {
      *         added to the 'vecpages' Vector of the Table.
      */
     public String addPage() {
-        
+
         int newPageNum = vecPages.size();
         String newPage = strTableName + "_" + newPageNum;
 
         vecPages.add(newPage);
 
-        
         return newPage;
     }
 
@@ -146,7 +145,7 @@ public class Table implements Serializable {
      */
     public Comparable getMin(String pageName) {
         // get the minimum value of a page
-        
+
         return this.vecMin.get(this.vecPages.indexOf(pageName));
     }
 
@@ -206,20 +205,28 @@ public class Table implements Serializable {
     }
 
     /**
-     * The setMin function updates the minimum value of a page at a specified index in a vector, either
-     * by replacing the existing value if the index is within the vector's size or by adding the value
+     * The setMin function updates the minimum value of a page at a specified index
+     * in a vector, either
+     * by replacing the existing value if the index is within the vector's size or
+     * by adding the value
      * to the vector if the index is greater.
      * 
-     * @param index The `index` parameter represents the position at which you want to set the minimum
-     * value in the vector `vecMin`. If the index is within the current size of the vector, the
-     * existing value at that index will be replaced with the new minimum value. If the index is
-     * greater than the current size
-     * @param min The `min` parameter in the `setMin` method represents the minimum value that you want
-     * to set for a specific index in a vector or list. It is of type `Comparable`, which means it can
-     * hold any object that implements the `Comparable` interface, allowing for comparison between
-     * objects.
+     * @param index The `index` parameter represents the position at which you want
+     *              to set the minimum
+     *              value in the vector `vecMin`. If the index is within the current
+     *              size of the vector, the
+     *              existing value at that index will be replaced with the new
+     *              minimum value. If the index is
+     *              greater than the current size
+     * @param min   The `min` parameter in the `setMin` method represents the
+     *              minimum value that you want
+     *              to set for a specific index in a vector or list. It is of type
+     *              `Comparable`, which means it can
+     *              hold any object that implements the `Comparable` interface,
+     *              allowing for comparison between
+     *              objects.
      */
-    public void setMin (int index, Comparable min) {
+    public void setMin(int index, Comparable min) {
         // set the minimum value of a page
         if (index < vecMin.size()) { // If the index is less than the size of the vector, replace the existing value
             this.vecMin.set(index, min);
@@ -253,16 +260,22 @@ public class Table implements Serializable {
     }
 
     /**
-     * The `setMax` function in Java sets the maximum value of a page at a specified index in a vector,
-     * replacing the existing value if the index is within the vector's size or adding the value to the
+     * The `setMax` function in Java sets the maximum value of a page at a specified
+     * index in a vector,
+     * replacing the existing value if the index is within the vector's size or
+     * adding the value to the
      * vector if the index is greater.
      * 
-     * @param index Index is the position at which the maximum value needs to be set or updated in the
-     * vector.
-     * @param max The `max` parameter in the `setMax` method represents the maximum value that you want
-     * to set for a specific index in a vector or list. It is of type `Comparable`, which means it can
-     * be any object that implements the `Comparable` interface, allowing for comparison with other
-     * objects of the
+     * @param index Index is the position at which the maximum value needs to be set
+     *              or updated in the
+     *              vector.
+     * @param max   The `max` parameter in the `setMax` method represents the
+     *              maximum value that you want
+     *              to set for a specific index in a vector or list. It is of type
+     *              `Comparable`, which means it can
+     *              be any object that implements the `Comparable` interface,
+     *              allowing for comparison with other
+     *              objects of the
      */
     public void setMax(int index, Comparable max) {
         // set the maximum value of a page
@@ -284,19 +297,20 @@ public class Table implements Serializable {
      */
     public void removeMin(String pageName) {
         // remove the minimum value of a page
-        
+
         this.vecMin.remove(this.vecPages.indexOf(pageName));
     }
 
-
     /**
-     * The `removeMin` function removes the minimum value at a specified index from a vector.
+     * The `removeMin` function removes the minimum value at a specified index from
+     * a vector.
      * 
-     * @param index The `index` parameter specifies the position of the minimum value that you want to
-     * remove from the `vecMin` vector.
+     * @param index The `index` parameter specifies the position of the minimum
+     *              value that you want to
+     *              remove from the `vecMin` vector.
      */
-    public void removeMin(int index){
-        //remove the minimum value of a page
+    public void removeMin(int index) {
+        // remove the minimum value of a page
         this.vecMin.remove(index);
     }
 
@@ -313,21 +327,19 @@ public class Table implements Serializable {
         this.vecMax.remove(this.vecPages.indexOf(pageName));
     }
 
-    
-
-   /**
-    * The `removeMax` function removes the maximum value at a specified index from a list.
-    * 
-    * @param index The `index` parameter specifies the position of the maximum value that you want to
-    * remove from the `vecMax` list.
-    */
-    public void removeMax(int index){
-        //remove the maximum value of a page
+    /**
+     * The `removeMax` function removes the maximum value at a specified index from
+     * a list.
+     * 
+     * @param index The `index` parameter specifies the position of the maximum
+     *              value that you want to
+     *              remove from the `vecMax` list.
+     */
+    public void removeMax(int index) {
+        // remove the maximum value of a page
         this.vecMax.remove(index);
     }
 
-
-    
     /**
      * The function `getPageAtIndex` returns the page at the specified index from a
      * vector of pages.
@@ -340,7 +352,7 @@ public class Table implements Serializable {
      *         `vecPages` vector.
      */
     public String getPageAtIndex(int i) {
-        System.out.println(vecPages);
+        
         return vecPages.get(i);
     }
 
@@ -362,7 +374,6 @@ public class Table implements Serializable {
         vecPages.remove(index);
     }
 
-   
     /**
      * The function `printAllPages` iterates through all pages in a table,
      * deserializes each page, and
@@ -374,9 +385,7 @@ public class Table implements Serializable {
 
             String strPage = this.getPageAtIndex(i);
             Page page = Page.deserialize(strPage + ".class");
-            System.out.println(
-                    "#################################### PAGE " + i + " ########################################");
-            System.out.println(page);
+            
         }
     }
 
@@ -391,7 +400,7 @@ public class Table implements Serializable {
         return strTableName;
     }
 
-    private int getPageIndex (Comparable compClusteringKeyValue){
+    public int getPageIndex(Comparable compClusteringKeyValue) {
         int n = vecPages.size();
 
         int left = 0, right = n - 1;
@@ -399,7 +408,7 @@ public class Table implements Serializable {
         while (left <= right) {
             int mid = left + (right - left) / 2;
 
-            Comparable compMinValue = vecMin.get(mid) , compMaxValue = vecMax.get(mid);
+            Comparable compMinValue = vecMin.get(mid), compMaxValue = vecMax.get(mid);
 
             if (compClusteringKeyValue.compareTo(compMinValue) >= 0 &&
                     compClusteringKeyValue.compareTo(compMaxValue) <= 0) {
@@ -411,7 +420,7 @@ public class Table implements Serializable {
             }
 
         }
-        System.out.println(compClusteringKeyValue.compareTo(vecMax.get(n - 1)));
+
         if (compClusteringKeyValue.compareTo(vecMin.get(0)) < 0)
             return 0;
         else if (compClusteringKeyValue.compareTo(vecMax.get(n - 1)) > 0)
@@ -419,18 +428,20 @@ public class Table implements Serializable {
 
         int lowerPnt = 0;
         int i = 1;
-    
-        while (i < n && vecMin.get(i).compareTo(compClusteringKeyValue) > 0) {
+
+        while (i < n && vecMin.get(i).compareTo(compClusteringKeyValue) < 0) {
             lowerPnt = i;
             i = i * 2;
         }
-    
+
         // Final check for the remaining elements which are < X
-        while (lowerPnt < n && vecMin.get(lowerPnt).compareTo(compClusteringKeyValue) > 0)
+        while (lowerPnt < n && vecMin.get(lowerPnt).compareTo(compClusteringKeyValue) < 0)
             lowerPnt++;
-    
+
         return lowerPnt;
     }
+
+    
 
     public HashSet<Tuple> greaterthan(String col, Object val)
             throws ClassNotFoundException, IOException, DBAppException {
@@ -438,9 +449,9 @@ public class Table implements Serializable {
         HashSet<Tuple> hmtup = new HashSet<>();
         int pageIndex = getPageIndex((Comparable) val);
         Page page = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(pageIndex) + ".class");
-        int tupleIndexInPage = page.binarySearchTuples(col , val);
-        hmtup.addAll(page.gtrsearch(col , val ,  true , tupleIndexInPage));
-        for (int i = pageIndex +1; i < vecPages.size(); i++) {
+        int tupleIndexInPage = page.binarySearchTuples(col, val);
+        hmtup.addAll(page.gtrsearch(col, val, true, tupleIndexInPage));
+        for (int i = pageIndex + 1; i < vecPages.size(); i++) {
             Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
             hmtup.addAll(page1.allTup());
         }
@@ -463,9 +474,9 @@ public class Table implements Serializable {
         HashSet<Tuple> hmtup = new HashSet<>();
         int pageIndex = getPageIndex((Comparable) val);
         Page page = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(pageIndex) + ".class");
-        int tupleIndexInPage = page.binarySearchTuples(col , val);
-        hmtup.addAll(page.gtreqsearch(col , val ,  true , tupleIndexInPage));
-        for (int i = pageIndex +1; i < vecPages.size(); i++) {
+        int tupleIndexInPage = page.binarySearchTuples(col, val);
+        hmtup.addAll(page.gtreqsearch(col, val, true, tupleIndexInPage));
+        for (int i = pageIndex + 1; i < vecPages.size(); i++) {
             Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
             hmtup.addAll(page1.allTup());
         }
@@ -486,11 +497,11 @@ public class Table implements Serializable {
             throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
         int pageIndex = getPageIndex((Comparable) val);
-        System.out.println(pageIndex);
+        
         Page page = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(pageIndex) + ".class");
-        int tupleIndexInPage = page.binarySearchTuples(col , val);
-        hmtup.addAll(page.lessearch(col , val ,  true , tupleIndexInPage));
-        for (int i = pageIndex -1; i >= 0; i--) {
+        int tupleIndexInPage = page.binarySearchTuples(col, val);
+        hmtup.addAll(page.lessearch(col, val, true, tupleIndexInPage));
+        for (int i = pageIndex - 1; i >= 0; i--) {
             Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
             hmtup.addAll(page1.allTup());
         }
@@ -512,9 +523,9 @@ public class Table implements Serializable {
         HashSet<Tuple> hmtup = new HashSet<>();
         int pageIndex = getPageIndex((Comparable) val);
         Page page = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(pageIndex) + ".class");
-        int tupleIndexInPage = page.binarySearchTuples(col , val);
-        hmtup.addAll(page.leseqsearch(col , val ,  true , tupleIndexInPage));
-        for (int i = pageIndex -1; i >= 0; i--) {
+        int tupleIndexInPage = page.binarySearchTuples(col, val);
+        hmtup.addAll(page.leseqsearch(col, val, true, tupleIndexInPage));
+        for (int i = pageIndex - 1; i >= 0; i--) {
             Page page1 = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(i) + ".class");
             hmtup.addAll(page1.allTup());
         }
@@ -534,8 +545,8 @@ public class Table implements Serializable {
     public HashSet<Tuple> cleqsearch(String col, Object val)
             throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
-        Page page1 = Page.getPageByClusteringKey(this.strTableName , val , this);
-        if(page1 != null){
+        Page page1 = Page.getPageByClusteringKey(this.strTableName, val, this);
+        if (page1 != null) {
             int index = page1.binarySearchTuples(col, val);
             hmtup.addAll(page1.eqsearch(col, val, true, index));
         }

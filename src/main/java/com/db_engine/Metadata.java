@@ -40,8 +40,14 @@ public class Metadata {
             try {
                 fileMetadataFile.createNewFile();
                 // write file header
-                // FileOutputStream fileOutputStream = new FileOutputStream("metadata.csv");
-                // fileOutputStream.write("Table Name, Column Name, Column Type, ClusteringKey, Index Name, Index Type\n".getBytes());
+                FileOutputStream fileOutputStream = new FileOutputStream("metadata.csv");
+                fileOutputStream.write("Table Name, Column Name, Column Type, ClusteringKey, Index Name, Index Type\n".getBytes());
+                
+                // save file
+                fileOutputStream.close();
+
+                
+                fileMetadataFile = new File("metadata.csv");
             } catch (IOException e) {
                 throw new DBAppException("Error creating metadata file");
             }
@@ -64,11 +70,14 @@ public class Metadata {
         
         try (Scanner scanner = new Scanner(new File("metadata.csv"))) {
             while (scanner.hasNextLine()) {
-                // check if first line is header
-                // if(scanner.nextLine().contains("Table Name, Column Name, Column Type, ClusteringKey, Index Name, Index Type"))
-                //     continue;
+                
+                String strLine = scanner.nextLine();
 
-                String[] arrstrRecord = scanner.nextLine().split(",", 2);
+                // check if first line is header
+                if(strLine.contains("Table Name, Column Name, Column Type, ClusteringKey, Index Name, Index Type"))
+                    continue;
+
+                String[] arrstrRecord = strLine.split(",", 2);
                 String strTableName = arrstrRecord[0].replaceAll("\\s+","");
                 if(!htblMetadata.containsKey(strTableName)){
                     htblMetadata.put(strTableName, getRecordFromLine(arrstrRecord[1]));
@@ -242,6 +251,28 @@ public class Metadata {
         return htblMetadata.get(strTableName).get(strColumnName).get("IndexType");
     }
 
+
+    /**
+     * The function `getIndexedColumns` retrieves a list of indexed columns along with their
+     * corresponding index names for a specified table in a database.
+     * 
+     * @param strTableName The `strTableName` parameter in the `getIndexedColumns` method is a String
+     * variable that represents the name of the table for which you want to retrieve the indexed
+     * columns.
+     * @return The `getIndexedColumns` method returns a list of `Pair` objects representing the indexed
+     * columns for a given table specified by `strTableName`.
+     */
+    public List<Pair> getIndexedColumns(String strTableName) throws DBAppException{
+        if(!htblMetadata.containsKey(strTableName))
+            throw new DBAppException("Table does not exist");
+        List<Pair> indexedColumns = new ArrayList<>();
+        for(String col : htblMetadata.get(strTableName).keySet()){
+            if(isColumnIndexed(strTableName, col)){
+                indexedColumns.add(new Pair(col, getIndexName(strTableName, col)));
+            }
+        }
+        return indexedColumns;
+    }
    
 
     /**

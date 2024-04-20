@@ -1,6 +1,5 @@
 package com.db_engine;
 
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -295,25 +294,102 @@ public class Page implements Serializable {
             }
 
         }
-        
+
         Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
 
         // Base cases
         if (cmpClusteringKeyValue.compareTo(vecTuples.get(0).getColumnValue(strClusteringKeyName)) < 0)
             return 0;
         else if (cmpClusteringKeyValue.compareTo(vecTuples.get(n - 1).getColumnValue(strClusteringKeyName)) > 0)
-            return n-1;
+            return n - 1;
 
         int lowerPnt = 0;
         int i = 1;
 
-        while (i < n && ((Comparable) vecTuples.get(i).getColumnValue(strClusteringKeyName)).compareTo(cmpClusteringKeyValue) > 0) {
+        while (i < n && ((Comparable) vecTuples.get(i).getColumnValue(strClusteringKeyName))
+                .compareTo(cmpClusteringKeyValue) > 0) {
             lowerPnt = i;
             i = i * 2;
         }
 
         // Final check for the remaining elements which are < X
-        while (lowerPnt < n && ((Comparable) vecTuples.get(lowerPnt).getColumnValue(strClusteringKeyName)).compareTo(cmpClusteringKeyValue) > 0)
+        while (lowerPnt < n && ((Comparable) vecTuples.get(lowerPnt).getColumnValue(strClusteringKeyName))
+                .compareTo(cmpClusteringKeyValue) > 0)
+            lowerPnt++;
+
+        return lowerPnt;
+
+    }
+
+    /**
+     * This Java function searches for tuples by a given clustering key name and
+     * value using binary
+     * search.
+     * 
+     * @param strClusteringKeyName  The `strClusteringKeyName` parameter is the name
+     *                              of the clustering
+     *                              key that you want to search for in the list of
+     *                              tuples. It is used to identify the specific
+     *                              attribute or column in the tuple that serves as
+     *                              the clustering key for the data structure.
+     * @param objClusteringKeyValue The `objClusteringKeyValue` parameter represents
+     *                              the value of the
+     *                              clustering key that you are searching for within
+     *                              the list of tuples. The method
+     *                              `searchTuplesByClusteringKey` is designed to
+     *                              search for a specific tuple within the list of
+     *                              tuples based on the provided clustering key name
+     *                              and value.
+     * @return The method is returning the correct index position that the tuple
+     *         should be inserted in. (In vecTuples)
+     */
+
+    public int binarySearchInsertTuples(String strClusteringKeyName, Object objClusteringKeyValue)
+            throws DBAppException {
+
+        int n = vecTuples.size();
+
+        int left = 0, right = n - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+
+            String strMidClusteringKeyValue = vecTuples.get(mid).getColumnValue(strClusteringKeyName).toString();
+
+            Comparable midClusteringKeyValue = (Comparable) vecTuples.get(mid).getColumnValue(strClusteringKeyName);
+
+            Comparable compClusteringKeyValue = (Comparable) objClusteringKeyValue;
+
+            if (midClusteringKeyValue.compareTo(compClusteringKeyValue) == 0) {
+                return mid;
+            } else if (midClusteringKeyValue.compareTo(compClusteringKeyValue) < 0) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+
+        }
+
+        Comparable cmpClusteringKeyValue = (Comparable) objClusteringKeyValue;
+
+        // Base cases
+        if (cmpClusteringKeyValue.compareTo(vecTuples.get(0).getColumnValue(strClusteringKeyName)) < 0)
+            return 0;
+        else if (cmpClusteringKeyValue.compareTo(vecTuples.get(n - 1).getColumnValue(strClusteringKeyName)) > 0)
+            return n - 1;
+
+        int lowerPnt = 0;
+        int i = 1;
+
+        while (i < n && ((Comparable) vecTuples.get(i).getColumnValue(strClusteringKeyName))
+                .compareTo(cmpClusteringKeyValue) < 0) {
+            lowerPnt = i;
+            i = i * 2;
+        }
+
+        // Final check for the remaining elements which are < X
+        while (lowerPnt < n && ((Comparable) vecTuples.get(lowerPnt).getColumnValue(strClusteringKeyName))
+                .compareTo(cmpClusteringKeyValue) < 0)
             lowerPnt++;
 
         return lowerPnt;
@@ -396,9 +472,8 @@ public class Page implements Serializable {
 
         for (int i = 0; i < vecTuples.size(); i++) {
 
-            
             if (vecTuples.get(i).equals(tuple)) {
-                
+
                 vecTuples.remove(i);
                 return;
             }
@@ -455,38 +530,36 @@ public class Page implements Serializable {
     public Object Max(String col) throws DBAppException {
         return vecTuples.get(vecTuples.size() - 1).getColumnValue(col);
     }
-    public  HashSet<Tuple> eqsearch(String col, Object val, boolean isclu, int index) throws DBAppException{
-        HashSet<Tuple> hstups= new HashSet<>();
-        if(isclu){
-            if(val instanceof Integer){
+
+    public HashSet<Tuple> eqsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
+        HashSet<Tuple> hstups = new HashSet<>();
+        if (isclu) {
+            if (val instanceof Integer) {
                 Integer te = (Integer) val;
-                if(((Integer)vecTuples.get(index).getColumnValue(col)).equals(te)){
+                if (((Integer) vecTuples.get(index).getColumnValue(col)).equals(te)) {
                     hstups.add(vecTuples.get(index));
                 }
-            }
-            else if(val instanceof Double){
+            } else if (val instanceof Double) {
                 Double te = (Double) val;
-                if(((Double)vecTuples.get(index).getColumnValue(col)).equals(te)){
+                if (((Double) vecTuples.get(index).getColumnValue(col)).equals(te)) {
                     hstups.add(vecTuples.get(index));
                 }
-            }
-            else {
+            } else {
                 String te = (String) val;
                 if (((String) vecTuples.get(index).getColumnValue(col)).compareTo(te) == 0) {
                     hstups.add(vecTuples.get(index));
                 }
             }
-        }
-        else {
+        } else {
             for (Tuple tu : vecTuples) {
                 if (val instanceof Integer) {
                     Integer te = (Integer) val;
-                    if(((Integer)tu.getColumnValue(col)).equals(te)){
+                    if (((Integer) tu.getColumnValue(col)).equals(te)) {
                         hstups.add(tu);
                     }
                 } else if (val instanceof Double) {
                     Double te = (Double) val;
-                    if(((Double)tu.getColumnValue(col)).equals(te)){
+                    if (((Double) tu.getColumnValue(col)).equals(te)) {
                         hstups.add(tu);
                     }
                 } else {
@@ -534,7 +607,7 @@ public class Page implements Serializable {
      *         `null`.
      */
     public static Page getPageByClusteringKey(String strTableName, Object objClusteringKeyValue,
-                                              Table table) throws DBAppException {
+            Table table) throws DBAppException {
 
         int intTableSize = table.getNumberOfPages();
         int intTopPageIndex = 0;
@@ -545,8 +618,6 @@ public class Page implements Serializable {
             int intMiddlePageIndex = intTopPageIndex + (intBottomPageIndex - intTopPageIndex) / 2;
 
             String strMiddlePage = table.getPageAtIndex(intMiddlePageIndex);
-
-
 
             Comparable cmpPageMinValue = table.getMin(strMiddlePage);
 
@@ -560,7 +631,7 @@ public class Page implements Serializable {
             // between the top and bottom tuple
             if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) >= 0
                     && cmpClusteringKeyValue
-                    .compareTo(cmpPageMaxValue) <= 0) {
+                            .compareTo(cmpPageMaxValue) <= 0) {
                 Page pageMiddlePage = Page.deserialize("tables/" + strTableName + "/" + strMiddlePage + ".class");
                 return pageMiddlePage;
             } else if (cmpClusteringKeyValue.compareTo(cmpPageMinValue) < 0) {
@@ -606,7 +677,7 @@ public class Page implements Serializable {
 
         return -1;
     }
-    
+
     public HashSet<Tuple> gtrsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
         HashSet<Tuple> hstups = new HashSet<>();
         if (isclu) {
@@ -796,12 +867,12 @@ public class Page implements Serializable {
         for (Tuple tu : vecTuples) {
             if (val instanceof Integer) {
                 Integer te = (Integer) val;
-                if(!((Integer)tu.getColumnValue(col)).equals(te)){
+                if (!((Integer) tu.getColumnValue(col)).equals(te)) {
                     hstups.add(tu);
                 }
             } else if (val instanceof Double) {
                 Double te = (Double) val;
-                if(!((Double)tu.getColumnValue(col)).equals(te)){
+                if (!((Double) tu.getColumnValue(col)).equals(te)) {
                     hstups.add(tu);
                 }
             } else {

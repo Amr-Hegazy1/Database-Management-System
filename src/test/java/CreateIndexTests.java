@@ -186,12 +186,46 @@ public class CreateIndexTests {
 
             for(int i = 0; i < 100; i++){
                 assert tree.query("name200" + i).size() == 0;
-                assert tree.query("name" + i) != null && tree.query("name" + i).size() == 1 && ((Tuple) tree.query("name" + i).get(0)).getColumnValue("name").equals("name" + i);
+                assert tree.query("name" + i) != null && tree.query("name" + i).size() == 1;
+
+                Pair pair = (Pair) tree.query("name" + i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+                
+                assert tuple.getColumnValue("name").equals("name" + i);
             }
 
             for(int i = 0; i < 100; i++){
                 assert tree2.query("name" + i).size() == 0;
-                assert tree2.query("name200" + i) != null && tree2.query("name200" + i).size() == 1 && ((Tuple) tree2.query("name200" + i).get(0)).getColumnValue("name").equals("name200" + i);
+                assert tree2.query("name200" + i) != null && tree2.query("name200" + i).size() == 1;
+
+                Pair pair = (Pair) tree2.query("name200" + i).get(0);
+
+                Comparable clusteringKey = (Comparable) pair.getKey();
+
+                String pageName = (String) pair.getValue();
+
+                Page page = Page.deserialize("tables/" + strTableName2 + "/" + pageName + ".class");
+
+                int tupleIndex = TestCases.searchTuplesByClusteringKey("id", clusteringKey, page);
+
+                assert tupleIndex != -1;
+
+                Tuple tuple = page.getTupleWithIndex(tupleIndex);
+
+                assert tuple.getColumnValue("name").equals("name200" + i);
+
+                
             }
 
 
@@ -227,6 +261,44 @@ public class CreateIndexTests {
             cleanUp();
         }
     }
+
+
+    @Test
+    public void createIndexWithSameTableName() throws DBAppException, IOException {
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            
+
+            dbApp.createIndex(strTableName, "name", "Student");
+
+            // check if the index is created by asserting that the file exists
+
+            File file = new File("tables/" + strTableName + "/StudentIndex.class");
+
+            assert file.exists();
+
+
+
+
+        }finally{
+
+            cleanUp();
+        }
+    }
+
+
 
     protected void cleanUp() throws IOException{
         try{
