@@ -20,9 +20,6 @@ import com.db_engine.Tuple;
 
 public class SelectTestCases {
 
-    // TODO indicies tests (almost complete)
-    // TODO add XOR to all tests
-
     // @Test
     // public void selectWithoutIndexWithId() throws DBAppException, IOException,
     // ClassNotFoundException {
@@ -500,6 +497,7 @@ public class SelectTestCases {
 
             while (iterator3.hasNext()) {
                 Tuple tuple = (Tuple) iterator3.next();
+                
                 assert tuple.getColumnValue("id").equals(6);
                 assert tuple.getColumnValue("name").equals("Student6");
                 assert tuple.getColumnValue("gpa").equals(3.0 + 6);
@@ -642,7 +640,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 5;
+            assert count == 5; // 3.0 to 7.0
 
             count = 0;
 
@@ -663,9 +661,9 @@ public class SelectTestCases {
             arrSQLTerms[1]._strOperator = ">";
             arrSQLTerms[1]._objValue = 12.0;
 
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa < 8.0 (4)
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa < 8.0 (5)
                                                                             // OR
-                                                                            // id > 12.0 (10) --> 4+10 = 14 tuples;
+                                                                            // id > 12.0 (10) --> 5+10 = 15 tuples;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -673,6 +671,7 @@ public class SelectTestCases {
                 count++;
             }
 
+            assert count == 15;
             assert count == 15;
 
             count = 0;
@@ -695,9 +694,9 @@ public class SelectTestCases {
             arrSQLTerms[1]._objValue = 12.0;
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa <= 8.0
-                                                                            // (5)
+                                                                            // (6)
                                                                             // OR
-                                                                            // id >= 12.0 (11) --> 5+11 = 16 tuples;
+                                                                            // id >= 12.0 (11) --> 6+11 = 17 tuples;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -705,6 +704,7 @@ public class SelectTestCases {
                 count++;
             }
 
+            assert count == 17;
             assert count == 17;
 
             count = 0;
@@ -727,9 +727,9 @@ public class SelectTestCases {
             arrSQLTerms[1]._objValue = 12.0;
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa <= 8.0
-                                                                            // (5)
+                                                                            // (6)
                                                                             // OR
-                                                                            // id > 12.0 (10) --> 5+10 = 15 tuples;
+                                                                            // id > 12.0 (10) --> 6+10 = 16 tuples;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -737,6 +737,7 @@ public class SelectTestCases {
                 count++;
             }
 
+            assert count == 16;
             assert count == 16;
 
             count = 0;
@@ -759,9 +760,9 @@ public class SelectTestCases {
             arrSQLTerms[1]._objValue = 12.0;
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa < 8.0
-                                                                            // (4)
+                                                                            // (5)
                                                                             // OR
-                                                                            // id >= 12.0 (11) --> 4+11 = 15 tuples;
+                                                                            // id >= 12.0 (11) --> 5+11 = 16 tuples;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -769,6 +770,7 @@ public class SelectTestCases {
                 count++;
             }
 
+            assert count == 16;
             assert count == 16;
 
             count = 0;
@@ -813,7 +815,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 15;
+            assert count == 15; // Student0-Student4(5) & Student10-Student19(10) -> (5+10=15 tuples)
 
             count = 0;
 
@@ -835,7 +837,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 16;
+            assert count == 16; // Student0-Student5(6) & Student10-Student19(10) -> (6+10=16 tuples)
 
             count = 0;
 
@@ -846,7 +848,8 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "name";
             arrSQLTerms[0]._strOperator = "<";
-            arrSQLTerms[0]._objValue = "Student5";
+            arrSQLTerms[0]._objValue = "Student5"; // Total 15 Tuples(Student0-Student4(5) & Student10-Student19(10) ->
+                                                   // (5+10=15))
 
             strarrOperators[0] = "OR";
 
@@ -854,11 +857,11 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "name";
             arrSQLTerms[1]._strOperator = ">";
-            arrSQLTerms[1]._objValue = "Student15";
+            arrSQLTerms[1]._objValue = "Student15"; // Total 8 tuples (Student2-Student9 (8))
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name <
-                                                                            // "Student5"(5) OR name > "Student15" (4)
-                                                                            // --> 5+4= 9 records;
+                                                                        
+                                                                           
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -866,8 +869,8 @@ public class SelectTestCases {
                         || ((String) tuple.getColumnValue("name")).compareTo("Student15") > 0;
                 count++;
             }
-
-            assert count == 9;
+            
+            assert count == 20; 
 
             count = 0;
 
@@ -886,11 +889,11 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "name";
             arrSQLTerms[1]._strOperator = ">";
-            arrSQLTerms[1]._objValue = "Student15";
+            arrSQLTerms[1]._objValue = "Student15"; // Total 8 tuples (Student2-Student9 (8))
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name <=
-                                                                            // "Student5"(6) OR name > "Student15" (4)
-                                                                            // --> 6+4= 10 records;
+                                                                            // "Student5"(16) OR name > "Student15" (8)
+                                                                            // --> 16+8=24 records;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -899,7 +902,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 10;
+            assert count == 20;
 
             count = 0;
 
@@ -910,7 +913,8 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "name";
             arrSQLTerms[0]._strOperator = "<";
-            arrSQLTerms[0]._objValue = "Student5";
+            arrSQLTerms[0]._objValue = "Student5"; // Total 15 Tuples(Student0-Student4(5) & Student10-Student19(10) ->
+                                                   // (5+10=15))
 
             strarrOperators[0] = "OR";
 
@@ -918,11 +922,11 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "name";
             arrSQLTerms[1]._strOperator = ">=";
-            arrSQLTerms[1]._objValue = "Student15";
+            arrSQLTerms[1]._objValue = "Student15"; // Total 19 tuples (Student1-Student19 (19))
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name <
-                                                                            // "Student5"(5) OR name >= "Student15" (5)
-                                                                            // --> 5+5= 10 records;
+                                                                            // "Student5"(15) OR name >= "Student15"
+                                                                            
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -931,8 +935,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 10;
-
+            assert count == 20;
             count = 0;
 
             // Test on Non-Clustering Key (Test 7 : String) (Same as Test 6 but change order
@@ -943,7 +946,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "name";
             arrSQLTerms[0]._strOperator = ">=";
-            arrSQLTerms[0]._objValue = "Student15";
+            arrSQLTerms[0]._objValue = "Student15"; // Total 19 tuples (Student1-Student19 (19))
 
             strarrOperators[0] = "OR";
 
@@ -951,11 +954,12 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "name";
             arrSQLTerms[1]._strOperator = "<";
-            arrSQLTerms[1]._objValue = "Student5";
+            arrSQLTerms[1]._objValue = "Student5";// Total 15 Tuples(Student0-Student4(5) & Student10-Student19(10) ->
+                                                  // (5+10=15))
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name >=
-                                                                            // "Student15"(5) OR name < "Student5" (5)
-                                                                            // --> 5+5= 10 records;
+                                                                            // "Student15"(19) OR name < "Student5" (15)
+                                                                            // --> 19+15= 34 records;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
@@ -964,7 +968,7 @@ public class SelectTestCases {
                 count++;
             }
 
-            assert count == 10;
+            assert count == 20;
 
             count = 0;
 
@@ -1038,10 +1042,10 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "name";
             arrSQLTerms[0]._strOperator = ">";
-            arrSQLTerms[0]._objValue = "Student19";
+            arrSQLTerms[0]._objValue = "Student9";
 
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // select * from Student where name >
-                                                                            // "Student19";
+                                                                            // "Student9";
 
             assert !iterator.hasNext();
 
@@ -1082,7 +1086,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "name";
             arrSQLTerms[0]._strOperator = "<";
-            arrSQLTerms[0]._objValue = "Student5";
+            arrSQLTerms[0]._objValue = "Student15";
 
             strarrOperators[0] = "AND";
 
@@ -1090,16 +1094,16 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "name";
             arrSQLTerms[1]._strOperator = ">";
-            arrSQLTerms[1]._objValue = "Student15";
+            arrSQLTerms[1]._objValue = "Student5";
 
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name
-                                                                                     // < "Student5"(5) AND name >
-                                                                                     // "Student15" (4) --> = 0 records;
+                                                                                     // < "Student15" AND name >
+                                                                                     // "Student5" --> = 0 records;
 
             while (iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
-                assert ((String) tuple.getColumnValue("name")).compareTo("Student5") < 0
-                        && ((String) tuple.getColumnValue("name")).compareTo("Student15") > 0;
+                assert ((String) tuple.getColumnValue("name")).compareTo("Student15") < 0
+                        && ((String) tuple.getColumnValue("name")).compareTo("Student5") > 0;
                 count++;
             }
 
@@ -1269,9 +1273,10 @@ public class SelectTestCases {
             arrSQLTerms[3]._strOperator = "=";
             arrSQLTerms[3]._objValue = 4;
 
+            // Final Correct Expression: (id = 1 XOR (id = 2 OR (id = 3 AND id = 4)))
             iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
                                                                             // "Student1" XOR id = 2 OR id = 3 AND id =
-            // 4;
+                                                                            // 4;
             while (!iterator.hasNext()) {
                 Tuple tuple = (Tuple) iterator.next();
                 assert (int) tuple.getColumnValue("id") == 1
@@ -1286,6 +1291,7 @@ public class SelectTestCases {
         }
     }
 
+    @Test
     // Upper case Test
     public void testOperatorCapitilzation1() throws IOException, DBAppException, ClassNotFoundException {
         boolean flag = false;
@@ -1342,6 +1348,7 @@ public class SelectTestCases {
         assert flag;
     }
 
+    @Test
     // Lowercase Test
     public void testOperatorCapitilzation2() throws IOException, DBAppException, ClassNotFoundException {
         boolean flag = false;
@@ -1451,9 +1458,11 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
+            dbApp.init();
 
             initializeTestTable(dbApp, 20);
 
+            
             // Test 2: Ranged queries 1 (Lower bound only)
             arrSQLTerms = new SQLTerm[1];
             strarrOperators = new String[0];
@@ -1465,7 +1474,7 @@ public class SelectTestCases {
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
                                                                                         // id > 5;
-
+            
             dbApp.createIndex("Student", "id", "idIndex");
 
             IteratorWithIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
@@ -1488,8 +1497,10 @@ public class SelectTestCases {
 
             noIndexCount = 0;
             indexCount = 0;
+            
 
             cleanUp(); // remove index
+            dbApp.init();
 
             initializeTestTable(dbApp, 20);
 
@@ -1537,7 +1548,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // II. Non-Clustering Index tests
@@ -1577,7 +1588,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 2: Exact Values (String)
@@ -1615,7 +1626,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             String strTableName = "Student";
 
             Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
@@ -1675,7 +1686,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             dbApp.createTable(strTableName, "name", htblColNameType);
 
             // insert n rows (20)
@@ -1724,7 +1735,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             dbApp.createTable(strTableName, "name", htblColNameType);
 
             // insert n rows (20)
@@ -1780,7 +1791,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 6 Ranged Values (double) (lower bound)
@@ -1819,7 +1830,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 7 : Ranged Values (double) (Lower & Upper bound)
@@ -1866,7 +1877,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 8 : Ranged Values (String) (Lower bound)
@@ -1876,7 +1887,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "name";
             arrSQLTerms[0]._strOperator = ">";
-            arrSQLTerms[0]._objValue = "Student5";
+            arrSQLTerms[0]._objValue = "Student5"; // Total tuples = 4 (Student6-Student9)
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
                                                                                         // name > "Student5";
@@ -1898,14 +1909,14 @@ public class SelectTestCases {
             }
 
             assert noIndexCount == indexCount;
-            assert noIndexCount == 14; // if this assert passes that means the number of values is correct and that
-                                       // they are equal.
+            assert noIndexCount == 4; // if this assert passes that means the number of values is correct and that
+                                      // they are equal.
 
             noIndexCount = 0;
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 9 : Ranged Values (String) (Lower & Upper bound)
@@ -1923,7 +1934,7 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "name";
             arrSQLTerms[1]._strOperator = "<=";
-            arrSQLTerms[1]._objValue = "Student10";
+            arrSQLTerms[1]._objValue = "Student9";
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
                                                                                         // name > "Student5" AND name<=
@@ -1936,23 +1947,24 @@ public class SelectTestCases {
             while (iteratorWithoutIndex.hasNext()) {
                 Tuple tuple = (Tuple) iteratorWithoutIndex.next();
                 assert ((String) tuple.getColumnValue("name")).compareTo("Student5") > 0
-                        && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
+                        && ((String) tuple.getColumnValue("name")).compareTo("Student9") <= 0;
                 noIndexCount++;
             }
 
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
                 assert ((String) tuple.getColumnValue("name")).compareTo("Student5") > 0
-                        && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
+                        && ((String) tuple.getColumnValue("name")).compareTo("Student9") <= 0;
                 indexCount++;
             }
 
             assert noIndexCount == indexCount;
-            assert noIndexCount == 5; // if this assert passes that means the number of values is correct and that
+            assert noIndexCount == 4; // if this assert passes that means the number of values is correct and that
                                       // they are equal.
 
         } finally {
             cleanUp();
+            
         }
     }
 
@@ -2017,7 +2029,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 2: Two indexed values (Ranged Values) (clust key + non-clust key)
@@ -2026,7 +2038,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "id";
             arrSQLTerms[0]._strOperator = ">";
-            arrSQLTerms[0]._objValue = 5;
+            arrSQLTerms[0]._objValue = 5; // gpas > 8.0
 
             strarrOperators[0] = "AND";
 
@@ -2034,7 +2046,7 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = "<=";
-            arrSQLTerms[1]._objValue = 12.0;
+            arrSQLTerms[1]._objValue = 12.0; // gpa 12 for student who has id=9 , total tuples=10 -> (12.0-3.0)+1 = 10
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where
                                                                                         // id= 5 AND gpa <= 12.0;
@@ -2053,8 +2065,9 @@ public class SelectTestCases {
             while (IteratorWithIndex.hasNext()) {
                 Tuple tuple = (Tuple) IteratorWithIndex.next();
                 assert (int) tuple.getColumnValue("id") > 5 && (double) tuple.getColumnValue("gpa") <= 12.0;
+                indexCount++;
             }
-
+           
             assert noIndexCount == indexCount;
             assert noIndexCount == 4; // if this assert passes that means the number of values is correct and that
                                       // they are equal.
@@ -2063,7 +2076,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 3: Two indexed values (Exact Value) (non-clust + non-clust)
@@ -2115,7 +2128,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 4: Two indexed values (Ranged Values) (non-clust + non-clust)
@@ -2126,7 +2139,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "name";
             arrSQLTerms[0]._strOperator = ">";
-            arrSQLTerms[0]._objValue = "Student5";
+            arrSQLTerms[0]._objValue = "Student5"; // from student6 to student9
 
             strarrOperators[0] = "AND";
 
@@ -2134,7 +2147,7 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = "<=";
-            arrSQLTerms[1]._objValue = 12.0;
+            arrSQLTerms[1]._objValue = 12.0; // from student0 up to student9 inclusive
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from
                                                                                         // Student where name>
@@ -2169,7 +2182,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 5: Three indexed values (Exact Value) (clust key + non-clust key +
@@ -2234,7 +2247,7 @@ public class SelectTestCases {
             indexCount = 0;
 
             cleanUp(); // remove index
-
+            dbApp.init();
             initializeTestTable(dbApp, 20);
 
             // Test 6: Three indexed values (Ranged Values) (clust key + non-clust key +
@@ -2247,7 +2260,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "id";
             arrSQLTerms[0]._strOperator = ">";
-            arrSQLTerms[0]._objValue = 5;
+            arrSQLTerms[0]._objValue = 5; // from Student6 to Student19
 
             strarrOperators[0] = "AND";
 
@@ -2255,7 +2268,7 @@ public class SelectTestCases {
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
             arrSQLTerms[1]._strOperator = ">";
-            arrSQLTerms[1]._objValue = 9.0;
+            arrSQLTerms[1]._objValue = 9.0; // from Student7 to Student19
 
             strarrOperators[1] = "AND";
 
@@ -2263,7 +2276,7 @@ public class SelectTestCases {
             arrSQLTerms[2]._strTableName = "Student";
             arrSQLTerms[2]._strColumnName = "name";
             arrSQLTerms[2]._strOperator = "<=";
-            arrSQLTerms[2]._objValue = "Student10";
+            arrSQLTerms[2]._objValue = "Student10"; // Student0,Student1 & from Student10 to Student19
 
             iteratorWithoutIndex = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from
                                                                                         // Student where id> 5
@@ -2291,17 +2304,110 @@ public class SelectTestCases {
                         && ((String) tuple.getColumnValue("name")).compareTo("Student10") <= 0;
                 indexCount++;
             }
-
+            
             assert noIndexCount == indexCount;
-            assert noIndexCount == 4; // if this assert passes that means the number of values is correct and that
-                                      // they are equal.
+            assert noIndexCount == 10; // if this assert passes that means the number of values is correct and that
+                                       // they are equal. Final Tuple range after ANDing -> Student10 to Student19
 
         } finally {
             cleanUp();
         }
     }
 
-    // TODO complete query time test
+    @Test
+    // TODO generate more XOR edge cases
+    public void xorTests() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+            dbApp.init();
+
+            initializeTestTable(dbApp, 20);
+
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[1];
+            int count = 0;
+
+            // Test 1: Exact Value Query (no common values, acts as normal OR)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            strarrOperators[0] = "XOR";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 3;
+
+            // select * from Student where id = 5 XOR id = 3
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (int) tuple.getColumnValue("id") == 5 || (int) tuple.getColumnValue("id") == 3;
+                count++;
+            }
+
+            assert count == 2;
+
+            count = 0;
+
+            // Test 2: Exact Value Query (common values, should return nothing)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            strarrOperators[0] = "XOR";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 5;
+
+            // select * from Student where id = 5 XOR id = 5
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            assert !iterator.hasNext();
+
+            // Test 3: Ranged Query (common values, should return nothing)
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = ">";
+            arrSQLTerms[0]._objValue = 8; // id>8 , 9-19
+
+            strarrOperators[0] = "XOR";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = ">";
+            arrSQLTerms[1]._objValue = 5; // id > 5 , 6-19
+
+            // select * from Student where id > 8 XOR id > 5 (res should be 6-8)
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert tuple.getColumnValue("id").equals(6) || tuple.getColumnValue("id").equals(7)
+                        || tuple.getColumnValue("id").equals(8);
+                count++;
+            }
+
+            assert count == 3;
+
+        } finally {
+            cleanUp();
+        }
+
+    }
+
     @Test
     public void IndexedQueryTime() throws IOException, DBAppException {
         try {
@@ -2310,12 +2416,81 @@ public class SelectTestCases {
 
             initializeTestTable(dbApp, 1000);
 
+            SQLTerm[] arrSQLTerms = new SQLTerm[2];
+            String[] strarrOperators = new String[1];
+
+            // Test 1: Exact Value Query
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 5;
+
+            strarrOperators[0] = "OR";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 3;
+
+            long startTime = System.currentTimeMillis();
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            long endTime = System.currentTimeMillis();
+
+            long nonIndexDuration = endTime - startTime;
+
+            dbApp.createIndex("Student", "id", "idIndex");
+
+            startTime = System.currentTimeMillis();
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            endTime = System.currentTimeMillis();
+
+            long indexedDuration = endTime - startTime;
+
+            assert indexedDuration < nonIndexDuration;
+
+            cleanUp(); // remove index
+            dbApp.init();
+            initializeTestTable(dbApp, 1000);
+
+            // Test 2: Ranged Query
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "<=";
+            arrSQLTerms[0]._objValue = 17;
+
+            strarrOperators[0] = "AND";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = ">=";
+            arrSQLTerms[1]._objValue = 3;
+
+            startTime = System.currentTimeMillis();
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            endTime = System.currentTimeMillis();
+
+            nonIndexDuration = endTime - startTime;
+
+            dbApp.createIndex("Student", "id", "idIndex");
+
+            startTime = System.currentTimeMillis();
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+            endTime = System.currentTimeMillis();
+
+            indexedDuration = endTime - startTime;
+
+            assert indexedDuration < nonIndexDuration;
+
         } finally {
             cleanUp();
         }
     }
 
-    @Before
+    
     public void cleanUp() throws IOException {
         try {
             // delete tables directory

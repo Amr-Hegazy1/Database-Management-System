@@ -18,10 +18,10 @@ public class DBApp {
 	private Metadata metadata;
 	final int MAX_ROWS_COUNT_IN_PAGE;
 
-	public DBApp() throws DBAppException {
+	public DBApp() throws DBAppException{
 
 		try {
-			metadata = new Metadata();
+			
 
 			Properties prop = new Properties();
 			String fileName = "/DBApp.config";
@@ -36,6 +36,7 @@ public class DBApp {
 		} catch (IOException ex) {
 			throw new DBAppException("Error reading config file");
 		}
+		
 
 	}
 
@@ -44,8 +45,14 @@ public class DBApp {
 	// execute at application startup
 	public void init() {
 
-		// TODO: LOAD INDICES
-		// TODO: LOAD METADATA FILE
+		try {
+			metadata = new Metadata();
+
+			
+
+		} catch (DBAppException e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -62,7 +69,7 @@ public class DBApp {
 	 *                               The data type of that column will be passed in
 	 *                               htblColNameType.
 	 * 
-	 * @param htblColNameType       The `htblColNameType` will have the column
+	 * @param htblColNameType        The `htblColNameType` will have the column
 	 *                               name as key and
 	 *                               the data type as value.
 	 * 
@@ -77,13 +84,17 @@ public class DBApp {
 			Hashtable<String, String> htblColNameType) throws DBAppException {
 
 		boolean boolValidTypes = true;
-		Vector<String> vecValidTypes = new Vector<>(Arrays.asList("java.lang.Integer"
-				,"java.lang.Double" , "java.lang.String"));
-		for(String strColumnName : htblColNameType.keySet()){
+		Vector<String> vecValidTypes = new Vector<>(
+				Arrays.asList("java.lang.Integer", "java.lang.Double", "java.lang.String"));
+		for (String strColumnName : htblColNameType.keySet()) {
 			boolValidTypes &= vecValidTypes.contains(htblColNameType.get(strColumnName));
 		}
-		if(!boolValidTypes){
+		if (!boolValidTypes) {
 			throw new DBAppException("Unsupported Data Types!");
+		}
+
+		if (!htblColNameType.containsKey(strClusteringKeyColumn)) {
+			throw new DBAppException("Clustering Key Column not found in Column Types!");
 		}
 
 		metadata.addTable(strTableName, strClusteringKeyColumn, htblColNameType);
@@ -373,7 +384,6 @@ public class DBApp {
 					bptTree.insert(colValue, pairIndexPair);
 				}
 
-				System.out.println("INSERTED IN INSERT" + colValue);
 				// bptTree.insert(colValue, pairIndexPair); // inserting col value(key) and
 				// tuple
 				// // object(value) into bTree
@@ -399,8 +409,6 @@ public class DBApp {
 																					// in the
 		// vecPages Vector
 		Tuple tupleLastTuple = pgFirstOverflowPage.removeLastTuple(); // last tuple in overflow page
-		System.out.println("removed tuple" + tupleLastTuple);
-		System.out.println("new last tuple " + pgFirstOverflowPage.getLastTuple());
 		tblTable.setMax(pgFirstOverflowPage.getPageName(),
 				(Comparable) pgFirstOverflowPage.getLastTuple().getColumnValue(strClustKeyName)); // adjusting max value
 																									// in
@@ -464,9 +472,6 @@ public class DBApp {
 					Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 							page.getPageName());
 
-					System.out.println("INSERTED IN HANDLEOVERFLOW FORLOOP " + colValue);
-					System.out.println("page of pair to be removed" + " " + pairOldIndexPair.getValue());
-					System.out.println("page of pair to be added" + " " + pairNewIndexPair.getValue());
 					bptTree.remove(colValue, pairOldIndexPair);
 					bptTree.insert(colValue, pairNewIndexPair);
 
@@ -484,8 +489,7 @@ public class DBApp {
 				tupleLastTuple = page.removeLastTuple();
 				tblTable.setMax(page.getPageName(),
 						(Comparable) page.getLastTuple().getColumnValue(strClustKeyName)); // adjust max value in page
-				System.out.println("LAST TUPLE REMOVED" + " " + tupleLastTuple);
-				System.out.println("NEW LAST TUPLE " + " " + page.getLastTuple());
+
 				page.serialize("tables/" + tblTable.getTableName() + "/" + page.getPageName() + ".class");
 			} else { // if no overflow, serialize page and break the loop
 				page.serialize("tables/" + tblTable.getTableName() + "/" + page.getPageName() + ".class");
@@ -498,12 +502,11 @@ public class DBApp {
 
 		String newPageName = tblTable.addPage(); // creating new page
 		Page newPage = new Page(newPageName); // creating new page object with new page name
-		
+
 		tblTable.setMin(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust min value
 																									// of new page
 		tblTable.setMax(newPageName, (Comparable) tupleLastTuple.getColumnValue(strClustKeyName)); // adjust max value
-																										// of new page
-		
+																									// of new page
 
 		// Adjust indicies only if there is any indexed columns *AND* newtuple being
 		// inserted from "insertIntoTable"
@@ -530,9 +533,6 @@ public class DBApp {
 				Pair pairNewIndexPair = new Pair(tupleLastTuple.getColumnValue(strClustKeyName),
 						newPageName);
 
-				System.out.println("INSERTED IN HANDLEOVERFLOW, CREATING A NEW PAGE" + colValue);
-				System.out.println("page of pair to be removed" + " " + pairOldIndexPair.getValue());
-				System.out.println("page of pair to be added" + " " + pairNewIndexPair.getValue());
 				bptTree.remove(colValue, pairOldIndexPair);
 				bptTree.insert(colValue, pairNewIndexPair); // inserting col value[key] and Pair(clust key val, page
 															// name) [value] into bTree
@@ -590,6 +590,9 @@ public class DBApp {
 		String strClusteringKey = metadata.getClusteringkey(strTableName);
 		String strclusteringKeyType = metadata.getColumnType(strTableName, strClusteringKey);
 		Comparable cmpClusteringKeyValue;
+
+		if (htblColNameValue.containsKey(strClusteringKey))
+			throw new DBAppException("Clustering key cannot be updated.");
 
 		try {
 			if (strclusteringKeyType.equals("java.lang.Integer")) {
@@ -662,7 +665,7 @@ public class DBApp {
 				
 
 				Pair<Object, String> keyPair = new Pair<>(tplTuple.getColumnValue(strClusteringKey),
-											tplTuple.getPageName());
+						tplTuple.getPageName());
 				bptTree.remove(cmpTemp, keyPair);
 				bptTree.insert(cmpColumnValue, keyPair);
 				bptTree.serialize("tables/" + strTableName + "/" + indexName + ".class");
@@ -735,12 +738,12 @@ public class DBApp {
 
 		if (pagePage.getSize() == 0) {
 			Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-			
+
 			table.removeMin(intTupleIndex);
 			table.removeMax(intTupleIndex);
 			table.removePage(intTupleIndex);
-			
-		}else{
+
+		} else {
 			// set min and max values for the page
 			Comparable cmpMin = (Comparable) pagePage.getTupleWithIndex(0).getColumnValue(strClusteringKeyColName);
 			Comparable cmpMax = (Comparable) pagePage.getTupleWithIndex(pagePage.getSize() - 1)
@@ -915,7 +918,6 @@ public class DBApp {
 			while (intCurrentPageIndex < intCurrentPageSize) {
 				Tuple tupleCurrentTuple = pageCurrentPage.getTupleWithIndex(intCurrentPageIndex);
 				boolean boolToBeDeletedTuple = false;
-				
 
 				if (tupleSatisfiesAndedConditions(tupleCurrentTuple, htblColNameValue)) {
 					pageCurrentPage.deleteTupleWithIndex(intCurrentPageIndex);
@@ -928,7 +930,7 @@ public class DBApp {
 
 			if (pageCurrentPage.getSize() == 0) {
 				Page.deletePage("tables/" + strTableName + "/" + pageCurrentPageName + ".class");
-				
+
 				table.removeMin(pageCurrentPageName);
 				table.removeMax(pageCurrentPageName);
 				table.removePage(pageCurrentPage.getPageName());
@@ -1011,7 +1013,7 @@ public class DBApp {
 
 				if (pagePage.getSize() == 0) {
 					Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
-					
+
 					table.removeMin(strPageName);
 					table.removeMax(strPageName);
 					table.removePage(pagePage.getPageName());
@@ -1104,9 +1106,8 @@ public class DBApp {
 			throw new DBAppException("Table does not exist");
 		}
 
-		
-
-		// check if the column names exist & if the column values are of the correct type
+		// check if the column names exist & if the column values are of the correct
+		// type
 		for (String strCol : htblColNameValue.keySet()) {
 
 			// check if the column name exists
@@ -1120,8 +1121,6 @@ public class DBApp {
 				throw new DBAppException("Data type mismatch");
 			}
 		}
-		
-		
 
 		Table table = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 		String strClusteringKey = metadata.getClusteringKey(strTableName);
@@ -1136,7 +1135,7 @@ public class DBApp {
 	}
 
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms,
-			String[] strarrOperators) throws DBAppException{
+			String[] strarrOperators) throws DBAppException {
 
 				try{
 					if(arrSQLTerms == null || strarrOperators == null){
@@ -1169,13 +1168,15 @@ public class DBApp {
 						throw new DBAppException("Column doesn't exist");
 				} else
 					throw new DBAppException("Table doesn't exist or inconsistent");
+			}
+			boolean indexhelp = true;
+			for (int i = 0; i < strarrOperators.length; i++) {
+				if (Objects.isNull(strarrOperators[i])) {
+					throw new DBAppException("null in operator");
 				}
-				boolean indexhelp=true;
-				for(int i=0;i<strarrOperators.length;i++){
-					if(Objects.isNull(strarrOperators[i])){
-						throw new DBAppException("null in operator");
-					}
-					if((!strarrOperators[i].toLowerCase().equals("and"))&&(!strarrOperators[i].toLowerCase().equals("or"))&&(!strarrOperators[i].toLowerCase().equals("xor")))
+				if ((!strarrOperators[i].toLowerCase().equals("and"))
+						&& (!strarrOperators[i].toLowerCase().equals("or"))
+						&& (!strarrOperators[i].toLowerCase().equals("xor")))
 					throw new DBAppException("Undefined operator is being used");
 					if(!(strarrOperators[i].toLowerCase().equals("and")))
 					indexhelp=false;
@@ -1342,6 +1343,8 @@ public class DBApp {
 	}
 
 	private static HashSet<Tuple> or2hs(HashSet<Tuple> hs1, HashSet<Tuple> hs2) {
+		
+
 		if(hs1.size() < hs2.size()){
 			HashSet<Tuple> hsTemp = hs1;
 			hs1 = hs2;
@@ -1525,7 +1528,7 @@ public class DBApp {
 
 		} else if (sql._strOperator.equals(">")) {
 			if (!metadata.getIndexType(sql._strTableName, sql._strColumnName).equals("null")) {
-
+				
 				BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
 						+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
 				Vector<Pair> listtmp;
@@ -1670,7 +1673,7 @@ public class DBApp {
 		if (sql._strOperator.equals("=")) {
 			BPlusTree bptmp = BPlusTree.deserialize("tables/" + sql._strTableName + "/"
 					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
-			Vector<Pair> listtmp = new Vector<Pair> (bptmp.query((Comparable) sql._objValue));
+			Vector<Pair> listtmp =  new Vector(bptmp.query((Comparable) sql._objValue));
 			for (Pair tup : listtmp) {
 				hstup.add((String) tup.getValue());
 			}
@@ -1682,17 +1685,17 @@ public class DBApp {
 					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
 			Vector<Pair> listtmp;
 			if (sql._objValue instanceof Integer) {
-				listtmp = new Vector<Pair> (bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE));
+				listtmp = new Vector(bptmp.rangeQuery((Comparable) sql._objValue, Integer.MAX_VALUE));
 				for (Pair tup : listtmp) {
 					hstup.add((String) tup.getValue());
 				}
 			} else if (sql._objValue instanceof Double) {
-				listtmp = new Vector<Pair> (bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE));
+				listtmp = new Vector(bptmp.rangeQuery((Comparable) sql._objValue, Double.MAX_VALUE));
 				for (Pair tup : listtmp) {
 					hstup.add((String) tup.getValue());
 				}
 			} else {
-				listtmp = new Vector<Pair> (bptmp.rangeQuery((Comparable) sql._objValue, "{"));
+				listtmp = new Vector(bptmp.rangeQuery((Comparable) sql._objValue, "{"));
 				for (Pair tup : listtmp) {
 					hstup.add((String) tup.getValue());
 				}
@@ -1705,20 +1708,20 @@ public class DBApp {
 					+ metadata.getIndexName(sql._strTableName, sql._strColumnName) + ".class");
 			Vector<Pair> listtmp;
 			if (sql._objValue instanceof Integer) {
-				listtmp = new Vector<Pair>( bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue));
+				listtmp = new Vector(bptmp.rangeQuery(Integer.MIN_VALUE, (Comparable) sql._objValue));
 				listtmp.addAll(bptmp.query((Integer) sql._objValue));
 				for (Pair tup : listtmp) {
 					hstup.add((String) tup.getValue());
 				}
 			} else if (sql._objValue instanceof Double) {
-				listtmp = new Vector<Pair> (bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue));
-				listtmp.addAll(bptmp.query((Double) sql._objValue));
+				listtmp = new Vector(bptmp.rangeQuery(Double.MIN_VALUE, (Comparable) sql._objValue));
+				listtmp.addAll(bptmp.query((Comparable) sql._objValue));
 				for (Pair tup : listtmp) {
 					hstup.add((String) tup.getValue());
 				}
 			} else {
-				listtmp = new Vector<Pair> (bptmp.rangeQuery("", (Comparable) sql._objValue));
-				listtmp.addAll(bptmp.query((String) sql._objValue));
+				listtmp = new Vector(bptmp.rangeQuery("", (Comparable) sql._objValue));
+				listtmp.addAll(bptmp.query((Comparable) sql._objValue));
 				for (Pair tup : listtmp) {
 					hstup.add((String) tup.getValue());
 				}
@@ -1799,10 +1802,9 @@ public class DBApp {
 	public static void main(String[] args) throws IOException {
 
 		try {
-
 			DBApp dbApp = new DBApp();
 
-            dbApp.init();
+			dbApp.init();
 
             String strTableName = "Student";
 
@@ -1814,12 +1816,25 @@ public class DBApp {
 
             htblColNameType.put("gpa", "java.lang.Double");
 
-            dbApp.createTable(strTableName, "id", htblColNameType);
+			dbApp.createTable(strTableName, "id", htblColNameType);
 
-            dbApp.createIndex(strTableName, "name", "nameIndex");
+			// insert 20 rows
 
-            // insert 20 rows
+			for (int i = 0; i < 20; i++) {
+				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+				htblColNameValue.put("id", i);
+				htblColNameValue.put("name", "Student" + i);
+				htblColNameValue.put("gpa", 3.0 + i);
+				dbApp.insertIntoTable(strTableName, htblColNameValue);
+			}
 
+			Page p = Page.deserialize("tables/" + strTableName + "/" + strTableName + "_0.class");
+
+			Vector<Tuple> tuples = p.getTuples();
+
+			for (Tuple t : tuples) {
+				System.out.println(t);
+			}
             for (int i = 0; i < 20; i++) {
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);

@@ -411,7 +411,25 @@ public class Table implements Serializable {
             }
 
         }
-        return left;
+        System.out.println(compClusteringKeyValue.compareTo(vecMax.get(n - 1)));
+        if (compClusteringKeyValue.compareTo(vecMin.get(0)) < 0)
+            return 0;
+        else if (compClusteringKeyValue.compareTo(vecMax.get(n - 1)) > 0)
+            return n - 1;
+
+        int lowerPnt = 0;
+        int i = 1;
+    
+        while (i < n && vecMin.get(i).compareTo(compClusteringKeyValue) > 0) {
+            lowerPnt = i;
+            i = i * 2;
+        }
+    
+        // Final check for the remaining elements which are < X
+        while (lowerPnt < n && vecMin.get(lowerPnt).compareTo(compClusteringKeyValue) > 0)
+            lowerPnt++;
+    
+        return lowerPnt;
     }
 
     public HashSet<Tuple> greaterthan(String col, Object val)

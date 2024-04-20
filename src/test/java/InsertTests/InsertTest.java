@@ -19,6 +19,71 @@ import com.db_engine.*;
 
 public class InsertTest {
 
+
+    @Test
+    public void insertWrongTableName() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            
+
+            assertThrows(DBAppException.class, () -> {
+                dbApp.insertIntoTable("Student2", new Hashtable<String, Object>());
+            });
+
+        } finally {
+            cleanUp();
+        }
+    }
+
+    @Test
+    public void insertExtraColumn() throws DBAppException, IOException {
+        try {
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+
+            htblColNameType.put("id", "java.lang.Integer");
+
+            htblColNameType.put("name", "java.lang.String");
+
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+            htblColNameValue.put("id", 1);
+            htblColNameValue.put("name", "Student");
+            htblColNameValue.put("gpa", 3.0);
+            htblColNameValue.put("extra", "extra");
+
+            assertThrows(DBAppException.class, () -> {
+                dbApp.insertIntoTable(strTableName, htblColNameValue);
+            });
+
+        } finally {
+            cleanUp();
+        }
+    } 
+
     @Test
     public void insertWrongDataType() throws DBAppException, IOException {
         try {
@@ -463,7 +528,7 @@ public class InsertTest {
         }
     }
 
-    @Test // TODO msh fahem haga
+    @Test
     public void checkOverFlowMultipleIndices() throws DBAppException, IOException {
         try {
             DBApp dbApp = new DBApp();
@@ -517,7 +582,7 @@ public class InsertTest {
             tblTable = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
 
             String newPage = strTableName + "_" + 0;
-            
+
             Page pgPage = Page.deserialize("tables/" + strTableName + "/" + newPage + ".class");
             for (int i = 0; i < 41; i++) {
                 if (i % 20 == 0 && i > 0) {
@@ -536,7 +601,6 @@ public class InsertTest {
 
             for (int i = 0; i < 41; i++) {
                 String strPageName = tblTable.getPageAtIndex(i / 20);
-                
 
                 // assert tree.query("Student" + i).size() == 1;
                 assert tree.query("Student" + i) != null
@@ -569,7 +633,7 @@ public class InsertTest {
 
     }
 
-    @Test // TODO error in line 614 "Attempting to access a wrong tuple index"
+    @Test
     public void checkMinMaxUpdate() throws DBAppException, IOException {
         try {
             DBApp dbApp = new DBApp();
