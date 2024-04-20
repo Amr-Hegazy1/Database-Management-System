@@ -746,11 +746,12 @@ public class DBApp {
 		pagePage.deleteTupleWithIndex(intTupleIndex);
 
 		if (pagePage.getSize() == 0) {
-			Page.deletePage("tables/" + strTableName + "/" + pagePage.getPageName() + ".class");
+			String strPageName = pagePage.getPageName();
+			Page.deletePage("tables/" + strTableName + "/" + strPageName + ".class");
 
-			table.removeMin(intTupleIndex);
-			table.removeMax(intTupleIndex);
-			table.removePage(intTupleIndex);
+			table.removeMin(strPageName);
+			table.removeMax(strPageName);
+			table.removePage(strPageName);
 
 		} else {
 			// set min and max values for the page

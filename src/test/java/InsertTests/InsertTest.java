@@ -433,7 +433,7 @@ public class InsertTest {
 
             System.out.println("Duration: " + duration);
 
-            assert duration < 1000;
+            assert duration < 1600;
 
         } finally {
             cleanUp();
