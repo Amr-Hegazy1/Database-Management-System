@@ -1845,9 +1845,9 @@ public class DBApp {
 			Page p = Page.deserialize("tables/Student/Student_0.class");
 			Vector<Tuple> tuples = p.getTuples();
 
-			if (tuples.contains(htblColNameValue)) {
-				System.out.println("page:" + p.getPageName());
-			}
+			// if (tuples.contains(htblColNameValue)) {
+			// System.out.println("page:" + p.getPageName());
+			// }
 
 			p = Page.deserialize("tables/Student/Student_1.class");
 			tuples = p.getTuples();
