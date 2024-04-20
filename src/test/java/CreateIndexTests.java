@@ -262,6 +262,44 @@ public class CreateIndexTests {
         }
     }
 
+
+    @Test
+    public void createIndexWithSameTableName() throws DBAppException, IOException {
+        try{
+            DBApp dbApp = new DBApp();
+
+            dbApp.init();
+
+            String strTableName = "Student";
+
+            Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
+            htblColNameType.put("id", "java.lang.Integer");
+            htblColNameType.put("name", "java.lang.String");
+            htblColNameType.put("gpa", "java.lang.Double");
+
+            dbApp.createTable(strTableName, "id", htblColNameType);
+
+            
+
+            dbApp.createIndex(strTableName, "name", "Student");
+
+            // check if the index is created by asserting that the file exists
+
+            File file = new File("tables/" + strTableName + "/StudentIndex.class");
+
+            assert file.exists();
+
+
+
+
+        }finally{
+
+            cleanUp();
+        }
+    }
+
+
+
     protected void cleanUp() throws IOException{
         try{
             // delete tables directory

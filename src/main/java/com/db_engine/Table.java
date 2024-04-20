@@ -352,7 +352,7 @@ public class Table implements Serializable {
      *         `vecPages` vector.
      */
     public String getPageAtIndex(int i) {
-        System.out.println(vecPages);
+        
         return vecPages.get(i);
     }
 
@@ -385,9 +385,7 @@ public class Table implements Serializable {
 
             String strPage = this.getPageAtIndex(i);
             Page page = Page.deserialize(strPage + ".class");
-            System.out.println(
-                    "#################################### PAGE " + i + " ########################################");
-            System.out.println(page);
+            
         }
     }
 
@@ -431,47 +429,6 @@ public class Table implements Serializable {
         int lowerPnt = 0;
         int i = 1;
 
-        while (i < n && vecMin.get(i).compareTo(compClusteringKeyValue) > 0) {
-            lowerPnt = i;
-            i = i * 2;
-        }
-
-        // Final check for the remaining elements which are < X
-        while (lowerPnt < n && vecMin.get(lowerPnt).compareTo(compClusteringKeyValue) > 0)
-            lowerPnt++;
-
-        return lowerPnt;
-    }
-
-    public int getPageIndexInsert(Comparable compClusteringKeyValue) {
-        int n = vecPages.size();
-
-        int left = 0, right = n - 1;
-
-        while (left <= right) {
-            int mid = left + (right - left) / 2;
-
-            Comparable compMinValue = vecMin.get(mid), compMaxValue = vecMax.get(mid);
-
-            if (compClusteringKeyValue.compareTo(compMinValue) >= 0 &&
-                    compClusteringKeyValue.compareTo(compMaxValue) <= 0) {
-                return mid;
-            } else if (compMinValue.compareTo(compClusteringKeyValue) < 0) {
-                left = mid + 1;
-            } else {
-                right = mid - 1;
-            }
-
-        }
-
-        if (compClusteringKeyValue.compareTo(vecMin.get(0)) < 0)
-            return 0;
-        else if (compClusteringKeyValue.compareTo(vecMax.get(n - 1)) > 0)
-            return n - 1;
-
-        int lowerPnt = 0;
-        int i = 1;
-
         while (i < n && vecMin.get(i).compareTo(compClusteringKeyValue) < 0) {
             lowerPnt = i;
             i = i * 2;
@@ -483,6 +440,8 @@ public class Table implements Serializable {
 
         return lowerPnt;
     }
+
+    
 
     public HashSet<Tuple> greaterthan(String col, Object val)
             throws ClassNotFoundException, IOException, DBAppException {
@@ -538,7 +497,7 @@ public class Table implements Serializable {
             throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
         int pageIndex = getPageIndex((Comparable) val);
-        System.out.println(pageIndex);
+        
         Page page = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(pageIndex) + ".class");
         int tupleIndexInPage = page.binarySearchTuples(col, val);
         hmtup.addAll(page.lessearch(col, val, true, tupleIndexInPage));

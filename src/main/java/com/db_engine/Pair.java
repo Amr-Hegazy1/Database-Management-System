@@ -47,7 +47,7 @@ public class Pair<K, V> implements Serializable, Comparable<Pair<K, V>>{
 
 
     public int compareTo(Pair<K, V> o) {
-        System.out.println("Comparing " + key + " with " + o.key);
+        
         return ((Comparable<K>) key).compareTo(o.key);
     }
 
