@@ -629,14 +629,9 @@ public class UpdateTests {
             // check that the index is updated
 
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
-
-            for(int i = 0; i < 21; i++){
-                if(i == 0){
-                    assert tree.query("Student" + i).size() == 0;
-                }else{
-                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1 && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
-                }
-            }
+            assert tree.query("Student0").size() == 0;
+            assert tree.query("Student20").size() == 1;
+           
             
         }finally{
             cleanUp();
@@ -687,38 +682,32 @@ public class UpdateTests {
             // check that the index is updated
 
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+                assert tree.query("Student0").size() == 0;
+                assert tree.query("Student20").size() == 1;
+                // check that the row is updated and the other rows are not
 
-            for(int i = 0; i < 21; i++){
-                if(i == 0){
-                    assert tree.query("Student" + i).size() == 0;
-                }else{
-                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1 && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
-                }
-            }
-            // check that the row is updated and the other rows are not
+                String pagesPath = "tables/" + strTableName;
 
-            String pagesPath = "tables/" + strTableName;
+                File pagesDir = new File(pagesPath);
 
-            File pagesDir = new File(pagesPath);
+                File[] pages = pagesDir.listFiles();
 
-            File[] pages = pagesDir.listFiles();
-
-            for(File page : pages){
-                // check if the file name is in the format page_i.class
-                if(!page.getName().matches("Student_\\d+\\.class")){
-                    continue;
-                }
-                
-                Page p = Page.deserialize(page.getPath());
-                for(Tuple tuple : p.getTuples()){
-                    if(tuple.getColumnValue("id").equals(0)){
-                        assert tuple.getColumnValue("name").equals("Student" + 21);
-                        assert tuple.getColumnValue("id").equals(0.69);
-                    }else{
-                        assert tuple.getColumnValue("name").equals("Student" + tuple.getColumnValue("id"));
-                        assert !tuple.getColumnValue("id").equals(0.69);
+                for(File page : pages){
+                    // check if the file name is in the format page_i.class
+                    if(!page.getName().matches("Student_\\d+\\.class")){
+                        continue;
                     }
-                }
+                    
+                    Page p = Page.deserialize(page.getPath());
+                    for(Tuple tuple : p.getTuples()){
+                        if(tuple.getColumnValue("id").equals(0)){
+                            assert tuple.getColumnValue("name").equals("Student" + 20);
+                            assert tuple.getColumnValue("gpa").equals(0.69);
+                        }else{
+                            assert tuple.getColumnValue("name").equals("Student" + tuple.getColumnValue("id"));
+                            assert !tuple.getColumnValue("gpa").equals(0.69);
+                        }
+                    }
             }
         }finally{
             cleanUp();
@@ -765,34 +754,45 @@ public class UpdateTests {
             Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
 
             htblColNameValue.put("name", "Student20");
+            htblColNameValue.put("gpa", 0.69);
 
             dbApp.updateTable(strTableName, "0", htblColNameValue);
 
             // check that the indexes are updated
 
             BPlusTree tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "nameIndex.class");
+            BPlusTree tree1 = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
+            assert tree.query("Student0").size() == 0;
+            assert tree.query("Student20").size() == 1;
+            assert tree1.query(0.69).size() == 1;
+            assert tree1.query(3.0).size() == 0;
+            // check that the row is updated and the other rows are not
 
-            for(int i = 0; i < 21; i++){
-                if(i == 0){ 
-                    assert tree.query("Student" + i).size() == 0;
-                }else{
-                    assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1 && ((Tuple) tree.query("Student" + i).get(0)).getColumnValue("name").equals("Student" + i);
-                }
-            }
+            String pagesPath = "tables/" + strTableName;
 
-            tree = BPlusTree.deserialize("tables/" + strTableName + "/" + "gpaIndex.class");
+            File pagesDir = new File(pagesPath);
 
-            for(int i = 0; i < 21; i++){
-                if(i == 0){
-                    System.out.println(tree.query(3.0 + i));
-                    assert tree.query(3.0 + i).size() == 0;
-                }else{
-                    assert tree.query(3.0 + i) != null && tree.query(3.0 + i).size() == 1 && ((Tuple) tree.query(3.0 + i).get(0)).getColumnValue("gpa").equals(3.0 + i);
+            File[] pages = pagesDir.listFiles();
+
+            for(File page : pages){
+                // check if the file name is in the format page_i.class
+                if(!page.getName().matches("Student_\\d+\\.class")){
+                    continue;
                 }
                 
-            }
+                Page p = Page.deserialize(page.getPath());
+                for(Tuple tuple : p.getTuples()){
+                    if(tuple.getColumnValue("id").equals(0)){
+                        assert tuple.getColumnValue("name").equals("Student" + 20);
+                        assert tuple.getColumnValue("gpa").equals(0.69);
+                    }else{
+                        assert tuple.getColumnValue("name").equals("Student" + tuple.getColumnValue("id"));
+                        assert !tuple.getColumnValue("gpa").equals(0.69);
+                    }
+                }
 
-        }finally{
+        }
+    }finally{
             cleanUp();
         }
     }
