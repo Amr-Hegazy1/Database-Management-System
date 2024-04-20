@@ -352,7 +352,7 @@ public class Table implements Serializable {
      *         `vecPages` vector.
      */
     public String getPageAtIndex(int i) {
-        System.out.println(vecPages);
+        
         return vecPages.get(i);
     }
 
@@ -385,9 +385,7 @@ public class Table implements Serializable {
 
             String strPage = this.getPageAtIndex(i);
             Page page = Page.deserialize(strPage + ".class");
-            System.out.println(
-                    "#################################### PAGE " + i + " ########################################");
-            System.out.println(page);
+            
         }
     }
 
@@ -538,7 +536,7 @@ public class Table implements Serializable {
             throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
         int pageIndex = getPageIndex((Comparable) val);
-        System.out.println(pageIndex);
+        
         Page page = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(pageIndex) + ".class");
         int tupleIndexInPage = page.binarySearchTuples(col, val);
         hmtup.addAll(page.lessearch(col, val, true, tupleIndexInPage));

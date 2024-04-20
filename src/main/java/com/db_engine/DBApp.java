@@ -364,8 +364,7 @@ public class DBApp {
 						htblColNameValue.get(strClustKeyName)); // binary search to find the correct index to insert in
 																// page
 
-				// System.out.println("CLUST KEY NAME" + strClustKeyName);
-				// System.out.println();
+				
 				Tuple tuplecheckTuple = pgInsertPage.getTuple(index); // Tuple that i check clust key duplication with
 
 				// make sure new clustering key is not a duplicate
@@ -803,7 +802,7 @@ public class DBApp {
 				bptTree.remove((Comparable) tupleTuple.getColumnValue(col), pair);
 				bptTree.serialize("tables/" + strTableName + "/" + strIndexName + ".class");
 
-				System.out.println("DELETED IN DELETE " + pair.hashCode());
+				
 			}
 		}
 
@@ -1230,7 +1229,7 @@ public class DBApp {
 			// el hashes at end of if statements are stand by
 			if (strarrOperators.length == 0) {
 				HashSet<Tuple> tut = getTuple(arrSQLTerms[0]);
-				System.out.println(tut.size());
+				
 				return tut.iterator();
 			}
 			if (indexhelp && indexhelp2) {
@@ -1283,14 +1282,14 @@ public class DBApp {
 			while (!stack2.isEmpty()) {
 				vec.add(stack2.pop());
 			}
-			System.out.println(vec.size());
+			
 			for (int i = 0; i < vec.size(); i++) {
 				if (vec.get(i) instanceof SQLTerm) {
 					stack.push((SQLTerm) vec.get(i));
 				} else {
 					HashSet<Tuple> tm = null;
 					HashSet<Tuple> tm2 = null;
-					System.out.println(i);
+					
 					if (stack.peek() instanceof SQLTerm) {
 						tm = getTuple((SQLTerm) stack.pop());
 						if (stack.peek() instanceof SQLTerm) {
@@ -1312,7 +1311,7 @@ public class DBApp {
 					} else if (((String) vec.get(i)).toLowerCase().equals("or")) {
 						stack.add(or2hs(tm, tm2));
 					} else {
-						System.out.println("and");
+						
 						stack.add(xor2hs(tm, tm2));
 					}
 
