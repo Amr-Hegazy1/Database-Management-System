@@ -186,6 +186,14 @@ public class Page implements Serializable {
 
     }
 
+    /**
+     * The function `deleteTupleWithIndex` removes a tuple from a list at a specified index in Java,
+     * throwing an exception if the index is out of bounds.
+     * 
+     * @param i The parameter `i` in the `deleteTupleWithIndex` method represents the index of the
+     * tuple that needs to be deleted from the `vecTuples` vector. If the index `i` is within the valid
+     * range of the vector, the tuple at that index will be removed.
+     */
     public void deleteTupleWithIndex(int i) throws DBAppException {
         if (i >= vecTuples.size())
             throw new DBAppException("Attempting to access a wrong tuple index");
@@ -480,30 +488,7 @@ public class Page implements Serializable {
         }
     }
 
-    public static void main(String[] args) {
-        // create 5 page objects with 5 tuples and serialize them
-        String strTableName = "Student";
-        int intPageSize = 200;
-
-        for (int i = 0; i < 5; i++) {
-            Page page = new Page(strTableName + "_" + i);
-            for (int j = 0; j < intPageSize; j++) {
-                Tuple tuple = new Tuple();
-                for (int k = 0; k < 5; k++) {
-                    tuple.setColumnValue("id", i * intPageSize + j);
-                    tuple.setColumnValue("name", "Ahmed" + i + j);
-                    tuple.setColumnValue("gpa", 20);
-
-                }
-                page.addTuple(tuple);
-            }
-            try {
-                page.serialize("tables/" + strTableName + "/" + strTableName + "_" + i + ".class");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+    
 
     /**
      * The function `getVecTuples` returns a Vector of Tuple objects.
@@ -523,14 +508,51 @@ public class Page implements Serializable {
         return hstups;
     }
 
+    /**
+     * The Min function returns the minimum value of a specified column from the first tuple in a
+     * vector of tuples.
+     * 
+     * @param col The parameter "col" in the method Min(String col) represents the name of the column
+     * for which you want to find the minimum value.
+     * @return The `Min` method is returning the value of the specified column (`col`) from the first
+     * tuple in the `vecTuples` vector.
+     */
     public Object Min(String col) throws DBAppException {
         return vecTuples.get(0).getColumnValue(col);
     }
 
+    /**
+     * The Max function retrieves the value of a specified column from the last tuple in a vector of
+     * tuples.
+     * 
+     * @param col The parameter `col` in the `Max` method represents the name of the column for which
+     * you want to find the maximum value. The method retrieves the value of this column from the last
+     * tuple in the `vecTuples` list and returns it as an `Object`.
+     * @return The `Max` method is returning the value of the specified column (`col`) from the last
+     * tuple in the `vecTuples` vector.
+     */
     public Object Max(String col) throws DBAppException {
         return vecTuples.get(vecTuples.size() - 1).getColumnValue(col);
     }
 
+    /**
+     * This Java function `eqsearch` searches for tuples in a HashSet based on a specified column value
+     * and data type.
+     * 
+     * @param col The `col` parameter in the `eqsearch` method represents the name of the column you
+     * want to search for equality.
+     * @param val The `val` parameter in the `eqsearch` method represents the value that you are
+     * searching for in the specified column (`col`). The method searches for tuples in a collection
+     * (`vecTuples`) where the value in the specified column matches the provided `val`.
+     * @param isclu The `isclu` parameter in the `eqsearch` method stands for "is clustered". It is a
+     * boolean flag that indicates whether the search is being performed on a clustered index or not.
+     * If `isclu` is true, the search will be optimized for the clustered index, otherwise
+     * @param index The `index` parameter in the `eqsearch` method represents the index of the tuple
+     * within the `vecTuples` list that you want to search for equality with the specified column value
+     * and object value. It is used to access a specific tuple within the list for comparison.
+     * @return The method `eqsearch` returns a `HashSet` of `Tuple` objects that match the specified
+     * criteria based on the input parameters `col`, `val`, `isclu`, and `index`.
+     */
     public HashSet<Tuple> eqsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
         HashSet<Tuple> hstups = new HashSet<>();
         if (isclu) {
@@ -645,6 +667,23 @@ public class Page implements Serializable {
 
     }
 
+    /**
+     * The function `getPageIndexByClusteringKey` searches for a specific clustering key within a table
+     * using binary search.
+     * 
+     * @param objClusteringKeyValue The `objClusteringKeyValue` parameter is the value of the
+     * clustering key that you want to find the corresponding page index for in the given table. This
+     * value is used to determine the page where the clustering key resides within the table's
+     * clustered index.
+     * @param table The `table` parameter in the `getPageIndexByClusteringKey` method represents a
+     * table in a database. It contains information about the table structure, such as the number of
+     * pages, minimum values for each page (stored in `table.getMinVec()`), and maximum values for each
+     * page (stored
+     * @return The method `getPageIndexByClusteringKey` returns the index of the page in the table
+     * where the given clustering key falls within the range of values defined by the minimum and
+     * maximum values of the page. If the clustering key is found within a page, the method returns the
+     * index of that page. If the clustering key is not found within any page, the method returns -1.
+     */
     public static int getPageIndexByClusteringKey(Object objClusteringKeyValue , Table table) {
         int intTableSize = table.getNumberOfPages();
         int intTopPageIndex = 0;
@@ -678,6 +717,24 @@ public class Page implements Serializable {
         return -1;
     }
 
+    /**
+     * The `gtrsearch` function searches for tuples in a HashSet based on a specified column value
+     * being greater than a given value.
+     * 
+     * @param col The `col` parameter in the `gtrsearch` method represents the name of the column in
+     * the database table on which you want to perform the greater than search.
+     * @param val The `val` parameter in the `gtrsearch` method represents the value that you want to
+     * compare against the column values in the tuples. It can be of type Integer, Double, or String
+     * based on the data type of the column you are comparing it with. The method will return a HashSet
+     * @param isclu The `isclu` parameter in the `gtrsearch` method indicates whether the search is
+     * being performed on a clustered index or not. If `isclu` is `true`, the method will start the
+     * search from the specified `index` in the `vecTuples` list.
+     * @param index The `index` parameter in the `gtrsearch` method represents the starting index from
+     * which the search for tuples will begin in the `vecTuples` list. The method will iterate over the
+     * tuples starting from this index to the end of the list if the `isclu` parameter is
+     * @return The method `gtrsearch` returns a `HashSet` containing `Tuple` objects that meet the
+     * specified condition based on the input parameters `col`, `val`, `isclu`, and `index`.
+     */
     public HashSet<Tuple> gtrsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
         HashSet<Tuple> hstups = new HashSet<>();
         if (isclu) {
@@ -724,6 +781,26 @@ public class Page implements Serializable {
         return hstups;
     }
 
+    /**
+     * This Java function `gtreqsearch` searches for tuples in a HashSet based on a specified column
+     * and value, considering whether the column is clustered or not.
+     * 
+     * @param col The `col` parameter in the `gtreqsearch` method represents the column name on which
+     * you want to perform the greater than or equal to search. This method searches for tuples in a
+     * collection where the value in the specified column is greater than or equal to the provided
+     * value.
+     * @param val The `val` parameter in the `gtreqsearch` method represents the value that you want to
+     * compare against in the greater than or equal search operation. It can be of type Integer,
+     * Double, or String depending on the data type of the column you are comparing it with.
+     * @param isclu The `isclu` parameter in the `gtreqsearch` method indicates whether the search is
+     * being performed on a clustered index or not. If `isclu` is `true`, the method will start the
+     * search from the specified `index` in the `vecTuples` list.
+     * @param index The `index` parameter in the `gtreqsearch` method represents the starting index
+     * from which the search for values greater than or equal to the specified value (`val`) should
+     * begin in the `vecTuples` list. The method iterates over the tuples in `vecTuples` starting from
+     * @return This method `gtreqsearch` returns a `HashSet` of `Tuple` objects that meet the specified
+     * criteria based on the input parameters `col`, `val`, `isclu`, and `index`.
+     */
     public HashSet<Tuple> gtreqsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
         HashSet<Tuple> hstups = new HashSet<>();
         if (isclu) {
@@ -770,6 +847,27 @@ public class Page implements Serializable {
         return hstups;
     }
 
+    /**
+     * This Java function searches for tuples in a HashSet based on a specified column value and
+     * comparison criteria.
+     * 
+     * @param col The `col` parameter in the `lessearch` method represents the name of the column you
+     * want to search in the tuples. It is used to specify the column on which the comparison will be
+     * based when filtering the tuples.
+     * @param val The `val` parameter in the `lessearch` method represents the value that you want to
+     * compare with the column values in the tuples. It can be of type Integer, Double, or String
+     * depending on the data type of the column you are comparing it with. The method then checks if
+     * the column
+     * @param isclu The `isclu` parameter in the `lessearch` method stands for "is clustered." It is a
+     * boolean flag that indicates whether the search should be limited to a specific index or not. If
+     * `isclu` is true, the search will only consider tuples up to the specified index
+     * @param index The `index` parameter in the `lessearch` method represents the index up to which
+     * you want to search for tuples in the `vecTuples` list. The method will iterate through the
+     * tuples in the list up to this index and check if the specified column value is less than the
+     * given value
+     * @return This method `lessearch` returns a `HashSet` of `Tuple` objects that meet the specified
+     * condition based on the input parameters `col`, `val`, `isclu`, and `index`.
+     */
     public HashSet<Tuple> lessearch(String col, Object val, boolean isclu, int index) throws DBAppException {
         HashSet<Tuple> hstups = new HashSet<>();
         if (isclu) {
@@ -816,6 +914,25 @@ public class Page implements Serializable {
         return hstups;
     }
 
+    /**
+     * The `leseqsearch` function searches for tuples in a vector based on a specified column and
+     * value, considering whether the search is inclusive or exclusive.
+     * 
+     * @param col The `col` parameter in the `leseqsearch` method represents the name of the column in
+     * the database table that you want to search for. It is used to specify the column on which the
+     * comparison operation will be performed.
+     * @param val The `val` parameter in the `leseqsearch` method represents the value that you are
+     * searching for in the specified column. It can be of type Integer, Double, or String based on the
+     * data type of the column you are searching in. The method then iterates through the tuples in the
+     * @param isclu The `isclu` parameter in the `leseqsearch` method indicates whether the search is
+     * inclusive or not. If `isclu` is `true`, the search will include the value being compared (i.e.,
+     * it will be less than or equal to). If `isclu
+     * @param index The `index` parameter in the `leseqsearch` method represents the index up to which
+     * you want to search in the `vecTuples` list. The method iterates through the tuples in
+     * `vecTuples` up to this index to perform the comparison with the specified value based on the
+     * @return The method `leseqsearch` returns a `HashSet` containing `Tuple` objects that meet the
+     * specified condition based on the input parameters `col`, `val`, `isclu`, and `index`.
+     */
     public HashSet<Tuple> leseqsearch(String col, Object val, boolean isclu, int index) throws DBAppException {
         HashSet<Tuple> hstups = new HashSet<>();
         if (isclu) {
@@ -862,6 +979,20 @@ public class Page implements Serializable {
         return hstups;
     }
 
+    /**
+     * The `noteqsearch` function searches for tuples in a collection based on a specified column and
+     * value, returning a HashSet of tuples that do not match the value in that column.
+     * 
+     * @param col The `col` parameter in the `noteqsearch` method represents the column name in the
+     * database table on which you want to perform the inequality search. This method searches for
+     * tuples in the `vecTuples` collection where the value in the specified column is not equal to the
+     * provided value (`val`).
+     * @param val The `val` parameter in the `noteqsearch` method represents the value that you want to
+     * search for in the specified column `col`. Depending on the type of `val` (Integer, Double, or
+     * String), the method iterates through the `vecTuples` collection of tuples and adds
+     * @return The method `noteqsearch` returns a `HashSet` containing `Tuple` objects that have a
+     * column value different from the specified value `val` for the given column `col`.
+     */
     public HashSet<Tuple> noteqsearch(String col, Object val) throws DBAppException {
         HashSet<Tuple> hstups = new HashSet<>();
         for (Tuple tu : vecTuples) {

@@ -15,6 +15,10 @@ public class Table implements Serializable {
     private Vector<Comparable> vecMin;
     private Vector<Comparable> vecMax;
 
+    // The above code is a constructor for a Java class named `Table`. It takes a `String` parameter
+    // `strTableName` and initializes three instance variables: `strTableName`, `vecPages`, `vecMin`,
+    // and `vecMax`. `vecPages`, `vecMin`, and `vecMax` are initialized as new instances of
+    // `Vector<String>`, `Vector<Comparable>`, and `Vector<Comparable>` respectively.
     public Table(String strTableName) {
         this.strTableName = strTableName;
         this.vecPages = new Vector<String>();
@@ -125,7 +129,12 @@ public class Table implements Serializable {
 
     }
 
-    // get all the pages used to store the table's data
+    
+    /**
+     * The function `getPages()` returns a Vector of Strings containing pages.
+     * 
+     * @return A Vector of Strings containing pages is being returned.
+     */
     public Vector<String> getPages() {
         return this.vecPages;
     }
@@ -167,11 +176,25 @@ public class Table implements Serializable {
         return this.vecMax.get(this.vecPages.indexOf(pageName));
     }
 
+    /**
+     * The function `getMaxVec()` returns the maximum value of a page stored in a Vector.
+     * 
+     * @return A Vector containing Comparable objects representing the maximum value of a page is being
+     * returned.
+     */
     public Vector<Comparable> getMaxVec() {
         // get the maximum value of a page
         return this.vecMax;
     }
 
+    /**
+     * The `getMaxIndex` function returns the index of the maximum value of a page in a vector.
+     * 
+     * @param pageName The `pageName` parameter is the name of the page for which you want to retrieve
+     * the maximum index value. The method `getMaxIndex` returns the index of the `pageName` in the
+     * `vecPages` list, which can be considered as the maximum value for that page.
+     * @return The method `getMaxIndex` returns the index of the `pageName` in the `vecPages` list.
+     */
     public int getMaxIndex(String pageName) {
         // get the maximum value of a page
         return this.vecPages.indexOf(pageName);
@@ -199,6 +222,12 @@ public class Table implements Serializable {
         }
     }
 
+    /**
+     * The `getMinVec` function returns the minimum value of a page stored in a Vector.
+     * 
+     * @return A Vector containing Comparable objects representing the minimum value of a page is being
+     * returned.
+     */
     public Vector<Comparable> getMinVec() {
         // get the maximum value of a page
         return this.vecMin;
@@ -370,6 +399,14 @@ public class Table implements Serializable {
 
     }
 
+    /**
+     * The `removePage` function removes a page at the specified index from a vector
+     * of pages.
+     * 
+     * @param index The `index` parameter is an integer representing the position of
+     *              the page you want
+     *              to remove from the `vecPages` vector.
+     */
     public void removePage(int index) {
         vecPages.remove(index);
     }
@@ -400,6 +437,15 @@ public class Table implements Serializable {
         return strTableName;
     }
 
+    /**
+     * The function `getPage` returns a page object given the page name.
+     * 
+     * @param pageName The `pageName` parameter is a string that represents the name
+     *                 of the page you
+     *                 want to retrieve.
+     * @return The method `getPage` is returning the page object associated with the
+     *         given `pageName`.
+     */
     public int getPageIndex(Comparable compClusteringKeyValue) {
         int n = vecPages.size();
 
@@ -442,7 +488,7 @@ public class Table implements Serializable {
     }
 
     
-
+    
     public HashSet<Tuple> greaterthan(String col, Object val)
             throws ClassNotFoundException, IOException, DBAppException {
 
@@ -457,6 +503,8 @@ public class Table implements Serializable {
         }
         return hmtup;
     }
+
+    
 
     public HashSet<Tuple> greaterthannc(String col, Object val)
             throws ClassNotFoundException, IOException, DBAppException {
@@ -482,6 +530,8 @@ public class Table implements Serializable {
         }
         return hmtup;
     }
+
+    
 
     public HashSet<Tuple> greaterthaneqnc(String col, Object val)
             throws ClassNotFoundException, IOException, DBAppException {

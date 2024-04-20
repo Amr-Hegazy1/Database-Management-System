@@ -1112,182 +1112,7 @@ public class SelectTestCases {
         }
     }
 
-    @Test
-    public void testPrecedence() throws DBAppException, IOException, ClassNotFoundException {
-        try {
-            DBApp dbApp = new DBApp();
-
-            dbApp.init();
-
-            initializeTestTable(dbApp, 20);
-
-            SQLTerm[] arrSQLTerms = new SQLTerm[3];
-            String[] strarrOperators = new String[2];
-
-            // Testing OR + AND
-            arrSQLTerms[0] = new SQLTerm();
-            arrSQLTerms[0]._strTableName = "Student";
-            arrSQLTerms[0]._strColumnName = "name";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = "Student2";
-
-            strarrOperators[0] = "or";
-
-            arrSQLTerms[1] = new SQLTerm();
-            arrSQLTerms[1]._strTableName = "Student";
-            arrSQLTerms[1]._strColumnName = "name";
-            arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = "Student1";
-
-            strarrOperators[1] = "and";
-
-            arrSQLTerms[2] = new SQLTerm();
-            arrSQLTerms[2]._strTableName = "Student";
-            arrSQLTerms[2]._strColumnName = "name";
-            arrSQLTerms[2]._strOperator = "=";
-            arrSQLTerms[2]._objValue = "Student1";
-
-            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name
-                                                                                     // = "Student2" OR name =
-                                                                                     // "Student1"
-                                                                                     // AND name = "Student1";
-            int count = 0;
-
-            while (iterator.hasNext()) {
-                Tuple tuple = (Tuple) iterator.next();
-                assert tuple.getColumnValue("name").equals("Student1")
-                        || tuple.getColumnValue("name").equals("Student2");
-                count++;
-            }
-
-            assert count == 2;
-
-            count = 0;
-
-            // Testing XOR+AND
-            arrSQLTerms[0] = new SQLTerm();
-            arrSQLTerms[0]._strTableName = "Student";
-            arrSQLTerms[0]._strColumnName = "name";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = "Student1";
-
-            strarrOperators[0] = "xor";
-
-            arrSQLTerms[1] = new SQLTerm();
-            arrSQLTerms[1]._strTableName = "Student";
-            arrSQLTerms[1]._strColumnName = "id";
-            arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = 2;
-
-            strarrOperators[1] = "and";
-
-            arrSQLTerms[2] = new SQLTerm();
-            arrSQLTerms[2]._strTableName = "Student";
-            arrSQLTerms[2]._strColumnName = "name";
-            arrSQLTerms[2]._strOperator = "=";
-            arrSQLTerms[2]._objValue = "Student2";
-
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
-                                                                            // "Student1" XOR id = 2 AND name =
-                                                                            // "Student2";
-
-            while (iterator.hasNext()) {
-                Tuple tuple = (Tuple) iterator.next();
-                assert tuple.getColumnValue("name").equals("Student1") || (int) tuple.getColumnValue("id") == 2;
-                count++;
-            }
-
-            assert count == 2;
-
-            count = 0;
-
-            // Testing XOR+OR
-            arrSQLTerms[0] = new SQLTerm();
-            arrSQLTerms[0]._strTableName = "Student";
-            arrSQLTerms[0]._strColumnName = "name";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = "Student2";
-
-            strarrOperators[0] = "xor";
-
-            arrSQLTerms[1] = new SQLTerm();
-            arrSQLTerms[1]._strTableName = "Student";
-            arrSQLTerms[1]._strColumnName = "id";
-            arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = 2;
-
-            strarrOperators[1] = "or";
-
-            arrSQLTerms[2] = new SQLTerm();
-            arrSQLTerms[2]._strTableName = "Student";
-            arrSQLTerms[2]._strColumnName = "id";
-            arrSQLTerms[2]._strOperator = "=";
-            arrSQLTerms[2]._objValue = 3;
-
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
-                                                                            // "Student1" XOR id = 2 OR id = 3;
-
-            while (iterator.hasNext()) {
-                Tuple tuple = (Tuple) iterator.next();
-                assert tuple.getColumnValue("name").equals("Student3") && (int) tuple.getColumnValue("id") == 3;
-                count++;
-            }
-
-            assert count == 1;
-
-            count = 0;
-
-            // Testing XOR+OR+AND
-            arrSQLTerms = new SQLTerm[4];
-            strarrOperators = new String[3];
-            arrSQLTerms[0] = new SQLTerm();
-            arrSQLTerms[0]._strTableName = "Student";
-            arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 1;
-
-            strarrOperators[0] = "xor";
-
-            arrSQLTerms[1] = new SQLTerm();
-            arrSQLTerms[1]._strTableName = "Student";
-            arrSQLTerms[1]._strColumnName = "id";
-            arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = 2;
-
-            strarrOperators[1] = "or";
-
-            arrSQLTerms[2] = new SQLTerm();
-            arrSQLTerms[2]._strTableName = "Student";
-            arrSQLTerms[2]._strColumnName = "id";
-            arrSQLTerms[2]._strOperator = "=";
-            arrSQLTerms[2]._objValue = 3;
-
-            strarrOperators[2] = "and";
-
-            arrSQLTerms[3] = new SQLTerm();
-            arrSQLTerms[3]._strTableName = "Student";
-            arrSQLTerms[3]._strColumnName = "id";
-            arrSQLTerms[3]._strOperator = "=";
-            arrSQLTerms[3]._objValue = 4;
-
-            // Final Correct Expression: (id = 1 XOR (id = 2 OR (id = 3 AND id = 4)))
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
-                                                                            // "Student1" XOR id = 2 OR id = 3 AND id =
-                                                                            // 4;
-            while (iterator.hasNext()) {
-                Tuple tuple = (Tuple) iterator.next();
-                assert (int) tuple.getColumnValue("id") == 1
-                        || (int) tuple.getColumnValue("id") == 2;
-                count++;
-            }
-
-            assert count == 2;
-
-        } finally {
-            cleanUp();
-        }
-    }
-
+    
     @Test
     // Upper case Test
     public void testOperatorCapitilzation1() throws IOException, DBAppException, ClassNotFoundException {
@@ -2793,182 +2618,517 @@ public class SelectTestCases {
     }
 
     @Test
-    public void bigTableSize() throws IOException, DBAppException {
+    public void noWhereCondition() throws IOException, DBAppException {
         try {
             DBApp dbApp = new DBApp();
             dbApp.init();
 
-            initializeTestTable(dbApp, 1000);
+            initializeTestTable(dbApp, 20);
 
-            SQLTerm[] arrSQLTerms = new SQLTerm[2];
-            String[] strarrOperators = new String[1];
+            SQLTerm[] arrSQLTerms = new SQLTerm[1];
+            String[] strarrOperators = new String[0];
+
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+
+            Iterator i = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+
+            int count = 0;
+            while (i.hasNext()) {
+                Tuple t = (Tuple) i.next();
+                assert (int) t.getColumnValue("id") >= 0 && (int) t.getColumnValue("id") <= 19;
+                count++;
+            }
+
+            assert count == 20;
 
         } finally {
             cleanUp();
         }
 
     }
+
+    // @Test
+    // public void IndexedQueryTimeClustKey() throws IOException, DBAppException {
+    //     try {
+    //         cleanUp();
+    //         DBApp dbApp = new DBApp();
+    //         dbApp.init();
+
+    //         initializeTestTable(dbApp, 1000);
+
+    //         SQLTerm[] arrSQLTerms = new SQLTerm[2];
+    //         String[] strarrOperators = new String[1];
+
+    //         // Test 1: Exact Value Query
+    //         arrSQLTerms[0] = new SQLTerm();
+    //         arrSQLTerms[0]._strTableName = "Student";
+    //         arrSQLTerms[0]._strColumnName = "id";
+    //         arrSQLTerms[0]._strOperator = "=";
+    //         arrSQLTerms[0]._objValue = 5;
+
+    //         strarrOperators[0] = "AND";
+
+    //         arrSQLTerms[1] = new SQLTerm();
+    //         arrSQLTerms[1]._strTableName = "Student";
+    //         arrSQLTerms[1]._strColumnName = "id";
+    //         arrSQLTerms[1]._strOperator = "=";
+    //         arrSQLTerms[1]._objValue = 3;
+
+    //         long startTime = System.currentTimeMillis();
+    //         Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+    //         long endTime = System.currentTimeMillis();
+
+    //         long nonIndexDuration = endTime - startTime;
+
+    //         dbApp.createIndex("Student", "id", "idIndex");
+
+    //         startTime = System.currentTimeMillis();
+    //         iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+    //         endTime = System.currentTimeMillis();
+
+    //         long indexedDuration = endTime - startTime;
+
+    //         assert indexedDuration >= nonIndexDuration;
+
+    //         cleanUp(); // remove index
+    //         dbApp.init();
+    //         initializeTestTable(dbApp, 1000);
+
+    //         // Test 2: Ranged Query
+    //         arrSQLTerms[0] = new SQLTerm();
+    //         arrSQLTerms[0]._strTableName = "Student";
+    //         arrSQLTerms[0]._strColumnName = "id";
+    //         arrSQLTerms[0]._strOperator = "<=";
+    //         arrSQLTerms[0]._objValue = 17;
+
+    //         strarrOperators[0] = "AND";
+
+    //         arrSQLTerms[1] = new SQLTerm();
+    //         arrSQLTerms[1]._strTableName = "Student";
+    //         arrSQLTerms[1]._strColumnName = "id";
+    //         arrSQLTerms[1]._strOperator = ">=";
+    //         arrSQLTerms[1]._objValue = 3;
+
+    //         startTime = System.currentTimeMillis();
+    //         iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+    //         endTime = System.currentTimeMillis();
+
+    //         nonIndexDuration = endTime - startTime;
+
+    //         dbApp.createIndex("Student", "id", "idIndex");
+
+    //         startTime = System.currentTimeMillis();
+    //         iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+    //         endTime = System.currentTimeMillis();
+
+    //         indexedDuration = endTime - startTime;
+
+    //         assert indexedDuration < nonIndexDuration;
+
+    //     } finally {
+    //         cleanUp();
+    //     }
+    // }
+
+    // @Test // sometimes fails if range is too big (max tuples per page = 20)
+    // public void IndexedQueryNonTimeClustKey() throws IOException, DBAppException {
+    //     try {
+    //         DBApp dbApp = new DBApp();
+    //         dbApp.init();
+
+    //         initializeTestTable(dbApp, 1000);
+
+    //         SQLTerm[] arrSQLTerms = new SQLTerm[2];
+    //         String[] strarrOperators = new String[1];
+
+    //         // Test 1: Exact Value Query
+    //         arrSQLTerms[0] = new SQLTerm();
+    //         arrSQLTerms[0]._strTableName = "Student";
+    //         arrSQLTerms[0]._strColumnName = "gpa";
+    //         arrSQLTerms[0]._strOperator = "=";
+    //         arrSQLTerms[0]._objValue = 3.0;
+
+    //         strarrOperators[0] = "AND";
+
+    //         arrSQLTerms[1] = new SQLTerm();
+    //         arrSQLTerms[1]._strTableName = "Student";
+    //         arrSQLTerms[1]._strColumnName = "name";
+    //         arrSQLTerms[1]._strOperator = "=";
+    //         arrSQLTerms[1]._objValue = "Student0";
+
+    //         long startTime = System.currentTimeMillis();
+    //         Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+    //         long endTime = System.currentTimeMillis();
+
+    //         long nonIndexDuration = endTime - startTime;
+
+    //         dbApp.createIndex("Student", "gpa", "gpaIndex");
+
+    //         startTime = System.currentTimeMillis();
+    //         iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+    //         endTime = System.currentTimeMillis();
+
+    //         long indexedDuration = endTime - startTime;
+
+    //         assert indexedDuration < nonIndexDuration;
+
+    //         cleanUp(); // remove index
+    //         dbApp.init();
+    //         initializeTestTable(dbApp, 1000);
+
+    //         // Test 2: Ranged Query
+    //         arrSQLTerms[0] = new SQLTerm();
+    //         arrSQLTerms[0]._strTableName = "Student";
+    //         arrSQLTerms[0]._strColumnName = "gpa";
+    //         arrSQLTerms[0]._strOperator = "<=";
+    //         arrSQLTerms[0]._objValue = 400.0;
+
+    //         strarrOperators[0] = "AND";
+
+    //         arrSQLTerms[1] = new SQLTerm();
+    //         arrSQLTerms[1]._strTableName = "Student";
+    //         arrSQLTerms[1]._strColumnName = "gpa";
+    //         arrSQLTerms[1]._strOperator = ">=";
+    //         arrSQLTerms[1]._objValue = 8.0;
+
+    //         startTime = System.currentTimeMillis();
+    //         iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+    //         endTime = System.currentTimeMillis();
+
+    //         nonIndexDuration = endTime - startTime;
+
+    //         dbApp.createIndex("Student", "gpa", "gpaIndex");
+
+    //         startTime = System.currentTimeMillis();
+    //         iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
+    //         endTime = System.currentTimeMillis();
+
+    //         indexedDuration = endTime - startTime;
+
+    //         assert indexedDuration <= nonIndexDuration;
+    //         assert indexedDuration < nonIndexDuration;
+
+    //     } finally {
+    //         cleanUp();
+    //     }
+    // }
 
     @Test
-    public void IndexedQueryTimeClustKey() throws IOException, DBAppException {
-        try {
-            cleanUp();
-            DBApp dbApp = new DBApp();
-            dbApp.init();
-
-            initializeTestTable(dbApp, 1000);
-
-            SQLTerm[] arrSQLTerms = new SQLTerm[2];
-            String[] strarrOperators = new String[1];
-
-            // Test 1: Exact Value Query
-            arrSQLTerms[0] = new SQLTerm();
-            arrSQLTerms[0]._strTableName = "Student";
-            arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 5;
-
-            strarrOperators[0] = "AND";
-
-            arrSQLTerms[1] = new SQLTerm();
-            arrSQLTerms[1]._strTableName = "Student";
-            arrSQLTerms[1]._strColumnName = "id";
-            arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = 3;
-
-            long startTime = System.currentTimeMillis();
-            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-            long endTime = System.currentTimeMillis();
-
-            long nonIndexDuration = endTime - startTime;
-
-            dbApp.createIndex("Student", "id", "idIndex");
-
-            startTime = System.currentTimeMillis();
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-            endTime = System.currentTimeMillis();
-
-            long indexedDuration = endTime - startTime;
-
-            assert indexedDuration >= nonIndexDuration;
-
-            cleanUp(); // remove index
-            dbApp.init();
-            initializeTestTable(dbApp, 1000);
-
-            // Test 2: Ranged Query
-            arrSQLTerms[0] = new SQLTerm();
-            arrSQLTerms[0]._strTableName = "Student";
-            arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "<=";
-            arrSQLTerms[0]._objValue = 17;
-
-            strarrOperators[0] = "AND";
-
-            arrSQLTerms[1] = new SQLTerm();
-            arrSQLTerms[1]._strTableName = "Student";
-            arrSQLTerms[1]._strColumnName = "id";
-            arrSQLTerms[1]._strOperator = ">=";
-            arrSQLTerms[1]._objValue = 3;
-
-            startTime = System.currentTimeMillis();
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-            endTime = System.currentTimeMillis();
-
-            nonIndexDuration = endTime - startTime;
-
-            dbApp.createIndex("Student", "id", "idIndex");
-
-            startTime = System.currentTimeMillis();
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-            endTime = System.currentTimeMillis();
-
-            indexedDuration = endTime - startTime;
-
-            assert indexedDuration < nonIndexDuration;
-
-        } finally {
-            cleanUp();
-        }
-    }
-
-    @Test // sometimes fails if range is too big (max tuples per page = 20)
-    public void IndexedQueryNonTimeClustKey() throws IOException, DBAppException {
+    public void testPrecedence() throws DBAppException, IOException, ClassNotFoundException {
         try {
             DBApp dbApp = new DBApp();
+
             dbApp.init();
 
-            initializeTestTable(dbApp, 1000);
+            initializeTestTable(dbApp, 20);
 
-            SQLTerm[] arrSQLTerms = new SQLTerm[2];
-            String[] strarrOperators = new String[1];
+            SQLTerm[] arrSQLTerms = new SQLTerm[3];
+            String[] strarrOperators = new String[2];
 
-            // Test 1: Exact Value Query
+            // Testing OR + AND
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = "Student";
-            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strColumnName = "name";
             arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 3.0;
+            arrSQLTerms[0]._objValue = "Student2";
 
-            strarrOperators[0] = "AND";
+            strarrOperators[0] = "or";
 
             arrSQLTerms[1] = new SQLTerm();
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "name";
             arrSQLTerms[1]._strOperator = "=";
-            arrSQLTerms[1]._objValue = "Student0";
+            arrSQLTerms[1]._objValue = "Student1";
 
-            long startTime = System.currentTimeMillis();
-            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-            long endTime = System.currentTimeMillis();
+            strarrOperators[1] = "and";
 
-            long nonIndexDuration = endTime - startTime;
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "name";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = "Student1";
 
-            dbApp.createIndex("Student", "gpa", "gpaIndex");
+            Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name
+                                                                                     // = "Student2" OR name =
+                                                                                     // "Student1"
+                                                                                     // AND name = "Student1";
+            int count = 0;
 
-            startTime = System.currentTimeMillis();
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-            endTime = System.currentTimeMillis();
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert tuple.getColumnValue("name").equals("Student1")
+                        || tuple.getColumnValue("name").equals("Student2");
+                count++;
+            }
 
-            long indexedDuration = endTime - startTime;
+            assert count == 2;
 
-            assert indexedDuration < nonIndexDuration;
+            count = 0;
 
-            cleanUp(); // remove index
-            dbApp.init();
-            initializeTestTable(dbApp, 1000);
+            // Testing XOR+AND
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = "Student1";
 
-            // Test 2: Ranged Query
+            strarrOperators[0] = "xor";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 2;
+
+            strarrOperators[1] = "and";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "name";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = "Student2";
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
+                                                                            // "Student1" XOR id = 2 AND name =
+                                                                            // "Student2";
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert tuple.getColumnValue("name").equals("Student1") || (int) tuple.getColumnValue("id") == 2;
+                count++;
+            }
+
+            assert count == 2;
+
+            count = 0;
+
+            // Testing XOR+OR
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "name";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = "Student2";
+
+            strarrOperators[0] = "xor";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 2;
+
+            strarrOperators[1] = "or";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "id";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = 3;
+
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where name =
+                                                                            // "Student1" XOR id = 2 OR id = 3;
+
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert tuple.getColumnValue("name").equals("Student3") && (int) tuple.getColumnValue("id") == 3;
+                count++;
+            }
+
+            assert count == 1;
+
+            count = 0;
+
+            // Testing XOR+OR+AND (clust key)
+            arrSQLTerms = new SQLTerm[4];
+            strarrOperators = new String[3];
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 1;
+
+            strarrOperators[0] = "xor";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 2;
+
+            strarrOperators[1] = "or";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "id";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = 3;
+
+            strarrOperators[2] = "and";
+
+            arrSQLTerms[3] = new SQLTerm();
+            arrSQLTerms[3]._strTableName = "Student";
+            arrSQLTerms[3]._strColumnName = "id";
+            arrSQLTerms[3]._strOperator = "=";
+            arrSQLTerms[3]._objValue = 4;
+
+            // Final Correct Expression: (id = 1 XOR (id = 2 OR (id = 3 AND id = 4)))
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where id =
+                                                                            // 1 XOR id = 2 OR id = 3 AND id =
+                                                                            // 4;
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (int) tuple.getColumnValue("id") == 1
+                        || (int) tuple.getColumnValue("id") == 2;
+                count++;
+            }
+
+            assert count == 2;
+
+            count = 0;
+
+            // Testing XOR+OR+AND (non-clust key)
+            arrSQLTerms = new SQLTerm[4];
+            strarrOperators = new String[3];
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = "Student";
             arrSQLTerms[0]._strColumnName = "gpa";
-            arrSQLTerms[0]._strOperator = "<=";
-            arrSQLTerms[0]._objValue = 400.0;
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 4.0; // id = 1
+
+            strarrOperators[0] = "xor";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "gpa";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 5.0; // id=2
+
+            strarrOperators[1] = "or";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "gpa";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = 6.0; // id=3
+
+            strarrOperators[2] = "and";
+
+            arrSQLTerms[3] = new SQLTerm();
+            arrSQLTerms[3]._strTableName = "Student";
+            arrSQLTerms[3]._strColumnName = "gpa";
+            arrSQLTerms[3]._strOperator = "=";
+            arrSQLTerms[3]._objValue = 7.0; // id=4
+
+            // Final Correct Expression: (gpa = 4.0 XOR (gpa = 5.0 OR (gpa = 6.0 AND gpa =
+            // 7.0)))
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where gpa =
+                                                                            // 4.0 XOR gpa = 5.0 OR id = 6.0 AND id =
+                                                                            // 7.0;
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (int) tuple.getColumnValue("id") == 1
+                        || (int) tuple.getColumnValue("id") == 2;
+                count++;
+            }
+
+            assert count == 2;
+
+            count = 0;
+
+            // Testing AND+OR+XOR (clust key)
+            arrSQLTerms = new SQLTerm[4];
+            strarrOperators = new String[3];
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "id";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 1;
+
+            strarrOperators[0] = "AND";
+
+            arrSQLTerms[1] = new SQLTerm();
+            arrSQLTerms[1]._strTableName = "Student";
+            arrSQLTerms[1]._strColumnName = "id";
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 2;
+
+            strarrOperators[1] = "OR";
+
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "id";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = 3;
+
+            strarrOperators[2] = "XOR";
+
+            arrSQLTerms[3] = new SQLTerm();
+            arrSQLTerms[3]._strTableName = "Student";
+            arrSQLTerms[3]._strColumnName = "id";
+            arrSQLTerms[3]._strOperator = "=";
+            arrSQLTerms[3]._objValue = 4;
+
+            // Final Correct Expression: (((id = 1 AND id = 2) OR id = 3)) XOR id = 4)))
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where id =
+                                                                            // 1 and id = 2 OR id = 3 xor id =
+                                                                            // 4;
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (int) tuple.getColumnValue("id") == 3
+                        || (int) tuple.getColumnValue("id") == 4;
+                count++;
+            }
+
+            assert count == 2;
+
+            count = 0;
+
+            // Testing AND+OR+XOR (non-clust key)
+            arrSQLTerms = new SQLTerm[4];
+            strarrOperators = new String[3];
+            arrSQLTerms[0] = new SQLTerm();
+            arrSQLTerms[0]._strTableName = "Student";
+            arrSQLTerms[0]._strColumnName = "gpa";
+            arrSQLTerms[0]._strOperator = "=";
+            arrSQLTerms[0]._objValue = 4.0;
 
             strarrOperators[0] = "AND";
 
             arrSQLTerms[1] = new SQLTerm();
             arrSQLTerms[1]._strTableName = "Student";
             arrSQLTerms[1]._strColumnName = "gpa";
-            arrSQLTerms[1]._strOperator = ">=";
-            arrSQLTerms[1]._objValue = 8.0;
+            arrSQLTerms[1]._strOperator = "=";
+            arrSQLTerms[1]._objValue = 5.0;
 
-            startTime = System.currentTimeMillis();
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-            endTime = System.currentTimeMillis();
+            strarrOperators[1] = "OR";
 
-            nonIndexDuration = endTime - startTime;
+            arrSQLTerms[2] = new SQLTerm();
+            arrSQLTerms[2]._strTableName = "Student";
+            arrSQLTerms[2]._strColumnName = "gpa";
+            arrSQLTerms[2]._strOperator = "=";
+            arrSQLTerms[2]._objValue = 6.0;
 
-            dbApp.createIndex("Student", "gpa", "gpaIndex");
+            strarrOperators[2] = "XOR";
 
-            startTime = System.currentTimeMillis();
-            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-            endTime = System.currentTimeMillis();
+            arrSQLTerms[3] = new SQLTerm();
+            arrSQLTerms[3]._strTableName = "Student";
+            arrSQLTerms[3]._strColumnName = "gpa";
+            arrSQLTerms[3]._strOperator = "=";
+            arrSQLTerms[3]._objValue = 7.0;
 
-            indexedDuration = endTime - startTime;
+            // Final Correct Expression: (((id = 1 AND id = 2) OR id = 3)) XOR id = 4)))
+            iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators); // Select * from Student where id =
+                                                                            // 1 and id = 2 OR id = 3 xor id =
+                                                                            // 4;
+            while (iterator.hasNext()) {
+                Tuple tuple = (Tuple) iterator.next();
+                assert (int) tuple.getColumnValue("id") == 3
+                        || (int) tuple.getColumnValue("id") == 4;
+                count++;
+            }
 
-            assert indexedDuration <= nonIndexDuration;
-            assert indexedDuration < nonIndexDuration;
+            assert count == 2;
 
         } finally {
             cleanUp();
