@@ -168,7 +168,7 @@ public class Table implements Serializable {
         return this.vecMax.get(this.vecPages.indexOf(pageName));
     }
 
-    public Vector<Comparable> getMaxVec(String pageName) {
+    public Vector<Comparable> getMaxVec() {
         // get the maximum value of a page
         return this.vecMax;
     }
@@ -200,7 +200,7 @@ public class Table implements Serializable {
         }
     }
 
-    public Vector<Comparable> getMinVec(String pageName) {
+    public Vector<Comparable> getMinVec() {
         // get the maximum value of a page
         return this.vecMin;
     }

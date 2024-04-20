@@ -2490,7 +2490,7 @@ public class SelectTestCases {
         }
     }
 
-    
+    @Before
     public void cleanUp() throws IOException {
         try {
             // delete tables directory

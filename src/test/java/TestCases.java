@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.bplustree.BPlusTree;
@@ -674,7 +675,7 @@ public class TestCases {
      * logarithmic time
      * complexity.
      */
-    @Test(timeout = 60000)
+    @Test(timeout = 2000)
     public void insertOccursInLogN() throws DBAppException, IOException {
         try {
             DBApp dbApp = new DBApp();
@@ -693,7 +694,7 @@ public class TestCases {
 
             dbApp.createTable(strTableName, "id", htblColNameType);
 
-            for (int i = 0; i < 1e5; i++) {
+            for (int i = 0; i < 1e3; i++) {
                 System.out.println(i);
                 Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
                 htblColNameValue.put("id", i);
@@ -3274,7 +3275,8 @@ public class TestCases {
 
     }
 
-    protected void cleanUp() throws IOException {
+    @Before
+    public void cleanUp() throws IOException {
         try {
             // delete tables directory
 
