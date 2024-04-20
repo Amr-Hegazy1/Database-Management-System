@@ -2827,7 +2827,7 @@ public class SelectTestCases {
             arrSQLTerms[0]._strOperator = "=";
             arrSQLTerms[0]._objValue = 5;
 
-            strarrOperators[0] = "OR";
+            strarrOperators[0] = "AND";
 
             arrSQLTerms[1] = new SQLTerm();
             arrSQLTerms[1]._strTableName = "Student";

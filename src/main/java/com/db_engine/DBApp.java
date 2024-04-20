@@ -276,7 +276,7 @@ public class DBApp {
 		if (intpageNum != 0) {// if table already has pages, binary search on correct page to insert into
 			pgInsertPage = Page.getPageByClusteringKey(strTableName,
 					htblColNameValue.get(strClustKeyName), tblTable); // get the page that the tuple will be inserted
-																		// into
+			// into
 			if (pgInsertPage == null) {// if tuple is out of range, check first and last page
 
 				String strFirstPage = vecPages.get(0); // get first page name
@@ -291,12 +291,19 @@ public class DBApp {
 				Tuple tupleFirstTuple = pgFirstPage.getTupleWithIndex(0); // get first tuple in 1st page(smallest clust
 																			// key)
 
+				Tuple tupleLastTuple = pgLastPage.getTupleWithIndex(pgLastPage.getSize() - 1); // get last tuple in
+																								// 1st
+																								// page(largest
+																								// clust
+																								// key
+
 				Comparable inputClustKey = (Comparable) htblColNameValue.get(strClustKeyName); // clust key in my insert
 																								// tuple
 
 				if (inputClustKey.compareTo((Comparable) tupleFirstTuple // if my insert key is smaller than first page
 																			// key, insert in index 0
 						.getColumnValue(strClustKeyName)) < 0) {
+
 					pgFirstPage.addTuple(0, tupleNewTuple);
 					tblTable.setMin(pgFirstPage.getPageName(),
 							(Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
@@ -312,8 +319,10 @@ public class DBApp {
 
 					}
 
-				} else {// only option left is that its bigger than last key in last page, so insert in
-						// last index in last page
+				} else if (inputClustKey.compareTo((Comparable) tupleLastTuple
+						.getColumnValue(strClustKeyName)) > 0) {// only option left is that its bigger than last key in
+																// last page, so insert in
+					// last index in last page
 					pgLastPage.addTuple(pgLastPage.getSize(), tupleNewTuple);
 					tblTable.setMax(pgLastPage.getPageName(),
 							(Comparable) tupleNewTuple.getColumnValue(strClustKeyName));
@@ -328,13 +337,35 @@ public class DBApp {
 						pgLastPage.serialize("tables/" + strTableName + "/" + pgLastPage.getPageName() + ".class");
 
 					}
+				} else {
+
+					int pageIndex = tblTable.getPageIndexInsert(inputClustKey);
+					pgInsertPage = Page
+							.deserialize("tables/" + strTableName + "/" + vecPages.get(pageIndex) + ".class");
+					Comparable currMax = tblTable.getMax(pgInsertPage.getPageName());
+					Vector<Tuple> vecInsertPageVector = pgInsertPage.getTuples();
+					int insertIndex = vecInsertPageVector.indexOf(currMax);
+					insertIndex++;
+					pgInsertPage.addTuple(insertIndex, tupleNewTuple);
+
+					if (pgInsertPage.getSize() > intMaxSize) {
+						handleInsertOverflow(tblTable, pgInsertPage, intMaxSize, strClustKeyName, hsIndexedColumns,
+								tupleNewTuple);
+						overflowOccured = true;
+					} else {
+						pgInsertPage.serialize("tables/" + strTableName + "/" + pgInsertPage.getPageName() + ".class");
+					}
+
 				}
 			}
 
 			else { // if tuple is in range of existing pages, insert and check for overflow
-				int index = pgInsertPage.binarySearchTuples(strClustKeyName,
+				int index = pgInsertPage.binarySearchInsertTuples(strClustKeyName,
 						htblColNameValue.get(strClustKeyName)); // binary search to find the correct index to insert in
 																// page
+
+				// System.out.println("CLUST KEY NAME" + strClustKeyName);
+				// System.out.println();
 				Tuple tuplecheckTuple = pgInsertPage.getTuple(index); // Tuple that i check clust key duplication with
 
 				// make sure new clustering key is not a duplicate
@@ -1839,14 +1870,7 @@ public class DBApp {
 				dbApp.insertIntoTable(strTableName, htblColNameValue);
 			}
 
-			Page p = Page.deserialize("tables/" + strTableName + "/" + strTableName + "_0.class");
-
-			Vector<Tuple> tuples = p.getTuples();
-
-			for (Tuple t : tuples) {
-				System.out.println(t);
-			}
-			for (int i = 0; i < 20; i++) {
+			for (int i = 40; i < 60; i++) {
 				Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
 				htblColNameValue.put("id", i);
 				htblColNameValue.put("name", "Student" + i);
@@ -1854,30 +1878,31 @@ public class DBApp {
 				dbApp.insertIntoTable(strTableName, htblColNameValue);
 			}
 
-			// delete a row
-
+			int i = 25;
 			Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
+			htblColNameValue.put("id", i);
+			htblColNameValue.put("name", "Student" + i);
+			htblColNameValue.put("gpa", 3.0 + i);
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
 
-			htblColNameValue.put("id", 0);
+			Page p = Page.deserialize("tables/" + strTableName + "/" + strTableName + "_0.class");
+			Table t = Table.deserialize("tables/" + strTableName + "/" + strTableName + ".class");
+			System.out.println("MAX OF PAGE0 " + " " + t.getMax("Student_0"));
+			Vector<Tuple> tuples = p.getTuples();
 
-			dbApp.deleteFromTable(strTableName, htblColNameValue);
+			for (Tuple tup : tuples) {
+				System.out.println("Page0" + " " + tup);
+			}
+
+			p = Page.deserialize("tables/" + strTableName + "/" + strTableName + "_1.class");
+			tuples = p.getTuples();
+
+			for (Tuple tup : tuples) {
+				System.out.println("Page1" + " " + tup);
+			}
 
 			// select all rows
 
-			SQLTerm[] arrSQLTerms = new SQLTerm[1];
-			String[] strarrOperators = new String[0];
-
-			arrSQLTerms[0] = new SQLTerm();
-			arrSQLTerms[0]._strTableName = strTableName;
-			arrSQLTerms[0]._strColumnName = "id";
-			arrSQLTerms[0]._strOperator = "<";
-			arrSQLTerms[0]._objValue = 100;
-
-			Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
-			while (iterator.hasNext()) {
-				Tuple tuple = (Tuple) iterator.next();
-				System.out.println(tuple);
-			}
 			// for (int i = 0; i < 80; i++) {
 
 			// if (i % 20 == 0) {
