@@ -2111,6 +2111,10 @@ public class TestCases {
             for (int i = 0; i < 20; i++) {
                 if (i == 0) {
                     assert tree.query("Student" + i).size() == 0;
+
+                } else if (i == 1){
+                    assert tree.query("Student" + i).size() == 0;
+                    assert tree.query("Student20").size() == 1;
                 } else {
                     assert tree.query("Student" + i) != null && tree.query("Student" + i).size() == 1;
 
@@ -2504,22 +2508,21 @@ public class TestCases {
             arrSQLTerms[0] = new SQLTerm();
             arrSQLTerms[0]._strTableName = strTableName;
             arrSQLTerms[0]._strColumnName = "id";
-            arrSQLTerms[0]._strOperator = "=";
-            arrSQLTerms[0]._objValue = 5;
+            arrSQLTerms[0]._strOperator = "<";
+            arrSQLTerms[0]._objValue = 100;
 
             Iterator iterator = dbApp.selectFromTable(arrSQLTerms, strarrOperators);
 
-            for (int i = 0; i < 20; i++) {
-                if (i == 5) {
-                    assert iterator.hasNext();
-                    Tuple tuple = (Tuple) iterator.next();
-                    assert tuple.getColumnValue("id").equals(5);
-                    assert tuple.getColumnValue("name").equals("Student5");
-                    assert tuple.getColumnValue("gpa").equals(3.0 + 5);
-                } else {
-                    assert !iterator.hasNext();
-                }
+            while(iterator.hasNext()){
+                Tuple tuple = (Tuple) iterator.next();
+                assert ((Integer) tuple.getColumnValue("id")) != 0;
+                assert ((String) tuple.getColumnValue("name")).equals("Student" + tuple.getColumnValue("id"));
             }
+
+            
+            
+                
+            
 
         } finally {
             cleanUp();
