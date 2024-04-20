@@ -468,6 +468,7 @@ public class Table implements Serializable {
             throws ClassNotFoundException, IOException, DBAppException {
         HashSet<Tuple> hmtup = new HashSet<>();
         int pageIndex = getPageIndex((Comparable) val);
+        System.out.println(pageIndex);
         Page page = Page.deserialize("tables/" + strTableName + "/" + vecPages.get(pageIndex) + ".class");
         int tupleIndexInPage = page.binarySearchTuples(col , val);
         hmtup.addAll(page.lessearch(col , val ,  true , tupleIndexInPage));

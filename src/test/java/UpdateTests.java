@@ -313,10 +313,10 @@ public class UpdateTests {
                 for(Tuple tuple : p.getTuples()){
                     if(tuple.getColumnValue("id").equals(3)){
                         assert tuple.getColumnValue("name").equals("Student" + 21);
-                        assert tuple.getColumnValue("id").equals(0.69);
+                        assert tuple.getColumnValue("gpa").equals(0.69);
                     }else{
                         assert tuple.getColumnValue("name").equals("Student" + tuple.getColumnValue("id"));
-                        assert !tuple.getColumnValue("id").equals(0.69);
+                        assert !tuple.getColumnValue("gpa").equals(0.69);
                     }
                 }
             }
@@ -571,10 +571,10 @@ public class UpdateTests {
                 for(Tuple tuple : p.getTuples()){
                     if(tuple.getColumnValue("id").equals(0)){
                         assert tuple.getColumnValue("name").equals("Student" + 21);
-                        assert tuple.getColumnValue("id").equals(0.69);
+                        assert tuple.getColumnValue("gpa").equals(0.69);
                     }else{
                         assert tuple.getColumnValue("name").equals("Student" + tuple.getColumnValue("id"));
-                        assert !tuple.getColumnValue("id").equals(0.69);
+                        assert !tuple.getColumnValue("gpa").equals(0.69);
                     }
                 }
             }
