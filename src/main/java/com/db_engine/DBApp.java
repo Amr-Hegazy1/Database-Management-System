@@ -155,7 +155,15 @@ public class DBApp {
 			throw new DBAppException("An index for this column already exists");
 
 		} else {
+
 			if (strIndexName.equals(strTableName)) strIndexName += "Index";
+
+			for (Pair pair : metadata.getIndexedColumns(strTableName)) {
+				
+				if (pair.getValue().equals(strIndexName)) {
+					throw new DBAppException("An index with this name already exists");
+				}
+			}
 
 			String strClusteringKeyColName = metadata.getClusteringkey(strTableName);
 
